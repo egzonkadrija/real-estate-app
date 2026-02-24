@@ -64,7 +64,7 @@ export default function AdminLayout({
         <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
           <Building2 className="h-7 w-7 text-blue-600" />
           <span className="text-lg font-bold">
-            Kosovo<span className="text-blue-600">RE</span>
+            Nova<span className="text-blue-600">Buildings</span>
           </span>
         </div>
         <nav className="flex flex-col gap-1 p-4">
@@ -105,7 +105,7 @@ export default function AdminLayout({
           <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
               <span className="text-lg font-bold">
-                Kosovo<span className="text-blue-600">RE</span>
+                Nova<span className="text-blue-600">Buildings</span>
               </span>
               <button onClick={() => setSidebarOpen(false)}>
                 <X className="h-5 w-5" />
@@ -148,7 +148,7 @@ export default function AdminLayout({
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-lg font-bold">
-            Kosovo<span className="text-blue-600">RE</span> Admin
+            Nova<span className="text-blue-600">Buildings</span> Admin
           </span>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>

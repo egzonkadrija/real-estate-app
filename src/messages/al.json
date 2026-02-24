@@ -29,11 +29,13 @@
     "login": "Kyçu",
     "logout": "Dil",
     "admin": "Paneli Admin",
-    "language": "Gjuha"
+    "language": "Gjuha",
+    "searchWithAI": "Kërko me AI",
+    "exclusive": "Ekskluzive"
   },
   "hero": {
-    "title": "Gjeni Pronën Tuaj të Ëndrrave në Kosovë",
-    "subtitle": "Shfletoni mijëra prona në shitje dhe me qira në të gjithë Kosovën",
+    "title": "Gjeni Pronën Tuaj të Ëndrrave në Maqedoninë e Veriut",
+    "subtitle": "Shfletoni mijëra prona në shitje dhe me qira në të gjithë Maqedoninë e Veriut",
     "searchPlaceholder": "Kërko sipas lokacionit, tipit..."
   },
   "property": {
@@ -113,7 +115,7 @@
     "of": "nga"
   },
   "footer": {
-    "description": "Platforma juaj e besuar për prona në Kosovë. Gjeni shtëpinë, apartamentin ose zyrën e ëndrrave tuaja.",
+    "description": "Platforma juaj e besuar për prona në Maqedoninë e Veriut. Gjeni shtëpinë, apartamentin ose zyrën e ëndrrave tuaja.",
     "quickLinks": "Lidhje të Shpejta",
     "contactInfo": "Informacioni i Kontaktit",
     "followUs": "Na Ndiqni",
@@ -137,7 +139,21 @@
   },
   "about": {
     "title": "Rreth Nesh",
-    "description": "Ne jemi platforma kryesore e pronave në Kosovë, duke ofruar shërbime profesionale për shitje dhe qira të pronave."
+    "description": "Ne jemi platforma kryesore e pronave në Maqedoninë e Veriut, duke ofruar shërbime profesionale për shitje dhe qira të pronave."
+  },
+  "chat": {
+    "title": "Asistenti NovaBuildings",
+    "placeholder": "Shkruani pyetjen tuaj...",
+    "welcome": "Përshëndetje! Unë jam asistenti i NovaBuildings. Si mund t'ju ndihmoj sot?",
+    "defaultResponse": "Nuk jam i sigurt për këtë. Mund të shfletoni pronat tona, vizitoni faqen e kontaktit, ose më pyetni për blerje, qira, çmime, ose lokacione në Maqedoninë e Veriut.",
+    "properties": "Mund të shfletoni të gjitha pronat e disponueshme në faqen e Pronave. Përdorni filtrat për të ngushtuar sipas tipit, çmimit, lokacionit dhe më shumë!",
+    "buySell": "Dëshironi të blini ose shitni? Shfletoni listat tona në faqen e Pronave. Për të shitur pronën tuaj, na kontaktoni përmes faqes së Kontaktit dhe ekipi ynë do t'ju ndihmojë.",
+    "rent": "Kemi shumë prona me qira të disponueshme! Vizitoni faqen e Pronave dhe filtroni sipas 'Me Qira' për të parë të gjitha listat.",
+    "price": "Listimi i pronës tuaj në NovaBuildings është plotësisht falas. Çmimet e pronave ndryshojnë sipas tipit, lokacionit dhe madhësisë — shfletoni listat tona për të krahasuar.",
+    "contact": "Mund të na kontaktoni përmes faqes sonë të Kontaktit. Ekipi ynë është gati t'ju ndihmojë me çdo pyetje rreth blerjes, shitjes ose qirasë së pronave.",
+    "location": "Ne mbulojmë të gjitha rajonet e Maqedonisë së Veriut duke përfshirë Shkupin, Tetovën, Gostivarin, Kumanovën, Manastirin, Ohrin dhe Strugën.",
+    "account": "Qasja admin është e disponueshme për menaxhimin e pronave. Na kontaktoni nëse keni nevojë për ndihmë me llogarinë.",
+    "favorites": "Mund të ruani pronat në të preferuarat tuaja duke klikuar ikonën e zemrës në çdo listim. Shikoni të gjitha pronat e ruajtura nga faqja e Të Preferuarave."
   },
   "faq": {
     "title": "Pyetje të Shpeshta",

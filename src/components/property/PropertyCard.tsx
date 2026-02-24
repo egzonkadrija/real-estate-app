@@ -32,9 +32,12 @@ export function PropertyCard({
   const locale = useLocale();
   const [currentImage, setCurrentImage] = React.useState(0);
 
-  const images = property.images?.length
-    ? property.images.sort((a, b) => a.sort_order - b.sort_order)
-    : [{ id: 0, url: "/uploads/placeholder.jpg", alt: "", sort_order: 0, is_primary: true }];
+  const images = [
+    { id: 0, url: "/uploads/placeholder.jpg", alt: "", sort_order: 0, is_primary: true },
+    { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
+    { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
+    { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
+  ];
 
   const title = getLocalizedField(property, "title", locale);
 
@@ -43,7 +46,7 @@ export function PropertyCard({
       {/* Image Carousel */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         <Image
-          src={images[currentImage]?.url || "/uploads/placeholder.jpg"}
+          src={images[currentImage]?.url || "/uploads/property-1.jpg"}
           alt={images[currentImage]?.alt || title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -92,19 +95,19 @@ export function PropertyCard({
 
         {/* Badges */}
         <div className="absolute left-3 top-3 flex gap-2">
+          {property.featured && (
+            <span className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-semibold text-white">
+              {t("featured")}
+            </span>
+          )}
           <span
             className={cn(
               "rounded-md px-2.5 py-1 text-xs font-semibold text-white",
-              property.type === "sale" ? "bg-blue-600" : "bg-emerald-600"
+              property.type === "sale" ? "bg-amber-500" : "bg-rose-600"
             )}
           >
             {property.type === "sale" ? t("forSale") : t("forRent")}
           </span>
-          {property.featured && (
-            <span className="rounded-md bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
-              {t("featured")}
-            </span>
-          )}
         </div>
 
         {/* Favorite Button */}
@@ -131,7 +134,7 @@ export function PropertyCard({
       {/* Content */}
       <Link href={`/properties/${property.id}`}>
         <div className="p-4">
-          <div className="mb-1 text-lg font-bold text-blue-600">
+          <div className="mb-1 text-lg font-bold text-gray-900">
             {formatPrice(property.price, property.currency)}
             {property.type === "rent" && (
               <span className="text-sm font-normal text-gray-500">/mo</span>

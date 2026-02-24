@@ -18,7 +18,7 @@ export default async function AboutPage({
       icon: Building2,
       title: "Wide Selection",
       description:
-        "Browse thousands of properties across Kosovo, from cozy apartments to commercial spaces.",
+        "Browse thousands of properties across North Macedonia, from cozy apartments to commercial spaces.",
     },
     {
       icon: Users,
@@ -36,7 +36,7 @@ export default async function AboutPage({
       icon: TrendingUp,
       title: "Market Expertise",
       description:
-        "Stay informed with the latest market trends and property valuations in Kosovo.",
+        "Stay informed with the latest market trends and property valuations in North Macedonia.",
     },
   ];
 
@@ -56,7 +56,7 @@ export default async function AboutPage({
       <section className="mb-12">
         <h2 className="mb-4 text-2xl font-bold text-gray-900">Our Mission</h2>
         <p className="leading-relaxed text-gray-600">
-          Our mission is to simplify the real estate experience in Kosovo. We
+          Our mission is to simplify the real estate experience in North Macedonia. We
           connect property buyers, sellers, and renters through a modern,
           easy-to-use platform. Whether you are looking for your first home, an
           investment opportunity, or a commercial space, we are here to help you
@@ -101,7 +101,7 @@ export default async function AboutPage({
         <p className="leading-relaxed text-gray-600">
           Our team is composed of real estate professionals, technology
           experts, and customer service specialists who share a common goal: to
-          make property transactions in Kosovo as seamless as possible. With
+          make property transactions in North Macedonia as seamless as possible. With
           years of experience in the local market, we understand the unique
           needs of our clients and work tirelessly to exceed their expectations.
         </p>

@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { KOSOVO_CENTER } from "@/lib/constants";
+import { NORTH_MACEDONIA_CENTER } from "@/lib/constants";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export default async function ContactPage({
@@ -42,7 +42,7 @@ export default async function ContactPage({
                   <p className="text-sm text-gray-600">
                     Rr. Agim Ramadani, Nr. 15
                     <br />
-                    10000 Prishtina, Kosovo
+                    1000 Skopje, North Macedonia
                   </p>
                 </div>
               </div>
@@ -55,7 +55,7 @@ export default async function ContactPage({
                   <h3 className="font-semibold text-gray-900">
                     {t("form.phone")}
                   </h3>
-                  <p className="text-sm text-gray-600">+383 44 123 456</p>
+                  <p className="text-sm text-gray-600">+389 2 123 456</p>
                 </div>
               </div>
 
@@ -68,7 +68,7 @@ export default async function ContactPage({
                     {t("form.email")}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    info@kosovorealestate.com
+                    info@novabuildings.com
                   </p>
                 </div>
               </div>
@@ -109,9 +109,9 @@ export default async function ContactPage({
           <Card className="overflow-hidden">
             <div className="h-[500px]">
               <PropertyMap
-                latitude={KOSOVO_CENTER.lat}
-                longitude={KOSOVO_CENTER.lng}
-                title="Kosovo Real Estate"
+                latitude={NORTH_MACEDONIA_CENTER.lat}
+                longitude={NORTH_MACEDONIA_CENTER.lng}
+                title="NovaBuildings"
                 zoom={12}
                 className="h-full w-full"
               />

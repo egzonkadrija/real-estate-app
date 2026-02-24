@@ -29,11 +29,13 @@
     "login": "Login",
     "logout": "Logout",
     "admin": "Admin Panel",
-    "language": "Language"
+    "language": "Language",
+    "searchWithAI": "Search with AI",
+    "exclusive": "Exclusive"
   },
   "hero": {
-    "title": "Find Your Dream Property in Kosovo",
-    "subtitle": "Browse thousands of properties for sale and rent across Kosovo",
+    "title": "Find Your Dream Property in North Macedonia",
+    "subtitle": "Browse thousands of properties for sale and rent across North Macedonia",
     "searchPlaceholder": "Search by location, type..."
   },
   "property": {
@@ -113,7 +115,7 @@
     "of": "of"
   },
   "footer": {
-    "description": "Your trusted real estate platform in Kosovo. Find your dream house, apartment, or office.",
+    "description": "Your trusted real estate platform in North Macedonia. Find your dream house, apartment, or office.",
     "quickLinks": "Quick Links",
     "contactInfo": "Contact Info",
     "followUs": "Follow Us",
@@ -137,7 +139,21 @@
   },
   "about": {
     "title": "About Us",
-    "description": "We are Kosovo's leading real estate platform, providing professional services for property sales and rentals."
+    "description": "We are North Macedonia's leading real estate platform, providing professional services for property sales and rentals."
+  },
+  "chat": {
+    "title": "NovaBuildings Assistant",
+    "placeholder": "Type your question...",
+    "welcome": "Hi! I'm the NovaBuildings assistant. How can I help you today?",
+    "defaultResponse": "I'm not sure about that. You can browse our properties, visit the contact page, or ask me about buying, renting, pricing, or locations in North Macedonia.",
+    "properties": "You can browse all available properties on our Properties page. Use filters to narrow down by type, price, location, and more!",
+    "buySell": "Looking to buy or sell? Browse our listings on the Properties page. To sell your property, contact us through the Contact page and our team will assist you.",
+    "rent": "We have many rental properties available! Visit the Properties page and filter by 'For Rent' to see all rental listings.",
+    "price": "Listing your property on NovaBuildings is completely free. Property prices vary by type, location, and size — browse our listings to compare.",
+    "contact": "You can reach us through our Contact page. Our team is ready to help with any questions about buying, selling, or renting properties.",
+    "location": "We cover all regions of North Macedonia including Skopje, Tetovo, Gostivar, Kumanovo, Bitola, Ohrid, and Struga.",
+    "account": "Admin access is available for property management. Contact us if you need account assistance.",
+    "favorites": "You can save properties to your favorites by clicking the heart icon on any listing. View all your saved properties from the Favorites page."
   },
   "faq": {
     "title": "Frequently Asked Questions",

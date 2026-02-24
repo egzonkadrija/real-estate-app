@@ -9,11 +9,12 @@ import {
   Heart,
   Globe,
   ChevronDown,
-  Home,
   Building2,
   Phone,
   Info,
-  PlusCircle,
+  Send,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,14 +27,15 @@ export function Header() {
   const [langOpen, setLangOpen] = React.useState(false);
 
   const navLinks = [
-    { href: "/" as const, label: t("home"), icon: Home },
     { href: "/properties" as const, label: t("properties"), icon: Building2 },
     { href: "/about" as const, label: t("about"), icon: Info },
     { href: "/contact" as const, label: t("contact"), icon: Phone },
+    { href: "/submit-property" as const, label: t("submitProperty"), icon: Send },
+    { href: "/request-property" as const, label: t("requestProperty"), icon: FileText },
   ];
 
   const languages = [
-    { code: "al" as const, label: "Shqip", flag: "🇽🇰" },
+    { code: "al" as const, label: "Shqip", flag: "🇲🇰" },
     { code: "en" as const, label: "English", flag: "🇬🇧" },
     { code: "de" as const, label: "Deutsch", flag: "🇩🇪" },
   ];
@@ -45,27 +47,31 @@ export function Header() {
     setLangOpen(false);
   }
 
+  function openAIChat() {
+    window.dispatchEvent(new Event("open-ai-chat"));
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Building2 className="h-8 w-8 text-blue-600" />
+          <Building2 className="h-8 w-8 text-amber-500" />
           <span className="text-xl font-bold text-gray-900">
-            Kosovo<span className="text-blue-600">RE</span>
+            Nova<span className="text-amber-500">Buildings</span>
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100",
+                "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-amber-600",
                 pathname === link.href
-                  ? "bg-blue-50 text-blue-600"
+                  ? "text-amber-600"
                   : "text-gray-700"
               )}
             >
@@ -76,13 +82,14 @@ export function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/submit-property"
-            className="hidden rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:inline-flex"
+          {/* Search with AI Button */}
+          <button
+            onClick={openAIChat}
+            className="hidden items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-amber-400 hover:text-amber-600 sm:inline-flex"
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {t("submitProperty")}
-          </Link>
+            <Sparkles className="h-4 w-4" />
+            {t("searchWithAI")}
+          </button>
 
           <Link
             href="/favorites"
@@ -117,7 +124,7 @@ export function Header() {
                       className={cn(
                         "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100",
                         locale === lang.code
-                          ? "bg-blue-50 text-blue-600"
+                          ? "bg-amber-50 text-amber-600"
                           : "text-gray-700"
                       )}
                     >
@@ -133,7 +140,7 @@ export function Header() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 md:hidden"
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" />
@@ -146,7 +153,7 @@ export function Header() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="border-t border-gray-200 bg-white md:hidden">
+        <div className="border-t border-gray-200 bg-white lg:hidden">
           <nav className="flex flex-col px-4 py-2">
             {navLinks.map((link) => (
               <Link
@@ -156,7 +163,7 @@ export function Header() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
                   pathname === link.href
-                    ? "bg-blue-50 text-blue-600"
+                    ? "bg-amber-50 text-amber-600"
                     : "text-gray-700 hover:bg-gray-100"
                 )}
               >
@@ -164,14 +171,16 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/submit-property"
-              onClick={() => setMobileOpen(false)}
-              className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white"
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                openAIChat();
+              }}
+              className="mt-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
-              <PlusCircle className="h-4 w-4" />
-              {t("submitProperty")}
-            </Link>
+              <Sparkles className="h-4 w-4" />
+              {t("searchWithAI")}
+            </button>
           </nav>
         </div>
       )}

@@ -1,5 +1,5 @@
-export const APP_NAME = "Kosovo Real Estate";
-export const APP_DESCRIPTION = "Find your dream property in Kosovo";
+export const APP_NAME = "NovaBuildings";
+export const APP_DESCRIPTION = "Find your dream property in North Macedonia";
 
 export const PROPERTY_TYPES = ["sale", "rent"] as const;
 export const PROPERTY_CATEGORIES = [
@@ -79,5 +79,5 @@ export const ITEMS_PER_PAGE = 12;
 export const LOCALES = ["al", "en", "de"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-export const KOSOVO_CENTER = { lat: 42.6026, lng: 20.903 };
+export const NORTH_MACEDONIA_CENTER = { lat: 41.9981, lng: 21.4254 };
 export const DEFAULT_ZOOM = 9;

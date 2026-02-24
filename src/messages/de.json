@@ -29,11 +29,13 @@
     "login": "Anmelden",
     "logout": "Abmelden",
     "admin": "Admin-Panel",
-    "language": "Sprache"
+    "language": "Sprache",
+    "searchWithAI": "Mit KI suchen",
+    "exclusive": "Exklusiv"
   },
   "hero": {
-    "title": "Finden Sie Ihre Traumimmobilie im Kosovo",
-    "subtitle": "Durchsuchen Sie tausende Immobilien zum Verkauf und zur Miete im Kosovo",
+    "title": "Finden Sie Ihre Traumimmobilie in Nordmazedonien",
+    "subtitle": "Durchsuchen Sie tausende Immobilien zum Verkauf und zur Miete in Nordmazedonien",
     "searchPlaceholder": "Suche nach Standort, Typ..."
   },
   "property": {
@@ -113,7 +115,7 @@
     "of": "von"
   },
   "footer": {
-    "description": "Ihre vertrauenswürdige Immobilienplattform im Kosovo. Finden Sie Ihr Traumhaus, Ihre Wohnung oder Ihr Büro.",
+    "description": "Ihre vertrauenswürdige Immobilienplattform in Nordmazedonien. Finden Sie Ihr Traumhaus, Ihre Wohnung oder Ihr Büro.",
     "quickLinks": "Schnelllinks",
     "contactInfo": "Kontaktinfo",
     "followUs": "Folgen Sie uns",
@@ -137,7 +139,21 @@
   },
   "about": {
     "title": "Über Uns",
-    "description": "Wir sind die führende Immobilienplattform im Kosovo und bieten professionelle Dienstleistungen für den Verkauf und die Vermietung von Immobilien."
+    "description": "Wir sind die führende Immobilienplattform in Nordmazedonien und bieten professionelle Dienstleistungen für den Verkauf und die Vermietung von Immobilien."
+  },
+  "chat": {
+    "title": "NovaBuildings Assistent",
+    "placeholder": "Geben Sie Ihre Frage ein...",
+    "welcome": "Hallo! Ich bin der NovaBuildings-Assistent. Wie kann ich Ihnen heute helfen?",
+    "defaultResponse": "Da bin ich mir nicht sicher. Sie können unsere Immobilien durchsuchen, die Kontaktseite besuchen oder mich nach Kauf, Miete, Preisen oder Standorten in Nordmazedonien fragen.",
+    "properties": "Sie können alle verfügbaren Immobilien auf unserer Immobilienseite durchsuchen. Verwenden Sie Filter, um nach Typ, Preis, Standort und mehr einzugrenzen!",
+    "buySell": "Möchten Sie kaufen oder verkaufen? Durchsuchen Sie unsere Angebote auf der Immobilienseite. Um Ihre Immobilie zu verkaufen, kontaktieren Sie uns über die Kontaktseite und unser Team wird Ihnen helfen.",
+    "rent": "Wir haben viele Mietimmobilien verfügbar! Besuchen Sie die Immobilienseite und filtern Sie nach 'Zu Vermieten', um alle Mietangebote zu sehen.",
+    "price": "Das Einstellen Ihrer Immobilie auf NovaBuildings ist völlig kostenlos. Immobilienpreise variieren je nach Typ, Standort und Größe — durchsuchen Sie unsere Angebote zum Vergleich.",
+    "contact": "Sie können uns über unsere Kontaktseite erreichen. Unser Team ist bereit, Ihnen bei allen Fragen zum Kauf, Verkauf oder zur Vermietung von Immobilien zu helfen.",
+    "location": "Wir decken alle Regionen Nordmazedoniens ab, einschließlich Skopje, Tetovo, Gostivar, Kumanovo, Bitola, Ohrid und Struga.",
+    "account": "Admin-Zugang ist für die Immobilienverwaltung verfügbar. Kontaktieren Sie uns, wenn Sie Hilfe mit Ihrem Konto benötigen.",
+    "favorites": "Sie können Immobilien zu Ihren Favoriten speichern, indem Sie auf das Herzsymbol bei jedem Angebot klicken. Sehen Sie alle gespeicherten Immobilien auf der Favoritenseite."
   },
   "faq": {
     "title": "Häufig gestellte Fragen",

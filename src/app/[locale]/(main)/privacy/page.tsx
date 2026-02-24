@@ -24,7 +24,7 @@ export default async function PrivacyPage({
             1. Introduction
           </h2>
           <p>
-            Kosovo Real Estate (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to
+            NovaBuildings (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to
             protecting your personal information and your right to privacy. This
             Privacy Policy explains how we collect, use, disclose, and safeguard
             your information when you visit our website and use our services.
@@ -122,7 +122,7 @@ export default async function PrivacyPage({
             You have the right to access, correct, or delete your personal
             information. You may also request that we restrict the processing of
             your data. To exercise these rights, please contact us at
-            info@kosovorealestate.com.
+            info@novabuildings.com.
           </p>
         </section>
 
@@ -135,15 +135,15 @@ export default async function PrivacyPage({
             at:
           </p>
           <p className="mt-2">
-            Kosovo Real Estate
+            NovaBuildings
             <br />
             Rr. Agim Ramadani, Nr. 15
             <br />
-            10000 Prishtina, Kosovo
+            1000 Skopje, North Macedonia
             <br />
-            Email: info@kosovorealestate.com
+            Email: info@novabuildings.com
             <br />
-            Phone: +383 44 123 456
+            Phone: +389 2 123 456
           </p>
         </section>
       </div>

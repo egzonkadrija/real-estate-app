@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
+import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
 export const metadata: Metadata = {
   title: {
-    default: "KosovoRE - Real Estate in Kosovo",
-    template: "%s | KosovoRE",
+    default: "NovaBuildings - Real Estate in North Macedonia",
+    template: "%s | NovaBuildings",
   },
-  description: "Find your dream property in Kosovo. Browse houses, apartments, offices, and land for sale and rent.",
+  description: "Find your dream property in North Macedonia. Browse houses, apartments, offices, and land for sale and rent.",
 };
 
 export default async function LocaleLayout({
@@ -28,7 +35,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 font-sans antialiased">
+      <body className={`${poppins.className} min-h-screen bg-gray-50 antialiased`}>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

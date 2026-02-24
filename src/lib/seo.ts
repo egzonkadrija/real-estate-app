@@ -50,18 +50,18 @@ export function generateOrganizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "KosovoRE",
+    name: "NovaBuildings",
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
     description:
-      "Kosovo's leading real estate platform for property sales and rentals.",
+      "North Macedonia's leading real estate platform for property sales and rentals.",
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Prishtinë",
-      addressCountry: "XK",
+      addressLocality: "Skopje",
+      addressCountry: "MK",
     },
-    telephone: "+383 44 123 456",
-    email: "info@kosovore.com",
+    telephone: "+389 2 123 456",
+    email: "info@novabuildings.com",
   };
 }
 

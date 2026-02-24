@@ -14,9 +14,9 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-blue-400" />
+              <Building2 className="h-8 w-8 text-amber-400" />
               <span className="text-xl font-bold text-white">
-                Kosovo<span className="text-blue-400">RE</span>
+                Nova<span className="text-amber-400">Buildings</span>
               </span>
             </Link>
             <p className="mt-4 text-sm leading-relaxed">
@@ -82,16 +82,16 @@ export function Footer() {
             </h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-blue-400" />
-                <span>Prishtinë, Kosovë</span>
+                <MapPin className="h-4 w-4 text-amber-400" />
+                <span>Shkup, Maqedoni e Veriut</span>
               </li>
               <li className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-blue-400" />
-                <span>+383 44 123 456</span>
+                <Phone className="h-4 w-4 text-amber-400" />
+                <span>+389 2 123 456</span>
               </li>
               <li className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-blue-400" />
-                <span>info@kosovore.com</span>
+                <Mail className="h-4 w-4 text-amber-400" />
+                <span>info@novabuildings.com</span>
               </li>
             </ul>
             <div className="mt-4 flex gap-3">
@@ -110,7 +110,7 @@ export function Footer() {
 
         <div className="mt-12 border-t border-gray-800 pt-8 text-center text-sm">
           <p>
-            &copy; {new Date().getFullYear()} KosovoRE. {t("footer.rights")}
+            &copy; {new Date().getFullYear()} NovaBuildings. {t("footer.rights")}
           </p>
         </div>
       </div>

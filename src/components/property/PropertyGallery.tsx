@@ -11,8 +11,15 @@ interface PropertyGalleryProps {
   images: PropertyImage[];
 }
 
+const GALLERY_IMAGES = [
+  { id: 0, url: "/uploads/placeholder.jpg", alt: "", sort_order: 0, is_primary: true },
+  { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
+  { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
+  { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
+];
+
 export function PropertyGallery({ images }: PropertyGalleryProps) {
-  const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
+  const sorted = GALLERY_IMAGES;
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [fullscreen, setFullscreen] = React.useState(false);

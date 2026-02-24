@@ -24,7 +24,7 @@ export default async function TermsPage({
             1. Acceptance of Terms
           </h2>
           <p>
-            By accessing and using Kosovo Real Estate (&quot;the Platform&quot;), you
+            By accessing and using NovaBuildings (&quot;the Platform&quot;), you
             accept and agree to be bound by these Terms of Service. If you do
             not agree to these terms, please do not use our services.
           </p>
@@ -35,8 +35,8 @@ export default async function TermsPage({
             2. Description of Service
           </h2>
           <p>
-            Kosovo Real Estate is an online platform that connects property
-            buyers, sellers, and renters in Kosovo. We provide property
+            NovaBuildings is an online platform that connects property
+            buyers, sellers, and renters in North Macedonia. We provide property
             listings, search tools, and communication channels between users
             and real estate agents. We act as an intermediary and do not own
             or manage any of the listed properties.
@@ -114,7 +114,7 @@ export default async function TermsPage({
           </h2>
           <p>
             All content on the Platform, including text, graphics, logos,
-            images, and software, is the property of Kosovo Real Estate or its
+            images, and software, is the property of NovaBuildings or its
             licensors and is protected by applicable intellectual property laws.
             You may not reproduce, distribute, or create derivative works
             without our express written permission.
@@ -126,7 +126,7 @@ export default async function TermsPage({
             8. Limitation of Liability
           </h2>
           <p>
-            Kosovo Real Estate is provided &quot;as is&quot; without warranties of any
+            NovaBuildings is provided &quot;as is&quot; without warranties of any
             kind. We are not liable for any damages arising from your use of
             the Platform, including but not limited to direct, indirect,
             incidental, or consequential damages. We do not guarantee that the
@@ -152,8 +152,8 @@ export default async function TermsPage({
           </h2>
           <p>
             These Terms of Service are governed by the laws of the Republic of
-            Kosovo. Any disputes arising from these terms or your use of the
-            Platform shall be resolved in the courts of Kosovo.
+            North Macedonia. Any disputes arising from these terms or your use of the
+            Platform shall be resolved in the courts of North Macedonia.
           </p>
         </section>
 
@@ -166,15 +166,15 @@ export default async function TermsPage({
             us at:
           </p>
           <p className="mt-2">
-            Kosovo Real Estate
+            NovaBuildings
             <br />
             Rr. Agim Ramadani, Nr. 15
             <br />
-            10000 Prishtina, Kosovo
+            1000 Skopje, North Macedonia
             <br />
-            Email: info@kosovorealestate.com
+            Email: info@novabuildings.com
             <br />
-            Phone: +383 44 123 456
+            Phone: +389 2 123 456
           </p>
         </section>
       </div>
