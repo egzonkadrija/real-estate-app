@@ -1,44 +1,31 @@
-import { db } from './index';
+﻿import { db } from './index';
 import * as schema from './schema';
 import { sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
-// ──────────────────────────────────────────────
-// Helper: slugify
-// ──────────────────────────────────────────────
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ë/g, 'e')
-    .replace(/ç/g, 'c')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Seed data
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function seed() {
   console.log('Seeding database...');
 
-  // ── 0. Clean all tables ─────────────────────────
+  // â”€â”€ 0. Clean all tables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   console.log('  Cleaning existing data...');
   await db.execute(sql`TRUNCATE TABLE property_images, contacts, property_requests, properties, agents, locations, admin_users RESTART IDENTITY CASCADE`);
   console.log('  All tables truncated.');
 
-  // ── 1. Locations ──────────────────────────────
+  // â”€â”€ 1. Locations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // States (regions) of North Macedonia
   const statesData: schema.NewLocation[] = [
     { type: 'state', name_al: 'Shkup', name_en: 'Skopje', name_de: 'Skopje', slug: 'shkup' },
-    { type: 'state', name_al: 'Tetovë', name_en: 'Tetovo', name_de: 'Tetovo', slug: 'tetove' },
+    { type: 'state', name_al: 'TetovÃ«', name_en: 'Tetovo', name_de: 'Tetovo', slug: 'tetove' },
     { type: 'state', name_al: 'Gostivar', name_en: 'Gostivar', name_de: 'Gostivar', slug: 'gostivar' },
-    { type: 'state', name_al: 'Kumanovë', name_en: 'Kumanovo', name_de: 'Kumanovo', slug: 'kumanove' },
+    { type: 'state', name_al: 'KumanovÃ«', name_en: 'Kumanovo', name_de: 'Kumanovo', slug: 'kumanove' },
     { type: 'state', name_al: 'Manastir', name_en: 'Bitola', name_de: 'Bitola', slug: 'manastir' },
-    { type: 'state', name_al: 'Ohër', name_en: 'Ohrid', name_de: 'Ohrid', slug: 'oher' },
-    { type: 'state', name_al: 'Strugë', name_en: 'Struga', name_de: 'Struga', slug: 'struge' },
+    { type: 'state', name_al: 'OhÃ«r', name_en: 'Ohrid', name_de: 'Ohrid', slug: 'oher' },
+    { type: 'state', name_al: 'StrugÃ«', name_en: 'Struga', name_de: 'Struga', slug: 'struge' },
   ];
 
   const insertedStates = await db
@@ -58,40 +45,40 @@ async function seed() {
   const citiesData: schema.NewLocation[] = [
     // Shkup (Skopje) cities
     { type: 'city', name_al: 'Shkup', name_en: 'Skopje', name_de: 'Skopje', parent_id: stateMap.get('shkup')!, slug: 'shkup-qytet' },
-    { type: 'city', name_al: 'Çair', name_en: 'Cair', name_de: 'Cair', parent_id: stateMap.get('shkup')!, slug: 'cair' },
+    { type: 'city', name_al: 'Ã‡air', name_en: 'Cair', name_de: 'Cair', parent_id: stateMap.get('shkup')!, slug: 'cair' },
     { type: 'city', name_al: 'Saraj', name_en: 'Saraj', name_de: 'Saraj', parent_id: stateMap.get('shkup')!, slug: 'saraj' },
-    { type: 'city', name_al: 'Gjorçe Petrov', name_en: 'Gjorce Petrov', name_de: 'Gjorce Petrov', parent_id: stateMap.get('shkup')!, slug: 'gjorce-petrov' },
-    { type: 'city', name_al: 'Gazi Babë', name_en: 'Gazi Baba', name_de: 'Gazi Baba', parent_id: stateMap.get('shkup')!, slug: 'gazi-babe' },
-    { type: 'city', name_al: 'Haraçinë', name_en: 'Haracina', name_de: 'Haracina', parent_id: stateMap.get('shkup')!, slug: 'haracine' },
+    { type: 'city', name_al: 'GjorÃ§e Petrov', name_en: 'Gjorce Petrov', name_de: 'Gjorce Petrov', parent_id: stateMap.get('shkup')!, slug: 'gjorce-petrov' },
+    { type: 'city', name_al: 'Gazi BabÃ«', name_en: 'Gazi Baba', name_de: 'Gazi Baba', parent_id: stateMap.get('shkup')!, slug: 'gazi-babe' },
+    { type: 'city', name_al: 'HaraÃ§inÃ«', name_en: 'Haracina', name_de: 'Haracina', parent_id: stateMap.get('shkup')!, slug: 'haracine' },
 
-    // Tetovë (Tetovo) cities
-    { type: 'city', name_al: 'Tetovë', name_en: 'Tetovo', name_de: 'Tetovo', parent_id: stateMap.get('tetove')!, slug: 'tetove-qytet' },
-    { type: 'city', name_al: 'Bërvenicë', name_en: 'Brvenica', name_de: 'Brvenica', parent_id: stateMap.get('tetove')!, slug: 'bervenice' },
-    { type: 'city', name_al: 'Jegunovcë', name_en: 'Jegunovce', name_de: 'Jegunovce', parent_id: stateMap.get('tetove')!, slug: 'jegunovce' },
+    // TetovÃ« (Tetovo) cities
+    { type: 'city', name_al: 'TetovÃ«', name_en: 'Tetovo', name_de: 'Tetovo', parent_id: stateMap.get('tetove')!, slug: 'tetove-qytet' },
+    { type: 'city', name_al: 'BÃ«rvenicÃ«', name_en: 'Brvenica', name_de: 'Brvenica', parent_id: stateMap.get('tetove')!, slug: 'bervenice' },
+    { type: 'city', name_al: 'JegunovcÃ«', name_en: 'Jegunovce', name_de: 'Jegunovce', parent_id: stateMap.get('tetove')!, slug: 'jegunovce' },
 
     // Gostivar cities
     { type: 'city', name_al: 'Gostivar', name_en: 'Gostivar', name_de: 'Gostivar', parent_id: stateMap.get('gostivar')!, slug: 'gostivar-qytet' },
-    { type: 'city', name_al: 'Vrapçisht', name_en: 'Vrapciste', name_de: 'Vrapciste', parent_id: stateMap.get('gostivar')!, slug: 'vrapcisht' },
-    { type: 'city', name_al: 'Mavrovë', name_en: 'Mavrovo', name_de: 'Mavrovo', parent_id: stateMap.get('gostivar')!, slug: 'mavrove' },
+    { type: 'city', name_al: 'VrapÃ§isht', name_en: 'Vrapciste', name_de: 'Vrapciste', parent_id: stateMap.get('gostivar')!, slug: 'vrapcisht' },
+    { type: 'city', name_al: 'MavrovÃ«', name_en: 'Mavrovo', name_de: 'Mavrovo', parent_id: stateMap.get('gostivar')!, slug: 'mavrove' },
 
-    // Kumanovë (Kumanovo) cities
-    { type: 'city', name_al: 'Kumanovë', name_en: 'Kumanovo', name_de: 'Kumanovo', parent_id: stateMap.get('kumanove')!, slug: 'kumanove-qytet' },
-    { type: 'city', name_al: 'Likovë', name_en: 'Lipkovo', name_de: 'Lipkovo', parent_id: stateMap.get('kumanove')!, slug: 'likove' },
-    { type: 'city', name_al: 'Staro Nagoriçane', name_en: 'Staro Nagoricane', name_de: 'Staro Nagoricane', parent_id: stateMap.get('kumanove')!, slug: 'staro-nagoricane' },
+    // KumanovÃ« (Kumanovo) cities
+    { type: 'city', name_al: 'KumanovÃ«', name_en: 'Kumanovo', name_de: 'Kumanovo', parent_id: stateMap.get('kumanove')!, slug: 'kumanove-qytet' },
+    { type: 'city', name_al: 'LikovÃ«', name_en: 'Lipkovo', name_de: 'Lipkovo', parent_id: stateMap.get('kumanove')!, slug: 'likove' },
+    { type: 'city', name_al: 'Staro NagoriÃ§ane', name_en: 'Staro Nagoricane', name_de: 'Staro Nagoricane', parent_id: stateMap.get('kumanove')!, slug: 'staro-nagoricane' },
 
     // Manastir (Bitola) cities
     { type: 'city', name_al: 'Manastir', name_en: 'Bitola', name_de: 'Bitola', parent_id: stateMap.get('manastir')!, slug: 'manastir-qytet' },
-    { type: 'city', name_al: 'Novaçi', name_en: 'Novaci', name_de: 'Novaci', parent_id: stateMap.get('manastir')!, slug: 'novaci' },
-    { type: 'city', name_al: 'Mogillë', name_en: 'Mogila', name_de: 'Mogila', parent_id: stateMap.get('manastir')!, slug: 'mogile' },
+    { type: 'city', name_al: 'NovaÃ§i', name_en: 'Novaci', name_de: 'Novaci', parent_id: stateMap.get('manastir')!, slug: 'novaci' },
+    { type: 'city', name_al: 'MogillÃ«', name_en: 'Mogila', name_de: 'Mogila', parent_id: stateMap.get('manastir')!, slug: 'mogile' },
 
-    // Ohër (Ohrid) cities
-    { type: 'city', name_al: 'Ohër', name_en: 'Ohrid', name_de: 'Ohrid', parent_id: stateMap.get('oher')!, slug: 'oher-qytet' },
-    { type: 'city', name_al: 'Debërcë', name_en: 'Debarca', name_de: 'Debarca', parent_id: stateMap.get('oher')!, slug: 'deberce' },
+    // OhÃ«r (Ohrid) cities
+    { type: 'city', name_al: 'OhÃ«r', name_en: 'Ohrid', name_de: 'Ohrid', parent_id: stateMap.get('oher')!, slug: 'oher-qytet' },
+    { type: 'city', name_al: 'DebÃ«rcÃ«', name_en: 'Debarca', name_de: 'Debarca', parent_id: stateMap.get('oher')!, slug: 'deberce' },
 
-    // Strugë (Struga) cities
-    { type: 'city', name_al: 'Strugë', name_en: 'Struga', name_de: 'Struga', parent_id: stateMap.get('struge')!, slug: 'struge-qytet' },
-    { type: 'city', name_al: 'Vevçan', name_en: 'Vevcani', name_de: 'Vevcani', parent_id: stateMap.get('struge')!, slug: 'vevcan' },
-    { type: 'city', name_al: 'Dibër', name_en: 'Debar', name_de: 'Debar', parent_id: stateMap.get('struge')!, slug: 'diber' },
+    // StrugÃ« (Struga) cities
+    { type: 'city', name_al: 'StrugÃ«', name_en: 'Struga', name_de: 'Struga', parent_id: stateMap.get('struge')!, slug: 'struge-qytet' },
+    { type: 'city', name_al: 'VevÃ§an', name_en: 'Vevcani', name_de: 'Vevcani', parent_id: stateMap.get('struge')!, slug: 'vevcan' },
+    { type: 'city', name_al: 'DibÃ«r', name_en: 'Debar', name_de: 'Debar', parent_id: stateMap.get('struge')!, slug: 'diber' },
   ];
 
   const insertedCities = await db
@@ -107,7 +94,7 @@ async function seed() {
     cityMap.set(c.slug, c.id);
   }
 
-  // ── 2. Agents ─────────────────────────────────
+  // â”€â”€ 2. Agents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const agentsData: schema.NewAgent[] = [
     {
@@ -115,7 +102,7 @@ async function seed() {
       email: 'arben@novabuildings.com',
       phone: '+389 70 123 456',
       avatar: '/uploads/agents/arben.jpg',
-      bio_al: 'Agjent me përvojë 10 vjeçare në tregun e patundshmërive në Maqedoninë e Veriut. Specializuar në prona rezidenciale dhe komerciale në Shkup.',
+      bio_al: 'Agjent me pÃ«rvojÃ« 10 vjeÃ§are nÃ« tregun e patundshmÃ«rive nÃ« MaqedoninÃ« e Veriut. Specializuar nÃ« prona rezidenciale dhe komerciale nÃ« Shkup.',
       bio_en: 'Agent with 10 years of experience in the North Macedonia real estate market. Specialized in residential and commercial properties in Skopje.',
       bio_de: 'Makler mit 10 Jahren Erfahrung auf dem nordmazedonischen Immobilienmarkt. Spezialisiert auf Wohn- und Gewerbeimmobilien in Skopje.',
     },
@@ -124,7 +111,7 @@ async function seed() {
       email: 'blerta@novabuildings.com',
       phone: '+389 71 234 567',
       avatar: '/uploads/agents/blerta.jpg',
-      bio_al: 'Eksperte e patundshmërive me fokus në apartamente moderne dhe prona luksoze. Njohëse e thellë e tregut në Tetovë dhe Shkup.',
+      bio_al: 'Eksperte e patundshmÃ«rive me fokus nÃ« apartamente moderne dhe prona luksoze. NjohÃ«se e thellÃ« e tregut nÃ« TetovÃ« dhe Shkup.',
       bio_en: 'Real estate expert focused on modern apartments and luxury properties. Deep knowledge of the Tetovo and Skopje markets.',
       bio_de: 'Immobilienexpertin mit Fokus auf moderne Apartments und Luxusimmobilien. Tiefgehende Marktkenntnis in Tetovo und Skopje.',
     },
@@ -133,7 +120,7 @@ async function seed() {
       email: 'driton@novabuildings.com',
       phone: '+389 72 345 678',
       avatar: '/uploads/agents/driton.jpg',
-      bio_al: 'Konsulent për prona komerciale dhe tokë. Përvojë e gjerë me investitorë vendorë dhe ndërkombëtarë.',
+      bio_al: 'Konsulent pÃ«r prona komerciale dhe tokÃ«. PÃ«rvojÃ« e gjerÃ« me investitorÃ« vendorÃ« dhe ndÃ«rkombÃ«tarÃ«.',
       bio_en: 'Consultant for commercial properties and land. Extensive experience with local and international investors.',
       bio_de: 'Berater fuer Gewerbeimmobilien und Grundstuecke. Umfangreiche Erfahrung mit lokalen und internationalen Investoren.',
     },
@@ -146,15 +133,15 @@ async function seed() {
 
   console.log(`  Inserted ${insertedAgents.length} agents`);
 
-  // ── 3. Properties ─────────────────────────────
+  // â”€â”€ 3. Properties â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const propertiesData: schema.NewProperty[] = [
     // 1 - Apartment for sale in Skopje
     {
-      title_al: 'Banesë moderne 3-dhomëshe në qendër të Shkupit',
+      title_al: 'BanesÃ« moderne 3-dhomÃ«she nÃ« qendÃ«r tÃ« Shkupit',
       title_en: 'Modern 3-bedroom apartment in Skopje center',
       title_de: 'Moderne 3-Zimmer-Wohnung im Zentrum von Skopje',
-      description_al: 'Banesë e re me 3 dhoma gjumi, 2 banjo, ballkon dhe parkim nëntokësor. Ndërtesë e re me ashensor, ndodhet pranë Sheshit të Maqedonisë.',
+      description_al: 'BanesÃ« e re me 3 dhoma gjumi, 2 banjo, ballkon dhe parkim nÃ«ntokÃ«sor. NdÃ«rtesÃ« e re me ashensor, ndodhet pranÃ« Sheshit tÃ« MaqedonisÃ«.',
       description_en: 'New apartment with 3 bedrooms, 2 bathrooms, balcony and underground parking. New building with elevator, located near Macedonia Square.',
       description_de: 'Neue Wohnung mit 3 Schlafzimmern, 2 Baedern, Balkon und Tiefgarage. Neubau mit Aufzug, in der Naehe des Mazedonien-Platzes.',
       type: 'sale',
@@ -176,10 +163,10 @@ async function seed() {
     },
     // 2 - House for sale in Tetovo
     {
-      title_al: 'Shtëpi e re me oborr në Tetovë',
+      title_al: 'ShtÃ«pi e re me oborr nÃ« TetovÃ«',
       title_en: 'New house with yard in Tetovo',
       title_de: 'Neues Haus mit Garten in Tetovo',
-      description_al: 'Shtëpi 2-katëshe me 5 dhoma gjumi, garazhë për 2 vetura, oborr i madh dhe pamje nga Mali i Sharrit.',
+      description_al: 'ShtÃ«pi 2-katÃ«she me 5 dhoma gjumi, garazhÃ« pÃ«r 2 vetura, oborr i madh dhe pamje nga Mali i Sharrit.',
       description_en: 'Two-story house with 5 bedrooms, garage for 2 cars, large yard, and views of Shar Mountain.',
       description_de: 'Zweistoeckiges Haus mit 5 Schlafzimmern, Garage fuer 2 Autos, grossem Garten und Blick auf den Shar-Berg.',
       type: 'sale',
@@ -201,10 +188,10 @@ async function seed() {
     },
     // 3 - Office for rent in Skopje
     {
-      title_al: 'Zyrë moderne në lagjen Çair, Shkup',
+      title_al: 'ZyrÃ« moderne nÃ« lagjen Ã‡air, Shkup',
       title_en: 'Modern office in Cair neighborhood, Skopje',
       title_de: 'Modernes Buero im Stadtteil Cair, Skopje',
-      description_al: 'Hapësirë zyrash me pamje panoramike, 2 salla mbledhjesh, kuzhinë, kushte të shkëlqyera pune.',
+      description_al: 'HapÃ«sirÃ« zyrash me pamje panoramike, 2 salla mbledhjesh, kuzhinÃ«, kushte tÃ« shkÃ«lqyera pune.',
       description_en: 'Office space with panoramic views, 2 meeting rooms, kitchen, excellent working conditions.',
       description_de: 'Bueroflaeche mit Panoramablick, 2 Besprechungsraeume, Kueche, hervorragende Arbeitsbedingungen.',
       type: 'rent',
@@ -226,10 +213,10 @@ async function seed() {
     },
     // 4 - Land for sale in Gostivar
     {
-      title_al: 'Tokë ndërtimore 10 ari në Gostivar',
+      title_al: 'TokÃ« ndÃ«rtimore 10 ari nÃ« Gostivar',
       title_en: '10 are building land in Gostivar',
       title_de: '10 Ar Bauland in Gostivar',
-      description_al: 'Tokë ndërtimore me leje ndërtimi, rrugë e asfaltuar, ujë dhe rrymë. Lokacion i shkëlqyer pranë qendrës.',
+      description_al: 'TokÃ« ndÃ«rtimore me leje ndÃ«rtimi, rrugÃ« e asfaltuar, ujÃ« dhe rrymÃ«. Lokacion i shkÃ«lqyer pranÃ« qendrÃ«s.',
       description_en: 'Building land with construction permit, paved road, water, and electricity. Excellent location near the center.',
       description_de: 'Bauland mit Baugenehmigung, asphaltierter Strasse, Wasser und Strom. Ausgezeichnete Lage nahe dem Zentrum.',
       type: 'sale',
@@ -251,10 +238,10 @@ async function seed() {
     },
     // 5 - Apartment for rent in Kumanovo
     {
-      title_al: 'Banesë me qira 2-dhomëshe në Kumanovë',
+      title_al: 'BanesÃ« me qira 2-dhomÃ«she nÃ« KumanovÃ«',
       title_en: '2-bedroom apartment for rent in Kumanovo',
       title_de: '2-Zimmer-Wohnung zur Miete in Kumanovo',
-      description_al: 'Banesë e mobiluar plotësisht me 2 dhoma gjumi, kuzhinë moderne, internet dhe ngrohje qendrore.',
+      description_al: 'BanesÃ« e mobiluar plotÃ«sisht me 2 dhoma gjumi, kuzhinÃ« moderne, internet dhe ngrohje qendrore.',
       description_en: 'Fully furnished apartment with 2 bedrooms, modern kitchen, internet and central heating.',
       description_de: 'Vollmoeblierte Wohnung mit 2 Schlafzimmern, moderner Kueche, Internet und Zentralheizung.',
       type: 'rent',
@@ -276,10 +263,10 @@ async function seed() {
     },
     // 6 - Store for rent in Bitola
     {
-      title_al: 'Dyqan 80m² në qendër të Manastirit',
-      title_en: '80m² store in Bitola center',
-      title_de: '80m² Geschaeft im Zentrum von Bitola',
-      description_al: 'Dyqan në rrugën kryesore tregtare Shirok Sokak, vitrinë e madhe, i përshtatshëm për çdo lloj biznesi.',
+      title_al: 'Dyqan 80mÂ² nÃ« qendÃ«r tÃ« Manastirit',
+      title_en: '80mÂ² store in Bitola center',
+      title_de: '80mÂ² Geschaeft im Zentrum von Bitola',
+      description_al: 'Dyqan nÃ« rrugÃ«n kryesore tregtare Shirok Sokak, vitrinÃ« e madhe, i pÃ«rshtatshÃ«m pÃ«r Ã§do lloj biznesi.',
       description_en: 'Store on the main commercial street Shirok Sokak, large storefront, suitable for any type of business.',
       description_de: 'Geschaeft an der Haupteinkaufsstrasse Shirok Sokak, grosse Schaufensterfront, geeignet fuer jede Art von Geschaeft.',
       type: 'rent',
@@ -301,10 +288,10 @@ async function seed() {
     },
     // 7 - Warehouse for sale in Gazi Baba, Skopje
     {
-      title_al: 'Depo industriale 500m² në Gazi Babë, Shkup',
-      title_en: '500m² industrial warehouse in Gazi Baba, Skopje',
-      title_de: '500m² Industrielager in Gazi Baba, Skopje',
-      description_al: 'Depo e madhe në zonën industriale, qasje e lehtë për kamionë, dysheme betoni, lartësi 6m.',
+      title_al: 'Depo industriale 500mÂ² nÃ« Gazi BabÃ«, Shkup',
+      title_en: '500mÂ² industrial warehouse in Gazi Baba, Skopje',
+      title_de: '500mÂ² Industrielager in Gazi Baba, Skopje',
+      description_al: 'Depo e madhe nÃ« zonÃ«n industriale, qasje e lehtÃ« pÃ«r kamionÃ«, dysheme betoni, lartÃ«si 6m.',
       description_en: 'Large warehouse in the industrial zone, easy truck access, concrete floor, 6m height.',
       description_de: 'Grosses Lager in der Industriezone, leichter LKW-Zugang, Betonboden, 6m Hoehe.',
       type: 'sale',
@@ -326,10 +313,10 @@ async function seed() {
     },
     // 8 - Luxury apartment in Skopje
     {
-      title_al: 'Apartament luksoz 4-dhomësh me pamje nga qyteti',
+      title_al: 'Apartament luksoz 4-dhomÃ«sh me pamje nga qyteti',
       title_en: 'Luxury 4-bedroom apartment with city views',
       title_de: 'Luxurioese 4-Zimmer-Wohnung mit Stadtblick',
-      description_al: 'Apartament premium në katin e 12-të me pamje panoramike nga Kalaja e Shkupit, materiale cilësore, sistem smart home.',
+      description_al: 'Apartament premium nÃ« katin e 12-tÃ« me pamje panoramike nga Kalaja e Shkupit, materiale cilÃ«sore, sistem smart home.',
       description_en: 'Premium apartment on the 12th floor with panoramic views of Skopje Fortress, quality materials, smart home system.',
       description_de: 'Premium-Wohnung im 12. Stock mit Panoramablick auf die Festung von Skopje, hochwertigen Materialien und Smart-Home-System.',
       type: 'sale',
@@ -351,10 +338,10 @@ async function seed() {
     },
     // 9 - House for sale in Ohrid
     {
-      title_al: 'Shtëpi me pamje nga Liqeni i Ohrit',
+      title_al: 'ShtÃ«pi me pamje nga Liqeni i Ohrit',
       title_en: 'House with Lake Ohrid views',
       title_de: 'Haus mit Blick auf den Ohridsee',
-      description_al: 'Shtëpi e bukur me pamje të mrekullueshme nga liqeni, e renovuar plotësisht, oborr i madh, afër Qendrës së Vjetër.',
+      description_al: 'ShtÃ«pi e bukur me pamje tÃ« mrekullueshme nga liqeni, e renovuar plotÃ«sisht, oborr i madh, afÃ«r QendrÃ«s sÃ« VjetÃ«r.',
       description_en: 'Beautiful house with stunning lake views, fully renovated, large yard, near the Old Town.',
       description_de: 'Schoenes Haus mit atemberaubendem Seeblick, komplett renoviert, grosser Garten, nahe der Altstadt.',
       type: 'sale',
@@ -376,10 +363,10 @@ async function seed() {
     },
     // 10 - Apartment for rent in Struga
     {
-      title_al: 'Banesë e re 1-dhomëshe me qira në Strugë',
+      title_al: 'BanesÃ« e re 1-dhomÃ«she me qira nÃ« StrugÃ«',
       title_en: 'New 1-bedroom apartment for rent in Struga',
       title_de: 'Neue 1-Zimmer-Wohnung zur Miete in Struga',
-      description_al: 'Banesë e re, e mobiluar, ideale për studentë ose çifte të reja. Lokacion i qetë pranë liqenit.',
+      description_al: 'BanesÃ« e re, e mobiluar, ideale pÃ«r studentÃ« ose Ã§ifte tÃ« reja. Lokacion i qetÃ« pranÃ« liqenit.',
       description_en: 'New, furnished apartment, ideal for students or young couples. Quiet location near the lake.',
       description_de: 'Neue, moeblierte Wohnung, ideal fuer Studenten oder junge Paare. Ruhige Lage in der Naehe des Sees.',
       type: 'rent',
@@ -401,10 +388,10 @@ async function seed() {
     },
     // 11 - Office for sale in Tetovo
     {
-      title_al: 'Hapësirë komerciale 200m² në Tetovë',
-      title_en: '200m² commercial space in Tetovo',
-      title_de: '200m² Gewerbeflaeche in Tetovo',
-      description_al: 'Hapësirë e madhe komerciale e përshtatshme për zyra ose klinikë, me parkim privat.',
+      title_al: 'HapÃ«sirÃ« komerciale 200mÂ² nÃ« TetovÃ«',
+      title_en: '200mÂ² commercial space in Tetovo',
+      title_de: '200mÂ² Gewerbeflaeche in Tetovo',
+      description_al: 'HapÃ«sirÃ« e madhe komerciale e pÃ«rshtatshme pÃ«r zyra ose klinikÃ«, me parkim privat.',
       description_en: 'Large commercial space suitable for offices or a clinic, with private parking.',
       description_de: 'Grosse Gewerbeflaeche, geeignet fuer Bueros oder Praxis, mit privatem Parkplatz.',
       type: 'sale',
@@ -426,10 +413,10 @@ async function seed() {
     },
     // 12 - Land for sale in Struga
     {
-      title_al: 'Tokë bujqësore 50 ari në Strugë',
+      title_al: 'TokÃ« bujqÃ«sore 50 ari nÃ« StrugÃ«',
       title_en: '50 are agricultural land in Struga',
       title_de: '50 Ar Ackerland in Struga',
-      description_al: 'Tokë pjellore bujqësore me ujë dhe rrugë qasjeje, e përshtatshme për sera ose vreshta.',
+      description_al: 'TokÃ« pjellore bujqÃ«sore me ujÃ« dhe rrugÃ« qasjeje, e pÃ«rshtatshme pÃ«r sera ose vreshta.',
       description_en: 'Fertile agricultural land with water and access road, suitable for greenhouses or vineyards.',
       description_de: 'Fruchtbares Ackerland mit Wasser und Zufahrtsstrasse, geeignet fuer Gewaechshaeuser oder Weinberge.',
       type: 'sale',
@@ -451,12 +438,12 @@ async function seed() {
     },
     // 13 - Featured: Penthouse in Skopje
     {
-      title_al: 'Penthouse luksoz me tarracë në Shkup',
+      title_al: 'Penthouse luksoz me tarracÃ« nÃ« Shkup',
       title_en: 'Luxury penthouse with terrace in Skopje',
       title_de: 'Luxus-Penthouse mit Terrasse in Skopje',
-      description_al: 'Penthouse ekskluziv në katin e fundit me tarracë 60m², pamje 360 gradë nga qyteti, 3 dhoma gjumi.',
-      description_en: 'Exclusive penthouse on the top floor with 60m² terrace, 360-degree city views, 3 bedrooms.',
-      description_de: 'Exklusives Penthouse im obersten Stockwerk mit 60m² Terrasse, 360-Grad-Stadtblick, 3 Schlafzimmer.',
+      description_al: 'Penthouse ekskluziv nÃ« katin e fundit me tarracÃ« 60mÂ², pamje 360 gradÃ« nga qyteti, 3 dhoma gjumi.',
+      description_en: 'Exclusive penthouse on the top floor with 60mÂ² terrace, 360-degree city views, 3 bedrooms.',
+      description_de: 'Exklusives Penthouse im obersten Stockwerk mit 60mÂ² Terrasse, 360-Grad-Stadtblick, 3 Schlafzimmer.',
       type: 'sale',
       category: 'apartment',
       price: 320000,
@@ -476,10 +463,10 @@ async function seed() {
     },
     // 14 - Featured: Villa in Ohrid
     {
-      title_al: 'Villë me pishinë pranë Liqenit të Ohrit',
+      title_al: 'VillÃ« me pishinÃ« pranÃ« Liqenit tÃ« Ohrit',
       title_en: 'Villa with pool near Lake Ohrid',
       title_de: 'Villa mit Pool am Ohridsee',
-      description_al: 'Villë luksoze me pishinë, 6 dhoma gjumi, oborr i madh, vetëm 200m nga liqeni. Ideale për turizëm ose banim.',
+      description_al: 'VillÃ« luksoze me pishinÃ«, 6 dhoma gjumi, oborr i madh, vetÃ«m 200m nga liqeni. Ideale pÃ«r turizÃ«m ose banim.',
       description_en: 'Luxury villa with pool, 6 bedrooms, large yard, only 200m from the lake. Ideal for tourism or living.',
       description_de: 'Luxusvilla mit Pool, 6 Schlafzimmern, grossem Garten, nur 200m vom See. Ideal fuer Tourismus oder Wohnen.',
       type: 'sale',
@@ -501,10 +488,10 @@ async function seed() {
     },
     // 15 - Featured: Modern apartment in Tetovo
     {
-      title_al: 'Banesë moderne 2-dhomëshe në qendër të Tetovës',
+      title_al: 'BanesÃ« moderne 2-dhomÃ«she nÃ« qendÃ«r tÃ« TetovÃ«s',
       title_en: 'Modern 2-bedroom apartment in Tetovo center',
       title_de: 'Moderne 2-Zimmer-Wohnung im Zentrum von Tetovo',
-      description_al: 'Banesë e re me dizajn modern, materiale premium, ngrohje nën dysheme dhe ballkon me pamje nga Malet e Sharrit.',
+      description_al: 'BanesÃ« e re me dizajn modern, materiale premium, ngrohje nÃ«n dysheme dhe ballkon me pamje nga Malet e Sharrit.',
       description_en: 'New apartment with modern design, premium materials, underfloor heating and balcony with Shar Mountain views.',
       description_de: 'Neue Wohnung mit modernem Design, Premium-Materialien, Fussbodenheizung und Balkon mit Blick auf das Shar-Gebirge.',
       type: 'sale',
@@ -526,10 +513,10 @@ async function seed() {
     },
     // 16 - Featured: Duplex in Gostivar
     {
-      title_al: 'Dupleks i ri 5-dhomësh në Gostivar',
+      title_al: 'Dupleks i ri 5-dhomÃ«sh nÃ« Gostivar',
       title_en: 'New 5-bedroom duplex in Gostivar',
       title_de: 'Neuer 5-Zimmer-Duplex in Gostivar',
-      description_al: 'Dupleks i ri me 5 dhoma gjumi, garazhë, oborr, ngrohje qendrore dhe sistem alarmi. Lagje e qetë familjare.',
+      description_al: 'Dupleks i ri me 5 dhoma gjumi, garazhÃ«, oborr, ngrohje qendrore dhe sistem alarmi. Lagje e qetÃ« familjare.',
       description_en: 'New duplex with 5 bedrooms, garage, yard, central heating and alarm system. Quiet family neighborhood.',
       description_de: 'Neuer Duplex mit 5 Schlafzimmern, Garage, Garten, Zentralheizung und Alarmanlage. Ruhige Familiengegend.',
       type: 'sale',
@@ -558,7 +545,7 @@ async function seed() {
 
   console.log(`  Inserted ${insertedProperties.length} properties`);
 
-  // ── 4. Property Images ────────────────────────
+  // â”€â”€ 4. Property Images â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const imagesData: schema.NewPropertyImage[] = [];
 
@@ -569,7 +556,7 @@ async function seed() {
     // Primary image
     imagesData.push({
       property_id: propId,
-      url: `/uploads/property-${propNum}-1.jpg`,
+      url: "/uploads/property-1.jpg",
       alt: `Property ${propNum} - Main image`,
       sort_order: 0,
       is_primary: true,
@@ -578,7 +565,7 @@ async function seed() {
     // Additional images (2-3 per property)
     imagesData.push({
       property_id: propId,
-      url: `/uploads/property-${propNum}-2.jpg`,
+      url: "/uploads/property-2.jpg",
       alt: `Property ${propNum} - Interior`,
       sort_order: 1,
       is_primary: false,
@@ -586,7 +573,7 @@ async function seed() {
 
     imagesData.push({
       property_id: propId,
-      url: `/uploads/property-${propNum}-3.jpg`,
+      url: "/uploads/property-3.jpg",
       alt: `Property ${propNum} - Additional view`,
       sort_order: 2,
       is_primary: false,
@@ -600,7 +587,7 @@ async function seed() {
 
   console.log(`  Inserted ${insertedImages.length} property images`);
 
-  // ── 5. Admin User ─────────────────────────────
+  // â”€â”€ 5. Admin User â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const passwordHash = await bcrypt.hash('admin123', 12);
 
@@ -619,9 +606,9 @@ async function seed() {
   console.log('\nSeeding complete!');
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Run seed
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 seed()
   .then(async () => {

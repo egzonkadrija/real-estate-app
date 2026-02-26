@@ -31,6 +31,8 @@ export const propertyCategoryEnum = pgEnum('property_category', [
   'land',
   'store',
   'warehouse',
+  'penthouse',
+  'object',
 ]);
 
 export const propertyStatusEnum = pgEnum('property_status', [

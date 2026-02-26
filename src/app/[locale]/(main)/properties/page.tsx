@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { properties, locations } from "@/db/schema";
+import { properties } from "@/db/schema";
 import { eq, gte, lte, and, desc, sql, SQL } from "drizzle-orm";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { FilterBar } from "@/components/filters/FilterBar";
@@ -13,6 +13,7 @@ import type { PropertyCategory, PropertyType } from "@/types";
 interface PropertiesPageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
+    q?: string;
     type?: string;
     category?: string;
     minPrice?: string;
@@ -39,6 +40,13 @@ export default async function PropertiesPage({
 
   // Build where conditions
   const conditions: SQL[] = [eq(properties.status, "active")];
+
+  if (filters.q?.trim()) {
+    const term = `%${filters.q.trim()}%`;
+    conditions.push(
+      sql`(${properties.title_al} ILIKE ${term} OR ${properties.title_en} ILIKE ${term} OR ${properties.title_de} ILIKE ${term})`
+    );
+  }
 
   if (filters.type && (filters.type === "sale" || filters.type === "rent")) {
     conditions.push(eq(properties.type, filters.type as PropertyType));
@@ -107,6 +115,7 @@ export default async function PropertiesPage({
   // Build pagination URL helper
   function buildPageUrl(p: number) {
     const params = new URLSearchParams();
+    if (filters.q) params.set("q", filters.q);
     if (filters.type) params.set("type", filters.type);
     if (filters.category) params.set("category", filters.category);
     if (filters.minPrice) params.set("minPrice", filters.minPrice);

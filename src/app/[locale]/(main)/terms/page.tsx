@@ -8,6 +8,144 @@ export default async function TermsPage({
   const { locale } = await params;
   const t = await getTranslations({ locale });
 
+  if (locale === "al") {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <h1 className="mb-6 text-3xl font-bold text-gray-900 sm:text-4xl">
+          {t("common.terms")}
+        </h1>
+
+        <div className="prose prose-gray max-w-none space-y-6 text-gray-600">
+          <p className="text-sm text-gray-400">
+            Perditesuar: Shkurt 2026
+          </p>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              1. Pranimi i kushteve
+            </h2>
+            <p>
+              Duke perdorur platformen NovaBuildings, ju pranoni keto Kushte Sherbimi.
+              Nese nuk pajtoheni me to, ju lutem mos e perdorni platformen.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              2. Pershkrimi i sherbimit
+            </h2>
+            <p>
+              NovaBuildings eshte platforme online qe lidh bleres, qiramarres, pronare dhe agjente ne Maqedonine e Veriut.
+              Ne ofrojme listime pronash, mjete kerkimi dhe komunikim mes paleve.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              3. Te dhenat e perdoruesit
+            </h2>
+            <p>
+              Per funksione te caktuara mund te kerkohet informacion personal.
+              Ju pranoni te jepni te dhena te sakta dhe te perditesuara.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              4. Listimet e pronave
+            </h2>
+            <p>
+              Listimet publikohen nga agjente dhe pronare. Edhe pse synojme saktesi,
+              nuk garantojme qe cdo informacion (cmim, pershkrim, foto, disponueshmeri) eshte gjithmone i plote ose i perditesuar.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              5. Sjellja e perdoruesit
+            </h2>
+            <p>Ju nuk lejohet te:</p>
+            <ul className="ml-6 mt-2 list-disc space-y-1">
+              <li>Publikoni informacione te rreme ose mashtruese</li>
+              <li>Perdorni platformen per qellime te paligjshme</li>
+              <li>Provoni qasje te paautorizuar ne sistem</li>
+              <li>Pengoni funksionimin normal te platformes</li>
+              <li>Mblidhni te dhena nga platforma pa autorizim</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              6. Dorzimi i pronave
+            </h2>
+            <p>
+              Kur dergoni prone per listim, deklaroni se keni te drejte ligjore per ta listuar.
+              Cdo prone i nenshtrohet shqyrtimit dhe miratimit nga ekipi yne.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              7. Pronesia intelektuale
+            </h2>
+            <p>
+              Permbajtja e platformes (tekste, logo, imazhe, softuer) eshte prone e NovaBuildings ose e paleve licencuese
+              dhe mbrohet nga ligji. Riperdorimi pa leje nuk lejohet.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              8. Kufizimi i pergjegjesise
+            </h2>
+            <p>
+              Platforma ofrohet ne gjendjen ekzistuese, pa garanci te plote.
+              NovaBuildings nuk mban pergjegjesi per deme direkte ose indirekte qe mund te vijne nga perdorimi i platformes.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              9. Ndryshimet e kushteve
+            </h2>
+            <p>
+              Ne mund t&apos;i ndryshojme keto kushte ne cdo kohe. Ndryshimet hyjne ne fuqi sapo publikohen ne platforme.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              10. Ligji ne fuqi
+            </h2>
+            <p>
+              Keto kushte rregullohen nga ligjet e Republikes se Maqedonise se Veriut.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              11. Kontakt
+            </h2>
+            <p>
+              Per pyetje rreth kushteve, na kontaktoni ne:
+            </p>
+            <p className="mt-2">
+              NovaBuildings
+              <br />
+              Rr. Agim Ramadani, Nr. 15
+              <br />
+              1000 Skopje, Maqedonia e Veriut
+              <br />
+              Email: info@novabuildings.com
+              <br />
+              Phone: +389 2 123 456
+            </p>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-6 text-3xl font-bold text-gray-900 sm:text-4xl">

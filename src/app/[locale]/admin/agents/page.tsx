@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { Plus, Edit, Trash2, X, Users, Upload } from "lucide-react";
 
 interface Agent {
@@ -91,9 +92,11 @@ export default function AdminAgentsPage() {
                 <div className="mb-4 text-center">
                   <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50">
                     {agent.avatar ? (
-                      <img
+                      <Image
                         src={agent.avatar}
                         alt={agent.name}
+                        width={80}
+                        height={80}
                         className="h-full w-full rounded-full object-cover"
                       />
                     ) : (
@@ -225,7 +228,13 @@ function AgentFormModal({
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gray-100">
                 {formData.avatar ? (
-                  <img src={formData.avatar} alt="" className="h-full w-full object-cover" />
+                  <Image
+                    src={formData.avatar}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <Users className="h-6 w-6 text-gray-400" />
                 )}

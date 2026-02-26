@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { useLocale } from "next-intl";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,20 +10,97 @@ import type { PropertyImage } from "@/types";
 
 interface PropertyGalleryProps {
   images: PropertyImage[];
+  category?: string;
+  title?: string;
 }
 
-const GALLERY_IMAGES = [
-  { id: 0, url: "/uploads/placeholder.jpg", alt: "", sort_order: 0, is_primary: true },
-  { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
-  { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
-  { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
-];
+export function PropertyGallery({ images, category, title }: PropertyGalleryProps) {
+  const locale = useLocale();
+  const noImagesText = locale === "al"
+    ? "Nuk ka foto"
+    : locale === "mk"
+    ? "Nema sliki"
+    : locale === "de"
+    ? "Keine Bilder"
+    : locale === "tr"
+    ? "Gorsel yok"
+    : "No images";
 
-export function PropertyGallery({ images }: PropertyGalleryProps) {
-  const sorted = GALLERY_IMAGES;
+  const isDuplex = React.useMemo(
+    () => /\b(?:duplex|dupleks)\b/i.test(title || ""),
+    [title]
+  );
+
+  const mainImage = React.useMemo(() => (
+    isDuplex
+      ? "/uploads/duplex.jpg"
+      : category === "land"
+      ? "/uploads/land-placeholder.jpg"
+      : category === "apartment"
+      ? "/uploads/apartment-placeholder.webp"
+      : category === "office"
+      ? "/uploads/office-placeholder.avif"
+      : category === "store"
+      ? "/uploads/store-placeholder.jpg"
+      : category === "warehouse"
+      ? "/uploads/warehouse-placeholder.jpg"
+      : "/uploads/placeholder.jpg"
+  ), [category, isDuplex]);
+
+  const fallbackImages = React.useMemo(() => (
+    isDuplex
+      ? [
+          { id: 0, url: "/uploads/duplex.jpg", alt: "", sort_order: 0, is_primary: true },
+        ]
+      : category === "warehouse"
+      ? [
+          { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+          { id: 1, url: "/uploads/warehouse-interior-1.jpg", alt: "", sort_order: 1, is_primary: false },
+          { id: 2, url: "/uploads/warehouse-interior-2.jpg", alt: "", sort_order: 2, is_primary: false },
+        ]
+      : category === "land"
+      ? [
+          { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+        ]
+      : [
+          { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+          { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
+          { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
+          { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
+        ]
+  ), [category, isDuplex, mainImage]);
+
+  const sorted = React.useMemo(() => (
+    isDuplex
+      ? [{ id: 0, url: "/uploads/duplex.jpg", alt: title || "", sort_order: 0, is_primary: true }]
+      : images.length > 0
+      ? [...images].sort((a, b) => a.sort_order - b.sort_order)
+      : fallbackImages
+  ), [images, fallbackImages, isDuplex, title]);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [fullscreen, setFullscreen] = React.useState(false);
+  const [failedIndexes, setFailedIndexes] = React.useState<Record<number, true>>({});
+
+  const getDisplayUrl = React.useCallback((imageUrl: string, idx: number) => {
+    const fallbackUrl = fallbackImages[idx % fallbackImages.length]?.url || mainImage;
+    if (failedIndexes[idx]) return fallbackUrl;
+
+    // Backward compatibility for older seeded URLs like /uploads/property-12-1.jpg.
+    const legacySeedMatch = imageUrl.match(/^\/uploads\/property-\d+-(\d+)\.jpg$/i);
+    if (legacySeedMatch) {
+      const legacySlot = Number(legacySeedMatch[1]);
+      if (legacySlot >= 1 && legacySlot <= 3) {
+        return `/uploads/property-${legacySlot}.jpg`;
+      }
+    }
+
+    return imageUrl;
+  }, [failedIndexes, fallbackImages, mainImage]);
+
+  const markFailed = React.useCallback((idx: number) => {
+    setFailedIndexes((prev) => (prev[idx] ? prev : { ...prev, [idx]: true }));
+  }, []);
 
   React.useEffect(() => {
     if (!emblaApi) return;
@@ -38,7 +116,7 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
   if (sorted.length === 0) {
     return (
       <div className="flex aspect-[16/9] items-center justify-center rounded-xl bg-gray-100">
-        <p className="text-gray-400">No images</p>
+        <p className="text-gray-400">{noImagesText}</p>
       </div>
     );
   }
@@ -49,18 +127,19 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
         {/* Main Carousel */}
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex">
-            {sorted.map((image) => (
+            {sorted.map((image, idx) => (
               <div
                 key={image.id}
                 className="relative aspect-[16/9] min-w-0 flex-[0_0_100%]"
               >
                 <Image
-                  src={image.url}
+                  src={getDisplayUrl(image.url, idx)}
                   alt={image.alt || ""}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 60vw"
                   priority={image.is_primary}
+                  onError={() => markFailed(idx)}
                 />
               </div>
             ))}
@@ -110,11 +189,12 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
               )}
             >
               <Image
-                src={image.url}
+                src={getDisplayUrl(image.url, idx)}
                 alt={image.alt || ""}
                 fill
                 className="object-cover"
                 sizes="80px"
+                onError={() => markFailed(idx)}
               />
             </button>
           ))}
@@ -144,11 +224,12 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
           </button>
           <div className="relative h-[80vh] w-[90vw]">
             <Image
-              src={sorted[selectedIndex]?.url || ""}
+              src={getDisplayUrl(sorted[selectedIndex]?.url || mainImage, selectedIndex)}
               alt={sorted[selectedIndex]?.alt || ""}
               fill
               className="object-contain"
               sizes="90vw"
+              onError={() => markFailed(selectedIndex)}
             />
           </div>
           <div className="absolute bottom-6 text-white">

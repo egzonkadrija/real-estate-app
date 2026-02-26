@@ -1,0 +1,13 @@
+
+> real-estate@0.1.0 dev
+> node scripts/dev-no-fork.cjs
+
+▲ Next.js 16.1.6 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://localhost:3001
+- Environments: .env.local
+- Experiments (use with caution):
+  ✓ workerThreads
+
+✓ Starting...
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.

@@ -68,7 +68,7 @@ export function generateOrganizationJsonLd() {
 export function generateHreflangLinks(
   path: string
 ): { locale: string; url: string }[] {
-  return ["al", "en", "de"].map((locale) => ({
+  return ["mk", "al", "en", "de", "tr"].map((locale) => ({
     locale,
     url: `${BASE_URL}/${locale}${path}`,
   }));

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Mail, MailOpen, Eye, Trash2 } from "lucide-react";
+import { Mail, MailOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Contact {

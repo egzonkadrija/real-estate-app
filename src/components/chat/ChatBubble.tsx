@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { MessageCircle, X, Send, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,8 +44,10 @@ function getResponse(input: string, t: (key: string) => string): string {
 
 export function ChatBubble() {
   const t = useTranslations("chat");
+  const locale = useLocale();
   const [open, setOpen] = React.useState(false);
   const [input, setInput] = React.useState("");
+  const [isSending, setIsSending] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([
     { id: 0, text: t("welcome"), sender: "bot" },
   ]);
@@ -62,7 +64,7 @@ export function ChatBubble() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function handleSend() {
+  async function handleSend() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
@@ -72,14 +74,39 @@ export function ChatBubble() {
       sender: "user",
     };
 
-    const botMsg: Message = {
-      id: Date.now() + 1,
-      text: getResponse(trimmed, t),
-      sender: "bot",
-    };
-
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsSending(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed, locale }),
+      });
+
+      const data = (await res.json()) as { reply?: string };
+      const botText =
+        typeof data.reply === "string" && data.reply.trim()
+          ? data.reply
+          : getResponse(trimmed, t);
+
+      const botMsg: Message = {
+        id: Date.now() + 1,
+        text: botText,
+        sender: "bot",
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch {
+      const botMsg: Message = {
+        id: Date.now() + 1,
+        text: getResponse(trimmed, t),
+        sender: "bot",
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -108,7 +135,7 @@ export function ChatBubble() {
               <div
                 key={msg.id}
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-2 text-sm",
+                  "max-w-[80%] whitespace-pre-line rounded-2xl px-4 py-2 text-sm",
                   msg.sender === "user"
                     ? "self-end bg-amber-500 text-white"
                     : "self-start bg-gray-100 text-gray-800"
@@ -133,11 +160,13 @@ export function ChatBubble() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t("placeholder")}
+              disabled={isSending}
               className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition-colors focus:border-amber-500"
             />
             <button
               type="submit"
-              className="rounded-lg bg-gray-900 p-2 text-white transition-colors hover:bg-gray-800"
+              disabled={isSending}
+              className="rounded-lg bg-gray-900 p-2 text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Send className="h-4 w-4" />
             </button>

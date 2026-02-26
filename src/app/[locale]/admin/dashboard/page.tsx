@@ -8,7 +8,6 @@ import {
   Mail,
   Users,
   TrendingUp,
-  Eye,
   ArrowRight,
 } from "lucide-react";
 

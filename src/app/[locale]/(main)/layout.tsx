@@ -8,11 +8,11 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="w-full">
       <Header />
-      <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+      <main className="min-h-[calc(100vh-5rem)] pt-20">{children}</main>
       <Footer />
       <ChatBubble />
-    </>
+    </div>
   );
 }

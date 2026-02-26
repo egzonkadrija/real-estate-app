@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
+import Image from "next/image";
 import {
   Plus,
   Edit,
   Trash2,
-  Eye,
-  Search,
   ChevronLeft,
   ChevronRight,
   X,
@@ -42,7 +41,6 @@ export default function AdminPropertiesPage() {
   const [loading, setLoading] = React.useState(true);
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
-  const [search, setSearch] = React.useState("");
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
@@ -148,9 +146,11 @@ export default function AdminPropertiesPage() {
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
                           {prop.images?.[0] && (
-                            <img
+                            <Image
                               src={prop.images[0].url}
                               alt=""
+                              width={56}
+                              height={40}
                               className="h-full w-full object-cover"
                             />
                           )}
@@ -539,7 +539,7 @@ function PropertyFormModal({
               <div className="flex flex-wrap gap-3">
                 {uploadedImages.map((url, i) => (
                   <div key={i} className="relative h-20 w-24 overflow-hidden rounded-lg border">
-                    <img src={url} alt="" className="h-full w-full object-cover" />
+                    <Image src={url} alt="" fill className="object-cover" sizes="96px" />
                     <button
                       type="button"
                       onClick={() => setUploadedImages((prev) => prev.filter((_, idx) => idx !== i))}

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
 const createPropertyRequestSchema = z.object({
-  type: z.enum(["buy", "rent"]),
+  type: z.enum(["buy", "rent", "sale"]),
   category: z.string().min(1, "Category is required"),
   min_price: z.number().int().nullable().optional(),
   max_price: z.number().int().nullable().optional(),
@@ -46,7 +46,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validated = createPropertyRequestSchema.parse(body);
+    const parsed = createPropertyRequestSchema.parse(body);
+    const validated = {
+      ...parsed,
+      type: parsed.type === "sale" ? "buy" : parsed.type,
+    };
 
     const [created] = await db
       .insert(propertyRequests)

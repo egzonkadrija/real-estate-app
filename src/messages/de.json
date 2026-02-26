@@ -49,6 +49,8 @@
     "land": "Grundstück",
     "store": "Geschäft",
     "warehouse": "Lager",
+    "penthouse": "Penthouse",
+    "object": "Objekt",
     "price": "Preis",
     "area": "Fläche",
     "rooms": "Zimmer",
@@ -66,6 +68,17 @@
     "mortgage": "Hypothekenrechner",
     "monthlyPayment": "Monatliche Zahlung",
     "sqm": "m²",
+    "exclusiveProperties": "Exklusive Immobilien",
+    "otherProperties": "Andere Immobilien",
+    "pricePerSqm": "Preis pro m²",
+    "priceRating": "Preisbewertung",
+    "shareProperty": "Immobilie teilen",
+    "downloadApp": "App herunterladen",
+    "whatsapp": "WhatsApp",
+    "viber": "Viber",
+    "priceRatingCheap": "Unter dem Durchschnitt",
+    "priceRatingAverage": "Durchschnittlich",
+    "priceRatingExpensive": "Über dem Durchschnitt",
     "status": {
       "active": "Aktiv",
       "pending": "Ausstehend",
@@ -119,7 +132,9 @@
     "quickLinks": "Schnelllinks",
     "contactInfo": "Kontaktinfo",
     "followUs": "Folgen Sie uns",
-    "rights": "Alle Rechte vorbehalten."
+    "rights": "Alle Rechte vorbehalten.",
+    "legal": "Rechtliches",
+    "downloadApp": "App herunterladen"
   },
   "admin": {
     "dashboard": "Dashboard",

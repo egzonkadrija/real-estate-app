@@ -13,7 +13,7 @@ const createPropertySchema = z.object({
   description_en: z.string().default(""),
   description_de: z.string().default(""),
   type: z.enum(["sale", "rent"]),
-  category: z.enum(["house", "apartment", "office", "land", "store", "warehouse"]),
+  category: z.enum(["house", "apartment", "office", "land", "store", "warehouse", "penthouse", "object"]),
   price: z.number().positive(),
   currency: z.string().default("EUR"),
   surface_area: z.number().positive(),
@@ -40,6 +40,8 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
+    const ids = searchParams.get("ids");
+    const q = searchParams.get("q");
     const type = searchParams.get("type");
     const category = searchParams.get("category");
     const minPrice = searchParams.get("minPrice");
@@ -56,11 +58,28 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const conditions: any[] = [];
 
+    if (ids) {
+      const idList = ids.split(",").map(Number).filter((n) => !isNaN(n));
+      if (idList.length > 0) {
+        conditions.push(
+          sql`${properties.id} IN (${sql.join(
+            idList.map((id) => sql`${id}`),
+            sql`, `
+          )})`
+        );
+      }
+    }
+    if (q?.trim()) {
+      const term = `%${q.trim()}%`;
+      conditions.push(
+        sql`(${properties.title_al} ILIKE ${term} OR ${properties.title_en} ILIKE ${term} OR ${properties.title_de} ILIKE ${term})`
+      );
+    }
     if (type) {
       conditions.push(eq(properties.type, type as "sale" | "rent"));
     }
     if (category) {
-      conditions.push(eq(properties.category, category as "house" | "apartment" | "office" | "land" | "store" | "warehouse"));
+      conditions.push(eq(properties.category, category as "house" | "apartment" | "office" | "land" | "store" | "warehouse" | "penthouse" | "object"));
     }
     if (minPrice) {
       conditions.push(gte(properties.price, Number(minPrice)));

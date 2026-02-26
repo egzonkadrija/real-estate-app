@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { ContactForm } from "@/components/forms/ContactForm";
 import { PropertyMap } from "@/components/property/PropertyMap";
+import { FloatingSidebar } from "@/components/property/FloatingSidebar";
 import {
   Card,
   CardContent,
@@ -17,6 +18,45 @@ export default async function ContactPage({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });
+  const contactText = locale === "al"
+    ? {
+        addressLabel: "Adresa",
+        workingHoursLabel: "Orari i punes",
+        weekdays: "Hen - Pre: 09:00 - 18:00",
+        saturday: "Sht: 10:00 - 14:00",
+        country: "Maqedonia e Veriut",
+      }
+    : locale === "mk"
+    ? {
+        addressLabel: "Adresa",
+        workingHoursLabel: "Rabotno vreme",
+        weekdays: "Pon - Pet: 09:00 - 18:00",
+        saturday: "Sab: 10:00 - 14:00",
+        country: "Severna Makedonija",
+      }
+    : locale === "de"
+    ? {
+        addressLabel: "Adresse",
+        workingHoursLabel: "Arbeitszeiten",
+        weekdays: "Mo - Fr: 09:00 - 18:00",
+        saturday: "Sa: 10:00 - 14:00",
+        country: "Nordmazedonien",
+      }
+    : locale === "tr"
+    ? {
+        addressLabel: "Adres",
+        workingHoursLabel: "Calisma saatleri",
+        weekdays: "Pzt - Cum: 09:00 - 18:00",
+        saturday: "Cmt: 10:00 - 14:00",
+        country: "Kuzey Makedonya",
+      }
+    : {
+        addressLabel: "Address",
+        workingHoursLabel: "Working Hours",
+        weekdays: "Mon - Fri: 09:00 - 18:00",
+        saturday: "Sat: 10:00 - 14:00",
+        country: "North Macedonia",
+      };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
@@ -27,8 +67,8 @@ export default async function ContactPage({
         {t("footer.description")}
       </p>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Left Column: Contact Info + Form */}
+      <div className="grid grid-cols-1 gap-8 md:items-start lg:grid-cols-2">
+        {/* Left Column: Contact Info + Map */}
         <div className="space-y-6">
           {/* Contact Details */}
           <Card>
@@ -38,11 +78,11 @@ export default async function ContactPage({
                   <MapPin className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Address</h3>
+                  <h3 className="font-semibold text-gray-900">{contactText.addressLabel}</h3>
                   <p className="text-sm text-gray-600">
                     Rr. Agim Ramadani, Nr. 15
                     <br />
-                    1000 Skopje, North Macedonia
+                    1000 Skopje, {contactText.country}
                   </p>
                 </div>
               </div>
@@ -79,33 +119,19 @@ export default async function ContactPage({
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">
-                    Working Hours
+                    {contactText.workingHoursLabel}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Mon - Fri: 09:00 - 18:00
+                    {contactText.weekdays}
                     <br />
-                    Sat: 10:00 - 14:00
+                    {contactText.saturday}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Contact Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {t("form.sendMessage")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ContactForm />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: Map */}
-        <div>
+          {/* Map */}
           <Card className="overflow-hidden">
             <div className="h-[500px]">
               <PropertyMap
@@ -118,6 +144,20 @@ export default async function ContactPage({
             </div>
           </Card>
         </div>
+
+        {/* Right Column: Contact Form (same floating behavior as property sidebar) */}
+        <FloatingSidebar className="md:col-span-1" footerOffset={48}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {t("form.sendMessage")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ContactForm />
+            </CardContent>
+          </Card>
+        </FloatingSidebar>
       </div>
     </div>
   );

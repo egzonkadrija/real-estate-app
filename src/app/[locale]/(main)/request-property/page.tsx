@@ -1,21 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { PROPERTY_CATEGORIES } from "@/lib/constants";
 
 export default function RequestPropertyPage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const uiText = locale === "al"
+    ? {
+        successDescription: "Kerkesa juaj u dergua. Do t'ju kontaktojme sapo te kemi prona te pershtatshme.",
+        introDescription: "Na tregoni cfare kerkoni dhe ne do t'ju ndihmojme ta gjeni.",
+        selectPlaceholder: "-- Zgjidh --",
+        errorMessage: "Ndodhi nje gabim. Ju lutem provoni perseri.",
+      }
+    : locale === "mk"
+    ? {
+        successDescription: "Baranjeto e isprateno. Ke ve kontaktirame koga ke ima soodvetni imoti.",
+        introDescription: "Kazete ni sto barate i ke vi pomogneme da go najdete.",
+        selectPlaceholder: "-- Izberi --",
+        errorMessage: "Nastana greska. Obidete se povtorno.",
+      }
+    : locale === "de"
+    ? {
+        successDescription: "Ihre Anfrage wurde gesendet. Wir kontaktieren Sie bei passenden Immobilien.",
+        introDescription: "Sagen Sie uns, was Sie suchen, und wir helfen Ihnen es zu finden.",
+        selectPlaceholder: "-- Wahlen --",
+        errorMessage: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      }
+    : locale === "tr"
+    ? {
+        successDescription: "Talebiniz gonderildi. Uygun ilanlar oldugunda sizinle iletisime gececegiz.",
+        introDescription: "Ne aradiginizi bize soyleyin, bulmaniza yardimci olalim.",
+        selectPlaceholder: "-- Secin --",
+        errorMessage: "Bir hata olustu. Lutfen tekrar deneyin.",
+      }
+    : {
+        successDescription: "Your property request has been submitted. We will contact you when matching properties become available.",
+        introDescription: "Tell us what you are looking for and we will find it for you.",
+        selectPlaceholder: "-- Select --",
+        errorMessage: "Something went wrong. Please try again.",
+      };
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const [type, setType] = useState("buy");
@@ -62,8 +91,7 @@ export default function RequestPropertyPage() {
           {t("form.messageSent")}
         </h1>
         <p className="text-gray-500">
-          Your property request has been submitted. We will contact you when
-          matching properties become available.
+          {uiText.successDescription}
         </p>
       </div>
     );
@@ -75,7 +103,7 @@ export default function RequestPropertyPage() {
         {t("form.requestProperty")}
       </h1>
       <p className="mb-6 text-gray-500">
-        Tell us what you are looking for and we will find it for you.
+        {uiText.introDescription}
       </p>
 
       <Card>
@@ -108,7 +136,7 @@ export default function RequestPropertyPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               >
-                <option value="">-- Select --</option>
+                <option value="">{uiText.selectPlaceholder}</option>
                 {PROPERTY_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
                     {t(`property.${cat}`)}
@@ -221,7 +249,7 @@ export default function RequestPropertyPage() {
 
             {status === "error" && (
               <p className="text-center text-sm text-red-600">
-                Something went wrong. Please try again.
+                {uiText.errorMessage}
               </p>
             )}
           </form>

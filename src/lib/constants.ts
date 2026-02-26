@@ -9,6 +9,8 @@ export const PROPERTY_CATEGORIES = [
   "land",
   "store",
   "warehouse",
+  "penthouse",
+  "object",
 ] as const;
 
 export const PROPERTY_STATUSES = [
@@ -76,7 +78,7 @@ export const PRICE_RANGES = {
 
 export const ITEMS_PER_PAGE = 12;
 
-export const LOCALES = ["al", "en", "de"] as const;
+export const LOCALES = ["mk", "al", "en", "de", "tr"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const NORTH_MACEDONIA_CENTER = { lat: 41.9981, lng: 21.4254 };

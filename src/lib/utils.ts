@@ -26,13 +26,17 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getLocalizedField(
-  obj: any,
+export function getLocalizedField<T extends object>(
+  obj: T | null | undefined,
   field: string,
   locale: string
 ): string {
-  return (obj?.[`${field}_${locale}`] as string) || (obj?.[`${field}_en`] as string) || "";
+  const record = obj as Record<string, unknown> | null | undefined;
+  const localized = record?.[`${field}_${locale}`];
+  if (typeof localized === "string") return localized;
+
+  const fallback = record?.[`${field}_en`];
+  return typeof fallback === "string" ? fallback : "";
 }
 
 export function calculateMortgage(

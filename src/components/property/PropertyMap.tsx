@@ -6,7 +6,7 @@ const MapInner = dynamic(() => import("./PropertyMapInner"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center rounded-xl bg-gray-100">
-      <p className="text-sm text-gray-400">Loading map...</p>
+      <p className="text-sm text-gray-400">...</p>
     </div>
   ),
 });

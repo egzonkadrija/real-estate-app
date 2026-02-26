@@ -21,9 +21,64 @@ const TOTAL_STEPS = 3;
 export default function SubmitPropertyPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const uiText = locale === "al"
+    ? {
+        successDescription: "Kerkesa juaj per prone u pranua. Ekipi yne do ta shqyrtoje shpejt.",
+        step1Title: "Informacioni bazik",
+        step1Description: "Vendos detajet kryesore te prones.",
+        step2Description: "Ku ndodhet prona?",
+        selectPlaceholder: "-- Zgjidh --",
+        step3Title: "Informacioni i kontaktit",
+        step3Description: "Si mund t'ju kontaktojme per kete prone?",
+        errorMessage: "Ndodhi nje gabim. Ju lutem provoni perseri.",
+      }
+    : locale === "mk"
+    ? {
+        successDescription: "Baranjeto e primeno. Naskoro ke ja pregledame.",
+        step1Title: "Osnovni informacii",
+        step1Description: "Vnesete gi glavnite detali za imotot.",
+        step2Description: "Kade se naoga imotot?",
+        selectPlaceholder: "-- Izberi --",
+        step3Title: "Kontakt informacii",
+        step3Description: "Kako da ve kontaktirame za ovoj imot?",
+        errorMessage: "Nastana greska. Obidete se povtorno.",
+      }
+    : locale === "de"
+    ? {
+        successDescription: "Ihre Anfrage wurde erhalten. Unser Team wird sie in Kurze prufen.",
+        step1Title: "Grundinformationen",
+        step1Description: "Geben Sie die wichtigsten Objektdaten ein.",
+        step2Description: "Wo befindet sich die Immobilie?",
+        selectPlaceholder: "-- Wahlen --",
+        step3Title: "Kontaktinformationen",
+        step3Description: "Wie konnen wir Sie zu dieser Immobilie erreichen?",
+        errorMessage: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      }
+    : locale === "tr"
+    ? {
+        successDescription: "Talebiniz alindi. Ekibimiz kisa surede inceleyecek.",
+        step1Title: "Temel bilgiler",
+        step1Description: "Ilaninizla ilgili ana bilgileri girin.",
+        step2Description: "Mulk nerede bulunuyor?",
+        selectPlaceholder: "-- Secin --",
+        step3Title: "Iletisim bilgileri",
+        step3Description: "Bu ilan icin size nasil ulasabiliriz?",
+        errorMessage: "Bir hata olustu. Lutfen tekrar deneyin.",
+      }
+    : {
+        successDescription: "Your property submission has been received. We will review it shortly.",
+        step1Title: "Basic Information",
+        step1Description: "Provide the main details about your property.",
+        step2Description: "Where is the property located?",
+        selectPlaceholder: "-- Select --",
+        step3Title: "Contact Information",
+        step3Description: "How can we reach you about this property?",
+        errorMessage: "Something went wrong. Please try again.",
+      };
   const [step, setStep] = useState(1);
   const [locations, setLocations] = useState<Location[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Step 1: Basic info
   const [type, setType] = useState("sale");
@@ -64,30 +119,76 @@ export default function SubmitPropertyPage() {
 
   async function handleSubmit() {
     setStatus("loading");
+    setErrorMessage("");
+
+    const parsedPrice = price ? Number(price) : null;
+    const parsedArea = area ? Number(area) : null;
+    const hasValidEmail = /\S+@\S+\.\S+/.test(email.trim());
+
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !parsedPrice ||
+      parsedPrice <= 0 ||
+      !parsedArea ||
+      parsedArea <= 0 ||
+      !locationId ||
+      !name.trim() ||
+      !hasValidEmail
+    ) {
+      setErrorMessage("Please fill all required fields correctly.");
+      setStatus("error");
+      return;
+    }
+
     try {
+      const selectedCity = cities.find((city) => city.id === Number(locationId));
+      const selectedCityName = selectedCity
+        ? getLocalizedField(selectedCity, "name", locale)
+        : null;
+      const requestType = type === "sale" ? "buy" : "rent";
+      const reviewPayload = {
+        source: "submit_property",
+        property: {
+          title,
+          type,
+          category,
+          price: parsedPrice,
+          area: parsedArea,
+          rooms: rooms ? Number(rooms) : null,
+          bathrooms: bathrooms ? Number(bathrooms) : null,
+          location_id: locationId ? Number(locationId) : null,
+          location_name: selectedCityName,
+          floor: floor ? Number(floor) : null,
+          year_built: yearBuilt ? Number(yearBuilt) : null,
+        },
+        note: description || null,
+      };
       const res = await fetch("/api/property-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type,
+          type: requestType,
           category,
-          title,
-          description,
-          price: Number(price),
-          area: Number(area),
-          rooms: rooms ? Number(rooms) : null,
-          bathrooms: bathrooms ? Number(bathrooms) : null,
-          location_id: locationId ? Number(locationId) : null,
-          floor: floor ? Number(floor) : null,
-          year_built: yearBuilt ? Number(yearBuilt) : null,
+          min_price: parsedPrice,
+          max_price: parsedPrice,
+          location: selectedCityName,
           name,
           email,
-          phone,
+          phone: phone || null,
+          description: JSON.stringify(reviewPayload),
         }),
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const detail = errorData?.details?.[0]?.message;
+        throw new Error(detail || errorData?.error || "Failed to submit property request");
+      }
       setStatus("success");
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        setErrorMessage(error.message);
+      }
       setStatus("error");
     }
   }
@@ -100,7 +201,7 @@ export default function SubmitPropertyPage() {
           {t("form.messageSent")}
         </h1>
         <p className="text-gray-500">
-          Your property submission has been received. We will review it shortly.
+          {uiText.successDescription}
         </p>
       </div>
     );
@@ -133,9 +234,9 @@ export default function SubmitPropertyPage() {
           {step === 1 && (
             <div className="space-y-4">
               <CardHeader className="p-0 pb-4">
-                <CardTitle className="text-lg">Basic Information</CardTitle>
+                <CardTitle className="text-lg">{uiText.step1Title}</CardTitle>
                 <CardDescription>
-                  Provide the main details about your property.
+                  {uiText.step1Description}
                 </CardDescription>
               </CardHeader>
 
@@ -266,7 +367,7 @@ export default function SubmitPropertyPage() {
                   {t("property.location")}
                 </CardTitle>
                 <CardDescription>
-                  Where is the property located?
+                  {uiText.step2Description}
                 </CardDescription>
               </CardHeader>
 
@@ -279,7 +380,7 @@ export default function SubmitPropertyPage() {
                   onChange={(e) => setLocationId(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="">-- Select --</option>
+                  <option value="">{uiText.selectPlaceholder}</option>
                   {cities.map((city) => (
                     <option key={city.id} value={city.id}>
                       {getLocalizedField(city, "name", locale)}
@@ -322,9 +423,9 @@ export default function SubmitPropertyPage() {
           {step === 3 && (
             <div className="space-y-4">
               <CardHeader className="p-0 pb-4">
-                <CardTitle className="text-lg">Contact Information</CardTitle>
+                <CardTitle className="text-lg">{uiText.step3Title}</CardTitle>
                 <CardDescription>
-                  How can we reach you about this property?
+                  {uiText.step3Description}
                 </CardDescription>
               </CardHeader>
 
@@ -400,7 +501,7 @@ export default function SubmitPropertyPage() {
 
           {status === "error" && (
             <p className="mt-4 text-center text-sm text-red-600">
-              Something went wrong. Please try again.
+              {errorMessage || uiText.errorMessage}
             </p>
           )}
         </CardContent>

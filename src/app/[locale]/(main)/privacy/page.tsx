@@ -8,6 +8,120 @@ export default async function PrivacyPage({
   const { locale } = await params;
   const t = await getTranslations({ locale });
 
+  if (locale === "al") {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <h1 className="mb-6 text-3xl font-bold text-gray-900 sm:text-4xl">
+          {t("common.privacy")}
+        </h1>
+
+        <div className="prose prose-gray max-w-none space-y-6 text-gray-600">
+          <p className="text-sm text-gray-400">
+            Perditesuar: Shkurt 2026
+          </p>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              1. Hyrje
+            </h2>
+            <p>
+              NovaBuildings eshte e perkushtuar per mbrojtjen e te dhenave personale dhe privatise suaj.
+              Kjo politike shpjegon si i mbledhim, i perdorim dhe i mbrojme te dhenat kur perdorni platformen tone.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              2. Cfare te dhena mbledhim
+            </h2>
+            <p>Ne mbledhim te dhena qe ju i jepni direkt, perfshire:</p>
+            <ul className="ml-6 mt-2 list-disc space-y-1">
+              <li>Te dhena identifikuese (emer, email, numer telefoni)</li>
+              <li>Detaje te kerkesave per prona (tipi, buxheti, lokacioni)</li>
+              <li>Te dhena per dorzimin/listimin e pronave</li>
+              <li>Komunikimet qe beni me ekipin tone ose me agjentet</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              3. Si i perdorim te dhenat
+            </h2>
+            <p>Te dhenat i perdorim per:</p>
+            <ul className="ml-6 mt-2 list-disc space-y-1">
+              <li>Ofrimin dhe permiresimin e sherbimeve tona</li>
+              <li>Lidhjen tuaj me agjentet dhe pergjigje ndaj kerkesave</li>
+              <li>Dergimin e njoftimeve relevante per prona sipas preferencave</li>
+              <li>Perpunimin e kerkesave per listim dhe publikim pronash</li>
+              <li>Permbushjen e detyrimeve ligjore</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              4. Ndarja e te dhenave
+            </h2>
+            <p>
+              Mund te ndajme te dhena me agjentet e pronave per te mundesuar komunikim dhe procesim kerkesash.
+              Nuk shesim te dhena personale te pale te treta. Mund te perdorim partnere teknike
+              (hostim, analitike) vetem per funksionimin e platformes.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              5. Cookies dhe gjurmimi
+            </h2>
+            <p>
+              Perdoren cookies dhe teknologji te ngjashme per pervoje me te mire, analize te trafikut dhe personalizim.
+              Preferencat mund t&apos;i menaxhoni ne shfletues. Gjithashtu perdorim localStorage per ruajtjen e pronave te preferuara.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              6. Siguria e te dhenave
+            </h2>
+            <p>
+              Zbatojme masa teknike dhe organizative per mbrojtjen e te dhenave nga qasje e paautorizuar,
+              ndryshim ose humbje. Asnje sistem online nuk garanton siguri absolute.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              7. Te drejtat tuaja
+            </h2>
+            <p>
+              Ju keni te drejte te kerkoni qasje, korrigjim ose fshirje te te dhenave tuaja personale.
+              Mund te kerkoni edhe kufizim te perpunimit. Per kerkesa, na kontaktoni ne info@novabuildings.com.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold text-gray-900">
+              8. Na kontaktoni
+            </h2>
+            <p>
+              Per pyetje rreth politikes se privatise, na kontaktoni ne:
+            </p>
+            <p className="mt-2">
+              NovaBuildings
+              <br />
+              Rr. Agim Ramadani, Nr. 15
+              <br />
+              1000 Skopje, Maqedonia e Veriut
+              <br />
+              Email: info@novabuildings.com
+              <br />
+              Phone: +389 2 123 456
+            </p>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-6 text-3xl font-bold text-gray-900 sm:text-4xl">

@@ -8,12 +8,15 @@ import {
   SlidersHorizontal,
   Home,
   Building2,
+  Building,
   Briefcase,
   Mountain,
   Store,
   Warehouse,
+  CircleDollarSign,
+  Maximize2,
+  MapPin,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
   { key: "house", icon: Home },
@@ -22,6 +25,7 @@ const CATEGORIES = [
   { key: "land", icon: Mountain },
   { key: "store", icon: Store },
   { key: "warehouse", icon: Warehouse },
+  { key: "object", icon: Building },
 ] as const;
 
 export function HomeFilterBar() {
@@ -29,26 +33,26 @@ export function HomeFilterBar() {
   const [search, setSearch] = React.useState("");
 
   return (
-    <div className="border-b border-gray-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4">
+    <div className="sticky top-20 z-[60] w-full overflow-hidden border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto max-w-[1440px] px-4">
         {/* Type pills + Category icons row */}
         <div className="flex items-center gap-2 overflow-x-auto py-3 scrollbar-hide">
           {/* Type pills */}
           <Link
             href="/properties?type=sale"
-            className="flex-shrink-0 rounded-full bg-amber-500 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-600"
+            className="flex-shrink-0 rounded-[var(--radius-pill)] bg-[var(--brand-600)] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-700)]"
           >
             {t("property.forSale")}
           </Link>
           <Link
             href="/properties?type=rent"
-            className="flex-shrink-0 rounded-full bg-rose-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-700"
+            className="flex-shrink-0 rounded-[var(--radius-pill)] bg-gray-700 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
           >
             {t("property.forRent")}
           </Link>
           <Link
             href="/properties?featured=true"
-            className="flex-shrink-0 rounded-full bg-green-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
+            className="flex-shrink-0 rounded-[var(--radius-pill)] bg-teal-700 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-teal-800"
           >
             {t("common.exclusive")}
           </Link>
@@ -61,33 +65,39 @@ export function HomeFilterBar() {
             <Link
               key={key}
               href={`/properties?category=${key}`}
-              className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-amber-400 hover:text-amber-600"
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
             >
               <Icon className="h-4 w-4" />
               {t(`property.${key}`)}
             </Link>
           ))}
 
-          {/* Filter shortcuts */}
+          {/* Separator */}
           <div className="mx-1 h-6 w-px flex-shrink-0 bg-gray-200" />
+
+          {/* Filter shortcuts */}
           <Link
             href="/properties"
-            className="flex flex-shrink-0 items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
           >
-            {t("filters.priceRange")}
+            <CircleDollarSign className="h-4 w-4" />
+            {t("property.price")}
           </Link>
           <Link
             href="/properties"
-            className="flex flex-shrink-0 items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
           >
+            <Maximize2 className="h-4 w-4" />
             {t("property.area")}
           </Link>
           <Link
             href="/properties"
-            className="flex flex-shrink-0 items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
           >
-            {t("filters.location")}
+            <MapPin className="h-4 w-4" />
+            {t("property.location")}
           </Link>
+
         </div>
 
         {/* Search bar */}
@@ -104,12 +114,12 @@ export function HomeFilterBar() {
                 }
               }}
               placeholder={t("hero.searchPlaceholder")}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-amber-400 focus:bg-white"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-[var(--brand-600)] focus:bg-[var(--surface)]"
             />
           </div>
           <Link
             href="/properties"
-            className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-[var(--surface-muted)]"
           >
             <SlidersHorizontal className="h-4 w-4" />
             {t("common.filter")}

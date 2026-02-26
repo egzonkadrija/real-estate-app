@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Send, CheckCircle } from "lucide-react";
 
 interface ContactFormProps {
@@ -9,8 +9,18 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ propertyId }: ContactFormProps) {
+  const locale = useLocale();
   const t = useTranslations("form");
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
+  const errorMessage = locale === "al"
+    ? "Ndodhi nje gabim. Ju lutem provoni perseri."
+    : locale === "mk"
+    ? "Nastana greska. Obidete se povtorno."
+    : locale === "de"
+    ? "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    : locale === "tr"
+    ? "Bir hata olustu. Lutfen tekrar deneyin."
+    : "Something went wrong. Please try again.";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -104,7 +114,7 @@ export function ContactForm({ propertyId }: ContactFormProps) {
         {status === "loading" ? "..." : t("sendMessage")}
       </button>
       {status === "error" && (
-        <p className="text-center text-sm text-red-600">Something went wrong. Please try again.</p>
+        <p className="text-center text-sm text-red-600">{errorMessage}</p>
       )}
     </form>
   );

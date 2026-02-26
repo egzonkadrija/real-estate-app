@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
-import { Link, usePathname } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
 import {
   LayoutDashboard,
   Building2,
   Mail,
+  ClipboardList,
   Users,
   LogOut,
   Menu,
@@ -20,6 +21,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const t = useTranslations("admin");
+  const locale = useLocale();
+  const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [isAuthed, setIsAuthed] = React.useState<boolean | null>(null);
@@ -27,11 +30,12 @@ export default function AdminLayout({
   React.useEffect(() => {
     const token = localStorage.getItem("admin-token");
     if (!token && !pathname.includes("/admin/login")) {
-      window.location.href = `/${document.documentElement.lang || "al"}/admin/login`;
-    } else {
-      setIsAuthed(!!token);
+      setIsAuthed(false);
+      router.replace("/admin/login", { locale });
+      return;
     }
-  }, [pathname]);
+    setIsAuthed(!!token);
+  }, [locale, pathname, router]);
 
   if (pathname.includes("/admin/login")) {
     return <>{children}</>;
@@ -48,13 +52,14 @@ export default function AdminLayout({
   const navItems = [
     { href: "/admin/dashboard" as const, label: t("dashboard"), icon: LayoutDashboard },
     { href: "/admin/properties" as const, label: t("properties"), icon: Building2 },
+    { href: "/admin/requests" as const, label: "Requests", icon: ClipboardList },
     { href: "/admin/contacts" as const, label: t("contacts"), icon: Mail },
     { href: "/admin/agents" as const, label: t("agents"), icon: Users },
   ];
 
   function handleLogout() {
     localStorage.removeItem("admin-token");
-    window.location.href = `/${document.documentElement.lang || "al"}/admin/login`;
+    router.replace("/admin/login", { locale });
   }
 
   return (
@@ -63,8 +68,13 @@ export default function AdminLayout({
       <aside className="hidden w-64 flex-shrink-0 border-r border-gray-200 bg-white lg:block">
         <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
           <Building2 className="h-7 w-7 text-blue-600" />
-          <span className="text-lg font-bold">
-            Nova<span className="text-blue-600">Buildings</span>
+          <span className="inline-flex flex-col leading-none">
+            <span className="text-lg font-extrabold tracking-wide text-gray-900">
+              NOVA
+            </span>
+            <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+              STATE
+            </span>
           </span>
         </div>
         <nav className="flex flex-col gap-1 p-4">
@@ -104,8 +114,13 @@ export default function AdminLayout({
           />
           <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-              <span className="text-lg font-bold">
-                Nova<span className="text-blue-600">Buildings</span>
+              <span className="inline-flex flex-col leading-none">
+                <span className="text-lg font-extrabold tracking-wide text-gray-900">
+                  NOVA
+                </span>
+                <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+                  STATE
+                </span>
               </span>
               <button onClick={() => setSidebarOpen(false)}>
                 <X className="h-5 w-5" />
@@ -147,8 +162,13 @@ export default function AdminLayout({
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
-          <span className="text-lg font-bold">
-            Nova<span className="text-blue-600">Buildings</span> Admin
+          <span className="inline-flex flex-col leading-none">
+            <span className="text-lg font-extrabold tracking-wide text-gray-900">
+              NOVA
+            </span>
+            <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+              STATE
+            </span>
           </span>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>

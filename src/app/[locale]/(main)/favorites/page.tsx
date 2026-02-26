@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useFavorites } from "@/hooks/useFavorites";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { SkeletonCard } from "@/components/property/SkeletonCard";
@@ -21,6 +21,15 @@ export default function FavoritesPage() {
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
   const [properties, setProperties] = useState<PropertyWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
+  const emptyInfoText = locale === "al"
+    ? "Ruani pronat duke klikuar ikonën e zemrës."
+    : locale === "mk"
+    ? "Zacuvajte gi imotite so klik na ikonata so srce."
+    : locale === "de"
+    ? "Speichern Sie Immobilien mit einem Klick auf das Herzsymbol."
+    : locale === "tr"
+    ? "Kalp simgesine tiklayarak ilanlari kaydedin."
+    : "Save properties by clicking the heart icon.";
 
   useEffect(() => {
     async function fetchFavorites() {
@@ -78,7 +87,7 @@ export default function FavoritesPage() {
             {t("common.noResults")}
           </h2>
           <p className="mb-6 text-gray-500">
-            Save properties by clicking the heart icon.
+            {emptyInfoText}
           </p>
           <Button asChild>
             <Link href="/properties">{t("common.properties")}</Link>

@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLocalizedField } from "@/lib/utils";
 import { PROPERTY_CATEGORIES } from "@/lib/constants";

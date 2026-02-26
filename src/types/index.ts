@@ -5,7 +5,9 @@ export type PropertyCategory =
   | "office"
   | "land"
   | "store"
-  | "warehouse";
+  | "warehouse"
+  | "penthouse"
+  | "object";
 export type PropertyStatus = "active" | "pending" | "sold" | "rented";
 export type LocationType = "state" | "city" | "neighborhood";
 
