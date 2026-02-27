@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLocalizedField } from "@/lib/utils";
 import { PROPERTY_CATEGORIES } from "@/lib/constants";
@@ -41,22 +41,9 @@ export function FilterBar({ locations = [] }: FilterBarProps) {
       }
     });
     params.delete("page");
-    router.push(`${pathname}?${params.toString()}`);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
   }
-
-  function clearFilters() {
-    router.push(pathname);
-  }
-
-  const hasActiveFilters =
-    currentType ||
-    currentCategory ||
-    currentMinPrice ||
-    currentMaxPrice ||
-    currentMinArea ||
-    currentMaxArea ||
-    currentLocation ||
-    currentRooms;
 
   const states = locations.filter((l) => l.type === "state");
   const cities = locations.filter((l) => l.type === "city");
@@ -107,15 +94,6 @@ export function FilterBar({ locations = [] }: FilterBarProps) {
             <SlidersHorizontal className="h-4 w-4" />
             {t("common.filter")}
           </button>
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
-            >
-              <X className="h-4 w-4" />
-              {t("filters.clearAll")}
-            </button>
-          )}
         </div>
       </div>
 

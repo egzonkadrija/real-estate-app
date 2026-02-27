@@ -1,0 +1,1 @@
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AcmVhbGVzdGF0ZS5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzIyMjUzNzIsImV4cCI6MTc3MjgzMDE3Mn0.V3lcrIJx2shFAlZGAhW-VbFUg4rP_-_7GRoyRFLhr3k","user":{"id":1,"email":"admin@realestate.com","name":"Admin"}}

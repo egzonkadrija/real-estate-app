@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField } from "@/lib/utils";
 import type { Property, PropertyImage } from "@/types";
+import { Button } from "@/components/ui/button";
 
 interface PropertyCardProps {
   property: Property & { images?: PropertyImage[] };
@@ -113,6 +114,15 @@ export function PropertyCard({
     : locale === "tr"
     ? "Daha fazla"
     : "More";
+  const lessInfoLabel = locale === "al"
+    ? "Më pak"
+    : locale === "mk"
+    ? "Помалку"
+    : locale === "de"
+    ? "Weniger Infos"
+    : locale === "tr"
+    ? "Daha az"
+    : "Less";
   const infoTitle = locale === "al"
     ? "Informacione të pronës"
     : locale === "mk"
@@ -233,15 +243,21 @@ export function PropertyCard({
     const prevBodyOverflow = body.style.overflow;
     const prevHtmlOverflow = html.style.overflow;
     const prevBodyTouchAction = body.style.touchAction;
+    const prevBodyPaddingRight = body.style.paddingRight;
+    const scrollBarWidth = window.innerWidth - html.clientWidth;
 
     body.style.overflow = "hidden";
     html.style.overflow = "hidden";
     body.style.touchAction = "none";
+    if (scrollBarWidth > 0) {
+      body.style.paddingRight = `${scrollBarWidth}px`;
+    }
 
     return () => {
       body.style.overflow = prevBodyOverflow;
       html.style.overflow = prevHtmlOverflow;
       body.style.touchAction = prevBodyTouchAction;
+      body.style.paddingRight = prevBodyPaddingRight;
     };
   }, [showMoreInfo]);
 
@@ -361,7 +377,8 @@ export function PropertyCard({
         <Link
           href={propertyHref}
           title={title}
-          className="mb-2 block truncate text-sm font-semibold text-gray-900 hover:underline"
+          className="mb-2 block truncate text-base font-semibold leading-tight text-gray-900 hover:underline"
+          style={{ fontFamily: "var(--font-title)" }}
         >
           {title}
         </Link>
@@ -371,7 +388,7 @@ export function PropertyCard({
             {getLocalizedField(property.location, "name", locale)}
           </p>
         )}
-        <div className="mb-3 grid grid-cols-3 gap-2">
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {documentOptions.map((option, index) => (
             <span
               key={option}
@@ -388,17 +405,19 @@ export function PropertyCard({
               <span className="truncate">{option}</span>
             </span>
           ))}
-          <button
-            type="button"
+          <Button
+            asChild={false}
+            size="sm"
+            variant="outline"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setShowMoreInfo(true);
+              setShowMoreInfo((prev) => !prev);
             }}
-            className="inline-flex min-w-0 items-center justify-center gap-1 rounded-[var(--radius-pill)] border border-[var(--brand-600)] bg-[var(--brand-600)] px-2 py-1 text-[11px] font-medium text-white transition-colors hover:bg-[var(--brand-700)]"
+            className="h-7"
           >
-            <span className="truncate">{moreInfoLabel}...</span>
-          </button>
+            <span>{showMoreInfo ? lessInfoLabel : moreInfoLabel}</span>
+          </Button>
         </div>
       </div>
 

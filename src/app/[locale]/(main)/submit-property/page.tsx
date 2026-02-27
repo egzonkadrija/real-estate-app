@@ -195,7 +195,7 @@ export default function SubmitPropertyPage() {
 
   if (status === "success") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+      <div className="mx-auto flex w-full max-w-4xl flex-col px-4 py-16 text-center">
         <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
         <h1 className="mb-2 text-2xl font-bold text-gray-900">
           {t("form.messageSent")}
@@ -208,16 +208,18 @@ export default function SubmitPropertyPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
-        {t("form.submitProperty")}
-      </h1>
-      <p className="mb-6 text-gray-500">
-        {t("form.step")} {step} {t("form.of")} {TOTAL_STEPS}
-      </p>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+      <header className="flex w-full flex-col gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+          {t("form.submitProperty")}
+        </h1>
+        <p className="text-gray-500">
+          {t("form.step")} {step} {t("form.of")} {TOTAL_STEPS}
+        </p>
+      </header>
 
       {/* Progress Bar */}
-      <div className="mb-8 flex gap-2">
+      <div className="mb-2 flex w-full gap-2">
         {Array.from({ length: TOTAL_STEPS }, (_, i) => (
           <div
             key={i}
@@ -228,7 +230,7 @@ export default function SubmitPropertyPage() {
         ))}
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardContent className="p-6">
           {/* Step 1: Basic Info */}
           {step === 1 && (

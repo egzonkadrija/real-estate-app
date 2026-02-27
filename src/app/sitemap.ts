@@ -3,7 +3,11 @@ import { db } from "@/db";
 import { properties } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
+
+if (!BASE_URL) {
+  throw new Error("NEXT_PUBLIC_APP_URL is required");
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const locales = ["mk", "al", "en", "de", "tr"];

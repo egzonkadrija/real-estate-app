@@ -25,28 +25,15 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [isAuthed, setIsAuthed] = React.useState<boolean | null>(null);
+  const isLoginPage = pathname === "/admin/login" || pathname.endsWith("/admin/login");
 
-  React.useEffect(() => {
-    const token = localStorage.getItem("admin-token");
-    if (!token && !pathname.includes("/admin/login")) {
-      setIsAuthed(false);
+  async function handleLogout() {
+    localStorage.removeItem("admin-token");
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
       router.replace("/admin/login", { locale });
-      return;
     }
-    setIsAuthed(!!token);
-  }, [locale, pathname, router]);
-
-  if (pathname.includes("/admin/login")) {
-    return <>{children}</>;
-  }
-
-  if (isAuthed === null) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
-    );
   }
 
   const navItems = [
@@ -57,9 +44,8 @@ export default function AdminLayout({
     { href: "/admin/agents" as const, label: t("agents"), icon: Users },
   ];
 
-  function handleLogout() {
-    localStorage.removeItem("admin-token");
-    router.replace("/admin/login", { locale });
+  if (isLoginPage) {
+    return <>{children}</>;
   }
 
   return (

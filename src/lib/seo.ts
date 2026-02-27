@@ -1,6 +1,10 @@
 import type { Property, PropertyImage } from "@/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
+
+if (!BASE_URL) {
+  throw new Error("NEXT_PUBLIC_APP_URL is required");
+}
 
 export function generatePropertyJsonLd(
   property: Property & { images?: PropertyImage[] },

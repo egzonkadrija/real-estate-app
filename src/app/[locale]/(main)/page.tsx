@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Send } from "lucide-react";
 import { PropertyCarousel } from "@/components/home/PropertyCarousel";
 import { FeaturedProperties } from "./FeaturedProperties";
+import { HeroCTAActions } from "@/components/home/HeroCTAActions";
 
 export default async function HomePage({
   params,
@@ -114,34 +115,29 @@ export default async function HomePage({
 
       {/* CTA Section */}
       <section className="mx-auto max-w-[1440px] px-4 py-16">
-        <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-center text-white sm:p-12">
-          <Send className="mx-auto mb-4 h-10 w-10 text-amber-400" />
-          <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
-            {t("form.submitProperty")}
-          </h2>
-          <p className="mx-auto mb-6 max-w-2xl text-gray-300">
-            {t("footer.description")}
-          </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              className="bg-amber-500 text-white hover:bg-amber-600"
-            >
-              <Link href="/submit-property">
-                {t("common.submitProperty")}
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              className="border border-white bg-transparent text-white hover:bg-white/10"
-            >
-              <Link href="/request-property">
-                {t("common.requestProperty")}
-              </Link>
-            </Button>
-          </div>
+          <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-left text-white sm:p-12">
+            <div className="mb-4 flex items-center gap-3">
+              <Send className="h-10 w-10 text-amber-400" />
+              <HeroCTAActions
+                submitLabel={t("common.submitProperty")}
+                requestLabel={t("common.requestProperty")}
+                aiLabel={t("common.searchWithAI")}
+                showSubmitRequest={false}
+                compact
+              />
+            </div>
+            <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
+              {t("form.submitProperty")}
+            </h2>
+            <p className="mx-auto mb-6 max-w-2xl text-gray-300">
+              {t("footer.description")}
+            </p>
+          <HeroCTAActions
+            submitLabel={t("common.submitProperty")}
+            requestLabel={t("common.requestProperty")}
+            aiLabel={t("common.searchWithAI")}
+            showSearchWithAI={false}
+          />
         </div>
       </section>
     </div>

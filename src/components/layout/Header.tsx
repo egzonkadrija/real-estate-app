@@ -77,7 +77,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden items-center gap-4 lg:flex">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href);
             return (
@@ -105,7 +105,7 @@ export function Header() {
             className="hidden items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)] sm:inline-flex"
           >
             <Sparkles className="h-4 w-4" />
-            {t("searchWithAI")}
+            AI
           </button>
 
           <Link
@@ -209,7 +209,7 @@ export function Header() {
               className="mt-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
               <Sparkles className="h-4 w-4" />
-              {t("searchWithAI")}
+              AI
             </button>
           </nav>
         </div>

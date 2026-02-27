@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/routing";
-import { Mail, MapPin, Phone, User, X } from "lucide-react";
+import { CheckCircle2, Clock3, Mail, MapPin, Phone, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PropertyRequest {
@@ -38,6 +38,7 @@ interface SubmitReviewPayload {
   approved_property_id?: number;
   approved_at?: string;
   declined_at?: string;
+  pending_at?: string;
 }
 
 function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
@@ -57,6 +58,7 @@ export default function AdminRequestsPage() {
   const [selected, setSelected] = React.useState<PropertyRequest | null>(null);
   const [approvingId, setApprovingId] = React.useState<number | null>(null);
   const [decliningId, setDecliningId] = React.useState<number | null>(null);
+  const [pendingId, setPendingId] = React.useState<number | null>(null);
   const [showDeclineModal, setShowDeclineModal] = React.useState(false);
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
@@ -130,6 +132,41 @@ export default function AdminRequestsPage() {
     }
   }
 
+  async function handlePending() {
+    if (!selected) return;
+
+    setActionMessage("");
+    setActionError("");
+    setPendingId(selected.id);
+
+    try {
+      const res = await fetch(`/api/property-requests/${selected.id}`, {
+        method: "PATCH",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "pending" }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to mark request as pending");
+      }
+
+      setActionMessage("Request moved back to pending review.");
+      await fetchRequests();
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark request as pending"
+      );
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   async function handleDecline() {
     if (!selected) return;
 
@@ -176,6 +213,11 @@ export default function AdminRequestsPage() {
   const selectedProperty = selectedPayload?.property;
   const approvedPropertyId = selectedPayload?.approved_property_id ?? null;
   const isSelectedDeclined = Boolean(selectedPayload?.declined_at);
+  const selectedStatus = approvedPropertyId
+    ? "approved"
+    : isSelectedDeclined
+      ? "declined"
+      : "pending";
 
   return (
     <div>
@@ -206,6 +248,7 @@ export default function AdminRequestsPage() {
                   const title = payload?.property?.title || "No title";
                   const isApproved = Boolean(payload?.approved_property_id);
                   const isDeclined = Boolean(payload?.declined_at);
+                  const isPending = !isApproved && !isDeclined;
 
                   return (
                     <button
@@ -240,6 +283,11 @@ export default function AdminRequestsPage() {
                           {isDeclined && (
                             <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
                               Declined
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                              Pending
                             </span>
                           )}
                         </div>
@@ -343,22 +391,27 @@ export default function AdminRequestsPage() {
               ) : null}
 
               <div className="mt-4">
-                {approvedPropertyId ? (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-emerald-700">
-                      Already approved as property #{approvedPropertyId}.
-                    </p>
-                    <Link
-                      href="/admin/properties"
-                      className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                    >
-                      Open Properties
-                    </Link>
+              {approvedPropertyId ? (
+                <div className="space-y-2">
+                  <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Approved
                   </div>
-                ) : isSelectedDeclined ? (
-                  <p className="text-xs font-medium text-rose-700">
-                    This request was declined.
+                  <p className="text-xs font-medium text-emerald-700">
+                    Already approved as property #{approvedPropertyId}.
                   </p>
+                  <Link
+                    href="/admin/properties"
+                    className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Open Properties
+                  </Link>
+                </div>
+                ) : selectedStatus === "pending" ? (
+                  <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Pending review
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -368,6 +421,14 @@ export default function AdminRequestsPage() {
                       className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
                     >
                       {approvingId === selected.id ? "Approving..." : "Approve & Publish"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePending}
+                      disabled={pendingId === selected.id}
+                      className="inline-flex rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-60"
+                    >
+                      {pendingId === selected.id ? "Setting Pending..." : "Pending"}
                     </button>
                     <button
                       type="button"
@@ -385,7 +446,8 @@ export default function AdminRequestsPage() {
                       )}
                     </button>
                   </div>
-                )}
+                )
+                }
                 {actionMessage && (
                   <p className="mt-2 text-xs font-medium text-emerald-700">
                     {actionMessage}

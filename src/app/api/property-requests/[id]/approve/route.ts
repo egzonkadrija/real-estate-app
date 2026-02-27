@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { agents, locations, properties, propertyRequests } from "@/db/schema";
 import { getTokenFromHeader, verifyToken } from "@/lib/auth";
+import { notifyPropertyRequestStatus } from "@/lib/propertyRequestNotifications";
 
 const ALLOWED_CATEGORIES = [
   "house",
@@ -232,6 +233,16 @@ export async function POST(
       .update(propertyRequests)
       .set({ description: JSON.stringify(updatedPayload) })
       .where(eq(propertyRequests.id, requestId));
+
+    void notifyPropertyRequestStatus({
+      recipientEmail: requestItem.email,
+      recipientName: requestItem.name,
+      status: "approved",
+      requestType: requestItem.type,
+      category: requestItem.category,
+      location: requestItem.location,
+      propertyId: createdProperty.id,
+    });
 
     return NextResponse.json({
       message: "Request approved and property created",

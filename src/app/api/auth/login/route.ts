@@ -6,8 +6,11 @@ import { z } from "zod";
 import { signToken, comparePassword } from "@/lib/auth";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z
+    .string()
+    .email("Invalid email address")
+    .transform((value) => value.trim().toLowerCase()),
+  password: z.string().trim().min(1, "Password is required"),
 });
 
 export async function POST(request: NextRequest) {
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       token,
       user: {
         id: user.id,
@@ -51,6 +54,18 @@ export async function POST(request: NextRequest) {
         name: user.name,
       },
     });
+
+    response.cookies.set({
+      name: "admin-token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

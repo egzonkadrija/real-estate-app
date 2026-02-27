@@ -1,0 +1,8 @@
+HTTP/1.1 307 Temporary Redirect
+location: /en/admin/login
+set-cookie: admin-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+Date: Fri, 27 Feb 2026 20:49:25 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
