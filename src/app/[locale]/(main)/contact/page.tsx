@@ -108,7 +108,7 @@ export default async function ContactPage({
                     {t("form.email")}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    info@novabuildings.com
+                    zmija9nqi@oninova.net
                   </p>
                 </div>
               </div>

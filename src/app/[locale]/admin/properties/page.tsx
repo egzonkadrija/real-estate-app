@@ -7,6 +7,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   X,
@@ -41,6 +42,8 @@ export default function AdminPropertiesPage() {
   const [loading, setLoading] = React.useState(true);
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
+  const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
+  const [showSoldOnly, setShowSoldOnly] = React.useState(false);
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
@@ -50,7 +53,12 @@ export default function AdminPropertiesPage() {
   const fetchProperties = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/properties?page=${page}&limit=10`);
+      const statusFilter = showSoldOnly
+        ? "sold"
+        : "active,pending,rented";
+      const res = await fetch(
+        `/api/properties?page=${page}&limit=10&status=${encodeURIComponent(statusFilter)}`
+      );
       const data = await res.json();
       setProperties(data.data || []);
       setTotal(data.total || 0);
@@ -59,7 +67,7 @@ export default function AdminPropertiesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, showSoldOnly]);
 
   React.useEffect(() => {
     fetchProperties();
@@ -72,9 +80,44 @@ export default function AdminPropertiesPage() {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
-      fetchProperties();
+      setProperties((previous) => {
+        const next = previous.filter((property) => property.id !== id);
+        if (next.length === 0 && page > 1) {
+          setPage((current) => Math.max(1, current - 1));
+        }
+        return next;
+      });
+      setTotal((previous) => Math.max(0, previous - 1));
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  async function handleMarkSold(id: number) {
+    if (!confirm("Mark this property as sold and remove it from this list?")) return;
+    setMarkingAsSoldId(id);
+    try {
+      const res = await fetch(`/api/properties/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status: "sold" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to mark property as sold");
+      }
+      setProperties((previous) => {
+        const next = previous.filter((property) => property.id !== id);
+        if (next.length === 0 && page > 1) {
+          setPage((current) => Math.max(1, current - 1));
+        }
+        return next;
+      });
+      setTotal((previous) => Math.max(0, previous - 1));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMarkingAsSoldId(null);
     }
   }
 
@@ -86,6 +129,18 @@ export default function AdminPropertiesPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           {t("admin.properties")}
         </h1>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={showSoldOnly}
+            onChange={(e) => {
+              setShowSoldOnly(e.target.checked);
+              setPage(1);
+            }}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600"
+          />
+          Show sold properties
+        </label>
         <button
           onClick={() => {
             setEditingId(null);
@@ -210,12 +265,31 @@ export default function AdminPropertiesPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button
+                    <button
                           onClick={() => handleDelete(prop.id)}
                           className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        {prop.status !== "sold" ? (
+                          <button
+                            onClick={() => handleMarkSold(prop.id)}
+                            disabled={markingAsSoldId === prop.id}
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
+                          >
+                            {markingAsSoldId === prop.id ? (
+                              <span className="inline-flex items-center gap-2">
+                                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                Sold
+                              </span>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Sold</span>
+                              </>
+                            )}
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>

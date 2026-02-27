@@ -78,7 +78,7 @@ export default async function HomePage({
       {exclusiveProperties.length > 0 && (
         <section className="mx-auto max-w-[1440px] px-4 py-8">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">
               {t("property.exclusiveProperties")}
             </h2>
             <Button asChild variant="outline" size="sm">
@@ -97,9 +97,9 @@ export default async function HomePage({
       {/* Other Properties Grid */}
       <section className="mx-auto max-w-[1440px] px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t("property.otherProperties")}
-          </h2>
+            <h2 className="text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">
+              {t("property.otherProperties")}
+            </h2>
           <Button asChild variant="outline" size="sm">
             <Link href="/properties" className="flex items-center gap-2">
               {t("common.viewAll")}

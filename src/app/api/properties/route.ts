@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { properties, propertyImages, locations } from "@/db/schema";
-import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, count, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
@@ -103,7 +103,29 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(properties.featured, true));
     }
     if (status) {
-      conditions.push(eq(properties.status, status as "active" | "pending" | "sold" | "rented"));
+      const allowedStatuses = ["active", "pending", "sold", "rented"] as const;
+      const normalizedStatuses = status
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item): item is typeof allowedStatuses[number] =>
+          (allowedStatuses as readonly string[]).includes(item)
+        );
+
+      if (normalizedStatuses.length === 1) {
+        conditions.push(eq(properties.status, normalizedStatuses[0]));
+      } else if (normalizedStatuses.length > 1) {
+        conditions.push(
+          inArray(
+            properties.status,
+            normalizedStatuses as (
+              | "active"
+              | "pending"
+              | "sold"
+              | "rented"
+            )[]
+          )
+        );
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

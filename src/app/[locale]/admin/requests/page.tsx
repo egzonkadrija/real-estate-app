@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/routing";
-import { Mail, MapPin, Phone, User } from "lucide-react";
+import { Mail, MapPin, Phone, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PropertyRequest {
@@ -37,6 +37,7 @@ interface SubmitReviewPayload {
   note?: string | null;
   approved_property_id?: number;
   approved_at?: string;
+  declined_at?: string;
 }
 
 function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
@@ -55,6 +56,8 @@ export default function AdminRequestsPage() {
   const [requests, setRequests] = React.useState<PropertyRequest[]>([]);
   const [selected, setSelected] = React.useState<PropertyRequest | null>(null);
   const [approvingId, setApprovingId] = React.useState<number | null>(null);
+  const [decliningId, setDecliningId] = React.useState<number | null>(null);
+  const [showDeclineModal, setShowDeclineModal] = React.useState(false);
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
 
@@ -127,14 +130,57 @@ export default function AdminRequestsPage() {
     }
   }
 
+  async function handleDecline() {
+    if (!selected) return;
+
+    setActionMessage("");
+    setActionError("");
+    setDecliningId(selected.id);
+
+    try {
+      const res = await fetch(`/api/property-requests/${selected.id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to decline request");
+      }
+
+      setActionMessage("Request declined and removed from publish workflow.");
+      await fetchRequests();
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Failed to decline request"
+      );
+    } finally {
+      setDecliningId(null);
+      setShowDeclineModal(false);
+    }
+  }
+
+  function openDeclineModal() {
+    setActionMessage("");
+    setActionError("");
+    setShowDeclineModal(true);
+  }
+
+  function cancelDecline() {
+    setShowDeclineModal(false);
+  }
+
   const selectedPayload = parseReviewPayload(selected?.description ?? null);
   const selectedProperty = selectedPayload?.property;
   const approvedPropertyId = selectedPayload?.approved_property_id ?? null;
+  const isSelectedDeclined = Boolean(selectedPayload?.declined_at);
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Property Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Submitted Properties</h1>
         <p className="mt-1 text-sm text-gray-500">
           Review submitted properties before creating live listings.
         </p>
@@ -159,6 +205,7 @@ export default function AdminRequestsPage() {
                   const payload = parseReviewPayload(request.description);
                   const title = payload?.property?.title || "No title";
                   const isApproved = Boolean(payload?.approved_property_id);
+                  const isDeclined = Boolean(payload?.declined_at);
 
                   return (
                     <button
@@ -188,6 +235,11 @@ export default function AdminRequestsPage() {
                           {isApproved && (
                             <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                               Approved
+                            </span>
+                          )}
+                          {isDeclined && (
+                            <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                              Declined
                             </span>
                           )}
                         </div>
@@ -303,15 +355,36 @@ export default function AdminRequestsPage() {
                       Open Properties
                     </Link>
                   </div>
+                ) : isSelectedDeclined ? (
+                  <p className="text-xs font-medium text-rose-700">
+                    This request was declined.
+                  </p>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleApprove}
-                    disabled={approvingId === selected.id}
-                    className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-                  >
-                    {approvingId === selected.id ? "Approving..." : "Approve & Publish"}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleApprove}
+                      disabled={approvingId === selected.id}
+                      className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {approvingId === selected.id ? "Approving..." : "Approve & Publish"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openDeclineModal}
+                      disabled={decliningId === selected.id}
+                      className="inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
+                    >
+                      {decliningId === selected.id ? (
+                        "Declining..."
+                      ) : (
+                        <>
+                          <X className="mr-1 h-4 w-4" />
+                          Decline
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
                 {actionMessage && (
                   <p className="mt-2 text-xs font-medium text-emerald-700">
@@ -332,6 +405,35 @@ export default function AdminRequestsPage() {
           )}
         </div>
       </div>
+
+      {showDeclineModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <p className="text-lg font-semibold text-gray-900">Decline request</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to decline this request? This will keep it
+              in records as declined but remove it from publish workflow.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={cancelDecline}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDecline}
+                disabled={decliningId === selected?.id}
+                className="rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-60"
+              >
+                {decliningId === selected?.id ? "Declining..." : "Yes, decline"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

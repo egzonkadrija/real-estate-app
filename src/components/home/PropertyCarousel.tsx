@@ -551,7 +551,7 @@ export function PropertyCarousel({ properties, title }: PropertyCarouselProps) {
 
       <div className="mb-4 flex items-center justify-between gap-3">
         {title && (
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">{title}</h2>
         )}
         <div className="flex items-center gap-2">
           <button

@@ -52,8 +52,8 @@ export default function AdminLayout({
   const navItems = [
     { href: "/admin/dashboard" as const, label: t("dashboard"), icon: LayoutDashboard },
     { href: "/admin/properties" as const, label: t("properties"), icon: Building2 },
-    { href: "/admin/requests" as const, label: "Requests", icon: ClipboardList },
-    { href: "/admin/contacts" as const, label: t("contacts"), icon: Mail },
+    { href: "/admin/requests" as const, label: "Submitted Properties", icon: ClipboardList },
+    { href: "/admin/contacts" as const, label: "Requested Properties", icon: Mail },
     { href: "/admin/agents" as const, label: t("agents"), icon: Users },
   ];
 

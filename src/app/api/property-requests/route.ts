@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { propertyRequests } from "@/db/schema";
+import { contacts, propertyRequests } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
@@ -16,6 +16,47 @@ const createPropertyRequestSchema = z.object({
   phone: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
 });
+
+function buildContactMessage(
+  request: typeof propertyRequests.$inferInsert
+) {
+  const typeLabel = request.type === "rent" ? "Rent" : "Buy";
+  const priceRange = request.min_price || request.max_price
+    ? [
+        request.min_price ? `Min ${request.min_price}` : null,
+        request.max_price ? `Max ${request.max_price}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : null;
+
+  const lines = [
+    "Property request from customer",
+    `Type: ${typeLabel}`,
+    `Category: ${request.category}`,
+  ];
+
+  if (request.location) {
+    lines.push(`Location: ${request.location}`);
+  }
+
+  if (priceRange) {
+    lines.push(`Budget: ${priceRange} EUR`);
+  }
+
+  if (request.phone) {
+    lines.push(`Phone: ${request.phone}`);
+  }
+
+  lines.push(`Name: ${request.name}`);
+  lines.push(`Email: ${request.email}`);
+
+  if (request.description) {
+    lines.push(`Note: ${request.description}`);
+  }
+
+  return lines.join("\n");
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,6 +97,18 @@ export async function POST(request: NextRequest) {
       .insert(propertyRequests)
       .values(validated)
       .returning();
+
+    try {
+      await db.insert(contacts).values({
+        name: created.name,
+        email: created.email,
+        phone: created.phone,
+        message: buildContactMessage(created),
+        property_id: null,
+      });
+    } catch (contactError) {
+      console.error("Failed to create contact notification for property request:", contactError);
+    }
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

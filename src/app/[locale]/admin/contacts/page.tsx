@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
 import { Mail, MailOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +15,18 @@ interface Contact {
   property_id: number | null;
 }
 
+function isPropertyRequestMessage(message: string) {
+  return message.toLowerCase().startsWith("property request from customer");
+}
+
+function buildReplyMailto(contact: Contact) {
+  const subject = `Re: ${contact.name} - Inquiry`;
+  const body = `Hi ${contact.name},\n\nThank you for reaching out.\n\n`;
+
+  return `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export default function AdminContactsPage() {
-  const t = useTranslations("admin");
   const [contacts, setContacts] = React.useState<Contact[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState<"all" | "unread" | "read">("all");
@@ -61,7 +70,7 @@ export default function AdminContactsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t("contacts")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Requested Properties</h1>
 
       {/* Filter Tabs */}
       <div className="mb-4 flex gap-2">
@@ -117,9 +126,16 @@ export default function AdminContactsPage() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className={cn("text-sm", !contact.is_read && "font-semibold")}>
-                          {contact.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className={cn("text-sm", !contact.is_read && "font-semibold")}>
+                            {contact.name}
+                          </p>
+                          {isPropertyRequestMessage(contact.message) ? (
+                            <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                              Request
+                            </span>
+                          ) : null}
+                        </div>
                         <span className="text-xs text-gray-400">
                           {new Date(contact.created_at).toLocaleDateString()}
                         </span>
@@ -148,6 +164,11 @@ export default function AdminContactsPage() {
                 <p className="mb-4 text-sm text-gray-500">{selectedContact.phone}</p>
               )}
               <div className="mb-4 rounded-lg bg-gray-50 p-4">
+                {isPropertyRequestMessage(selectedContact.message) ? (
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Property request notification
+                  </p>
+                ) : null}
                 <p className="whitespace-pre-wrap text-sm text-gray-700">
                   {selectedContact.message}
                 </p>
@@ -155,6 +176,13 @@ export default function AdminContactsPage() {
               <p className="text-xs text-gray-400">
                 Received: {new Date(selectedContact.created_at).toLocaleString()}
               </p>
+              <a
+                href={buildReplyMailto(selectedContact)}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Reply
+              </a>
             </div>
           ) : (
             <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">

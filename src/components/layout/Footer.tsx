@@ -1,6 +1,5 @@
 "use client";
 
-import NextLink from "next/link";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Youtube, Linkedin, Smartphone } from "lucide-react";
@@ -99,22 +98,6 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <NextLink
-                  href="/admin/dashboard"
-                  className="text-sm transition-colors hover:text-white"
-                >
-                  {t("common.admin")}
-                </NextLink>
-              </li>
-              <li>
-                <NextLink
-                  href="/admin"
-                  className="text-sm transition-colors hover:text-white"
-                >
-                  {t("common.login")}
-                </NextLink>
-              </li>
             </ul>
           </div>
 

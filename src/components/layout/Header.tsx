@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import * as React from "react";
-import NextLink from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import {
@@ -16,8 +15,6 @@ import {
   Send,
   FileText,
   Sparkles,
-  Shield,
-  LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -102,21 +99,6 @@ export function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          <NextLink
-            href="/admin/dashboard"
-            className="hidden items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)] md:inline-flex"
-          >
-            <Shield className="h-4 w-4" />
-            {t("admin")}
-          </NextLink>
-          <NextLink
-            href="/admin"
-            className="hidden items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)] md:inline-flex"
-          >
-            <LogIn className="h-4 w-4" />
-            {t("login")}
-          </NextLink>
-
           {/* Search with AI Button */}
           <button
             onClick={openAIChat}
@@ -229,22 +211,6 @@ export function Header() {
               <Sparkles className="h-4 w-4" />
               {t("searchWithAI")}
             </button>
-            <NextLink
-              href="/admin/dashboard"
-              onClick={() => setMobileOpen(false)}
-              className="mt-2 flex items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-200 hover:bg-gray-100"
-            >
-              <Shield className="h-4 w-4" />
-              {t("admin")}
-            </NextLink>
-            <NextLink
-              href="/admin"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-200 hover:bg-gray-100"
-            >
-              <LogIn className="h-4 w-4" />
-              {t("login")}
-            </NextLink>
           </nav>
         </div>
       )}

@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getLocalizedField, formatPrice, formatArea } from "@/lib/utils";
 import { PropertyGallery } from "@/components/property/PropertyGallery";
-import { AmenityBadge } from "@/components/property/AmenityBadge";
 import { PropertyMap } from "@/components/property/PropertyMap";
 import { FloatingSidebar } from "@/components/property/FloatingSidebar";
 import { ContactForm } from "@/components/forms/ContactForm";
@@ -19,11 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Maximize,
-  BedDouble,
-  Bath,
-  Building,
-  Calendar,
   User,
   Mail,
   Phone,
@@ -151,7 +145,7 @@ export default async function PropertyDetailPage({
     ? "Mulk bilgileri"
     : "Property information";
 
-  const infoRows: Array<{ label: string; value: string }> = [];
+const infoRows: Array<{ label: string; value: string }> = [];
   const priceValue = `${formatPrice(property.price, property.currency)}${property.type === "rent" ? "/mo" : ""}`;
   infoRows.push({ label: t("property.price"), value: priceValue });
   infoRows.push({ label: t("property.area"), value: formatArea(property.surface_area) });
@@ -179,20 +173,41 @@ export default async function PropertyDetailPage({
   if (property.year_built !== null) {
     infoRows.push({ label: t("property.yearBuilt"), value: String(property.year_built) });
   }
-  if (amenities.length > 0) {
-    infoRows.push({
-      label: t("property.amenities"),
-      value: amenities
-        .map((amenity) =>
-          amenity
-            .replace(/([a-z])([A-Z])/g, "$1 $2")
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase())
-        )
-        .slice(0, 4)
-        .join(", "),
-    });
-  }
+  const normalizeAmenity = (value: string) =>
+    value
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/[_-]/g, " ")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const normalizeText = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const normalizedAmenities = amenities.map(normalizeAmenity);
+  const normalizedDescription = normalizeText(description);
+
+  const hasMentionedInDescription = (featureKeys: string[]) =>
+    featureKeys.some((featureKey) => normalizedDescription.includes(featureKey));
+
+  const featuredAmenityLabels = [
+    { keys: ["garage"], label: "Garage" },
+    { keys: ["garden", "yard"], label: "Garden" },
+    { keys: ["central heating"], label: "Central Heating" },
+    { keys: ["air conditioning"], label: "Air Conditioning" },
+  ] as const;
+
+  const listedFeaturedAmenities = featuredAmenityLabels
+    .filter(
+      (feature) =>
+        feature.keys.some((featureKey) => normalizedAmenities.includes(featureKey)) &&
+        !hasMentionedInDescription(feature.keys)
+    )
+    .map((feature) => feature.label);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -319,82 +334,6 @@ export default async function PropertyDetailPage({
             </CardContent>
           </Card>
 
-          {/* Details Grid */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {t("property.details")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-50 p-2">
-                    <Maximize className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">{t("property.area")}</p>
-                    <p className="font-semibold">
-                      {formatArea(property.surface_area)}
-                    </p>
-                  </div>
-                </div>
-                {property.rooms !== null && (
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <BedDouble className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("property.rooms")}
-                      </p>
-                      <p className="font-semibold">{property.rooms}</p>
-                    </div>
-                  </div>
-                )}
-                {property.bathrooms !== null && (
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <Bath className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("property.bathrooms")}
-                      </p>
-                      <p className="font-semibold">{property.bathrooms}</p>
-                    </div>
-                  </div>
-                )}
-                {property.floor !== null && (
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <Building className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("property.floor")}
-                      </p>
-                      <p className="font-semibold">{property.floor}</p>
-                    </div>
-                  </div>
-                )}
-                {property.year_built !== null && (
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("property.yearBuilt")}
-                      </p>
-                      <p className="font-semibold">{property.year_built}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Description */}
           <Card className="mt-6">
             <CardHeader>
@@ -406,26 +345,14 @@ export default async function PropertyDetailPage({
               <p className="whitespace-pre-line leading-relaxed text-gray-700">
                 {description}
               </p>
+
+              {listedFeaturedAmenities.length > 0 && (
+                <p className="mt-4 text-sm leading-relaxed text-gray-700">
+                  Key amenities include {listedFeaturedAmenities.join(", ")}.
+                </p>
+              )}
             </CardContent>
           </Card>
-
-          {/* Amenities */}
-          {amenities.length > 0 && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {t("property.amenities")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {amenities.map((amenity) => (
-                    <AmenityBadge key={amenity} amenity={amenity} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Map */}
           {property.latitude && property.longitude && (
