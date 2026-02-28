@@ -3,7 +3,11 @@ import { db } from "@/db";
 import { agents, properties } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import {
+  parseNumericId,
+  requireAuth,
+  validationErrorResponse,
+} from "@/lib/apiRouteUtils";
 
 const updateAgentSchema = z.object({
   name: z.string().min(1).optional(),
@@ -16,19 +20,13 @@ const updateAgentSchema = z.object({
 });
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const agentId = Number(id);
-
-    if (isNaN(agentId)) {
-      return NextResponse.json(
-        { error: "Invalid agent ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid agent ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const agentId = parsedId;
 
     const [agent] = await db
       .select()
@@ -66,24 +64,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const agentId = Number(id);
-
-    if (isNaN(agentId)) {
-      return NextResponse.json(
-        { error: "Invalid agent ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid agent ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const agentId = parsedId;
 
     const body = await request.json();
     const validated = updateAgentSchema.parse(body);
@@ -104,10 +90,7 @@ export async function PUT(
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error updating agent:", error);
     return NextResponse.json(
@@ -122,24 +105,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const agentId = Number(id);
-
-    if (isNaN(agentId)) {
-      return NextResponse.json(
-        { error: "Invalid agent ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid agent ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const agentId = parsedId;
 
     const [deleted] = await db
       .delete(agents)

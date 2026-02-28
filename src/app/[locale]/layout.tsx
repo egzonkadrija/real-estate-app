@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Locale, routing } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
+import { isSupportedLocale } from "@/lib/locales";
 export const metadata: Metadata = {
   title: {
     default: "NovaBuildings - Real Estate in North Macedonia",
@@ -20,11 +21,11 @@ export default async function LocaleLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as Locale)) {
+  if (!isSupportedLocale(locale)) {
     notFound();
   }
 

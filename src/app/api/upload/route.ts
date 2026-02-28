@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireAuth } from "@/lib/apiRouteUtils";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -41,14 +41,8 @@ async function uploadToLocal(file: File, uniqueName: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

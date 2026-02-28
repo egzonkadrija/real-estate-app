@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField } from "@/lib/utils";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
+import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 
 interface PropertyItem {
   id: number;
@@ -82,10 +83,9 @@ export default function AdminPropertiesPage() {
     [locale, pathname, router, searchParams]
   );
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-    "Content-Type": "application/json",
-  });
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
 
   const formatAgentFilter = React.useCallback(async () => {
     try {
@@ -142,7 +142,7 @@ export default function AdminPropertiesPage() {
     try {
       await fetch(`/api/properties/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       setProperties((previous) => {
         const next = previous.filter((property) => property.id !== id);
@@ -163,7 +163,7 @@ export default function AdminPropertiesPage() {
     try {
       const res = await fetch(`/api/properties/${id}`, {
         method: "PUT",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ status: "sold" }),
       });
       if (!res.ok) {
@@ -500,6 +500,10 @@ function PropertyFormModal({
   });
   const [uploadedImages, setUploadedImages] = React.useState<string[]>([]);
 
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
+
   React.useEffect(() => {
     fetch("/api/locations").then((r) => r.json()).then(setLocations).catch(() => {});
     fetch("/api/agents").then((r) => r.json()).then((d) => setAgents(Array.isArray(d) ? d : d.data || [])).catch(() => {});
@@ -550,7 +554,7 @@ function PropertyFormModal({
       try {
         const res = await fetch("/api/upload", {
           method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("admin-token")}` },
+          headers: getAuthHeaders(),
           body: fd,
         });
         const data = await res.json();
@@ -591,10 +595,7 @@ function PropertyFormModal({
       const method = editingId ? "PUT" : "POST";
       await fetch(url, {
         method,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body),
       });
       onSaved();

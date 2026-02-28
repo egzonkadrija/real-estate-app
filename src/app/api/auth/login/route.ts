@@ -4,6 +4,8 @@ import { adminUsers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { signToken, comparePassword } from "@/lib/auth";
+import { validationErrorResponse } from "@/lib/apiRouteUtils";
+import { ADMIN_TOKEN_COOKIE } from "@/lib/adminAuth";
 
 const loginSchema = z.object({
   email: z
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set({
-      name: "admin-token",
+      name: ADMIN_TOKEN_COOKIE,
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -68,10 +70,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error during login:", error);
     return NextResponse.json(

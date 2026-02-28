@@ -12,6 +12,8 @@ import {
   MailOpen,
   ChevronDown,
 } from "lucide-react";
+import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
+import { parseReviewStatus } from "@/lib/propertyRequestReview";
 
 interface PropertyRequest {
   id: number;
@@ -63,17 +65,8 @@ function parseRequestReviewStatus(
   request: PropertyRequest,
   fallback: "pending" | "approved" | "declined" = "pending"
 ): "pending" | "approved" | "declined" {
-  if (request.review_status) {
-    if (
-      request.review_status === "approved" ||
-      request.review_status === "declined" ||
-      request.review_status === "pending"
-    ) {
-      return request.review_status;
-    }
-  }
-
-  return fallback;
+  if (!request.review_status) return fallback;
+  return parseReviewStatus(request.review_status);
 }
 
 function formatCurrency(value: number): string {
@@ -102,9 +95,9 @@ export default function AdminDashboard() {
     monthlyRentedRevenue: [],
   });
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-  });
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
 
   React.useEffect(() => {
     let isMounted = true;

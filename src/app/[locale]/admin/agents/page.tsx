@@ -13,6 +13,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 
 interface Agent {
   id: number;
@@ -87,10 +88,9 @@ export default function AdminAgentsPage() {
   const [editingAgent, setEditingAgent] = React.useState<Agent | null>(null);
   const [expandedAgents, setExpandedAgents] = React.useState<Record<string, boolean>>({});
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-    "Content-Type": "application/json",
-  });
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
 
   const fetchAgents = React.useCallback(async () => {
     setLoading(true);
@@ -114,7 +114,7 @@ export default function AdminAgentsPage() {
     try {
       await fetch(`/api/agents/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       fetchAgents();
     } catch (e) {
@@ -358,6 +358,9 @@ function AgentFormModal({
   onSaved: () => void;
 }) {
   const [loading, setLoading] = React.useState(false);
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
   const [formData, setFormData] = React.useState({
     name: agent?.name || "",
     email: agent?.email || "",
@@ -376,7 +379,7 @@ function AgentFormModal({
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("admin-token")}` },
+        headers: getAuthHeaders(),
         body: fd,
       });
       const data = await res.json();
@@ -394,10 +397,7 @@ function AgentFormModal({
       const method = agent ? "PUT" : "POST";
       await fetch(url, {
         method,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(formData),
       });
       onSaved();

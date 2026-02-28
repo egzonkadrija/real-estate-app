@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { agents, properties } from "@/db/schema";
 import { count, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
 
 const createAgentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -122,14 +122,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const body = await request.json();
     const validated = createAgentSchema.parse(body);
@@ -139,10 +133,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error creating agent:", error);
     return NextResponse.json(

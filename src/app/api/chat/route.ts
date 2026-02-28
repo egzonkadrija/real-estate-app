@@ -8,12 +8,14 @@ import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
 import trMessages from "@/messages/tr.json";
 import mkMessages from "@/messages/mk.json";
+import { LOCALES, type Locale } from "@/lib/constants";
+import { isSupportedLocale } from "@/lib/locales";
 
-type SupportedLocale = "mk" | "al" | "en" | "de" | "tr";
+type SupportedLocale = Locale;
 
 const bodySchema = z.object({
   message: z.string().trim().min(1).max(500),
-  locale: z.enum(["mk", "al", "en", "de", "tr"]).optional(),
+  locale: z.enum(LOCALES).optional(),
 });
 
 const CHAT_TEXTS: Record<SupportedLocale, Record<string, string>> = {
@@ -32,7 +34,7 @@ function normalizeText(value: string): string {
 }
 
 function normalizeLocale(locale?: string): SupportedLocale {
-  if (locale === "mk" || locale === "al" || locale === "en" || locale === "de" || locale === "tr") {
+  if (locale && isSupportedLocale(locale)) {
     return locale;
   }
   return "en";
@@ -310,4 +312,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

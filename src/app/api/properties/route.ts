@@ -1,44 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { properties, propertyImages, locations, agents } from "@/db/schema";
-import { eq, desc, and, gte, lte, sql, count, inArray } from "drizzle-orm";
+import {
+  eq,
+  desc,
+  and,
+  gte,
+  lte,
+  sql,
+  count,
+  inArray,
+  type SQL,
+} from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
+import {
+  createPropertySchema,
+  parsePropertyStatuses,
+  propertyCategorySchema,
+  propertyTypeSchema,
+} from "@/lib/propertyValidation";
 
-const createPropertySchema = z.object({
-  title_al: z.string().min(1),
-  title_en: z.string().min(1),
-  title_de: z.string().min(1),
-  description_al: z.string().default(""),
-  description_en: z.string().default(""),
-  description_de: z.string().default(""),
-  type: z.enum(["sale", "rent"]),
-  category: z.enum(["house", "apartment", "office", "land", "store", "warehouse", "penthouse", "object"]),
-  price: z.number().positive(),
-  currency: z.string().default("EUR"),
-  surface_area: z.number().positive(),
-  rooms: z.number().int().nullable().optional(),
-  bathrooms: z.number().int().nullable().optional(),
-  floor: z.number().int().nullable().optional(),
-  year_built: z.number().int().nullable().optional(),
-  latitude: z.number().nullable().optional(),
-  longitude: z.number().nullable().optional(),
-  location_id: z.number().int(),
-  agent_id: z.number().int(),
-  featured: z.boolean().default(false),
-  status: z.enum(["active", "pending", "sold", "rented"]).default("active"),
-  amenities: z.array(z.string()).default([]),
-  images: z
-    .array(
-      z.object({
-        url: z.string(),
-        alt: z.string().optional(),
-        sort_order: z.number().default(0),
-        is_primary: z.boolean().default(false),
-      })
-    )
-    .optional(),
-});
+function parseIntegerParam(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return undefined;
+  return parsed;
+}
+
+function parseNumberParam(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return undefined;
+  return parsed;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,26 +49,26 @@ export async function GET(request: NextRequest) {
     const maxArea = searchParams.get("maxArea");
     const locationId = searchParams.get("locationId");
     const rooms = searchParams.get("rooms");
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "12", 10);
+    const page = Math.max(1, parseIntegerParam(searchParams.get("page")) ?? 1);
+    const limit = Math.max(
+      1,
+      Math.min(100, parseIntegerParam(searchParams.get("limit")) ?? 12)
+    );
     const featured = searchParams.get("featured");
     const status = searchParams.get("status");
     const agentId = searchParams.get("agentId");
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const conditions: any[] = [];
+    const conditions: SQL<unknown>[] = [];
 
     if (ids) {
-      const idList = ids.split(",").map(Number).filter((n) => !isNaN(n));
+      const idList = ids
+        .split(",")
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value));
       if (idList.length > 0) {
-        conditions.push(
-          sql`${properties.id} IN (${sql.join(
-            idList.map((id) => sql`${id}`),
-            sql`, `
-          )})`
-        );
+        conditions.push(inArray(properties.id, idList));
       }
     }
 
@@ -85,48 +80,47 @@ export async function GET(request: NextRequest) {
     }
 
     if (type) {
-      conditions.push(eq(properties.type, type as "sale" | "rent"));
+      const parsedType = propertyTypeSchema.safeParse(type);
+      if (parsedType.success) {
+        conditions.push(eq(properties.type, parsedType.data));
+      }
     }
 
     if (category) {
-      conditions.push(
-        eq(
-          properties.category,
-          category as
-            | "house"
-            | "apartment"
-            | "office"
-            | "land"
-            | "store"
-            | "warehouse"
-            | "penthouse"
-            | "object"
-        )
-      );
+      const parsedCategory = propertyCategorySchema.safeParse(category);
+      if (parsedCategory.success) {
+        conditions.push(eq(properties.category, parsedCategory.data));
+      }
     }
 
-    if (minPrice) {
-      conditions.push(gte(properties.price, Number(minPrice)));
+    const minPriceValue = parseNumberParam(minPrice);
+    if (minPriceValue !== undefined) {
+      conditions.push(gte(properties.price, minPriceValue));
     }
 
-    if (maxPrice) {
-      conditions.push(lte(properties.price, Number(maxPrice)));
+    const maxPriceValue = parseNumberParam(maxPrice);
+    if (maxPriceValue !== undefined) {
+      conditions.push(lte(properties.price, maxPriceValue));
     }
 
-    if (minArea) {
-      conditions.push(gte(properties.surface_area, Number(minArea)));
+    const minAreaValue = parseNumberParam(minArea);
+    if (minAreaValue !== undefined) {
+      conditions.push(gte(properties.surface_area, minAreaValue));
     }
 
-    if (maxArea) {
-      conditions.push(lte(properties.surface_area, Number(maxArea)));
+    const maxAreaValue = parseNumberParam(maxArea);
+    if (maxAreaValue !== undefined) {
+      conditions.push(lte(properties.surface_area, maxAreaValue));
     }
 
-    if (locationId) {
-      conditions.push(eq(properties.location_id, Number(locationId)));
+    const locationIdValue = parseIntegerParam(locationId);
+    if (locationIdValue !== undefined) {
+      conditions.push(eq(properties.location_id, locationIdValue));
     }
 
-    if (rooms) {
-      conditions.push(gte(properties.rooms, Number(rooms)));
+    const roomsValue = parseIntegerParam(rooms);
+    if (roomsValue !== undefined) {
+      conditions.push(gte(properties.rooms, roomsValue));
     }
 
     if (featured === "true") {
@@ -134,33 +128,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      const allowedStatuses = ["active", "pending", "sold", "rented"] as const;
-      const normalizedStatuses = status
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item): item is typeof allowedStatuses[number] =>
-          (allowedStatuses as readonly string[]).includes(item)
-        );
+      const normalizedStatuses = parsePropertyStatuses(status);
 
       if (normalizedStatuses.length === 1) {
         conditions.push(eq(properties.status, normalizedStatuses[0]));
       } else if (normalizedStatuses.length > 1) {
-        conditions.push(
-          inArray(
-            properties.status,
-            normalizedStatuses as
-              | "active"
-              | "pending"
-              | "sold"
-              | "rented"
-          )
-        );
+        conditions.push(inArray(properties.status, normalizedStatuses));
       }
     }
 
     if (agentId) {
-      const resolvedAgentId = Number(agentId);
-      if (!Number.isNaN(resolvedAgentId)) {
+      const resolvedAgentId = parseIntegerParam(agentId);
+      if (resolvedAgentId !== undefined) {
         conditions.push(eq(properties.agent_id, resolvedAgentId));
       }
     }
@@ -207,12 +186,7 @@ export async function GET(request: NextRequest) {
       images = await db
         .select()
         .from(propertyImages)
-        .where(
-          sql`${propertyImages.property_id} IN (${sql.join(
-            propertyIds.map((id) => sql`${id}`),
-            sql`, `
-          )})`
-        );
+        .where(inArray(propertyImages.property_id, propertyIds));
     }
 
     const result = data.map((row) => ({
@@ -245,14 +219,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const body = await request.json();
     const { images: imageData, ...propertyData } = createPropertySchema.parse(body);
@@ -274,10 +242,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error creating property:", error);
     return NextResponse.json(

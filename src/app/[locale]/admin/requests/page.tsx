@@ -15,6 +15,12 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
+import {
+  type ReviewPayload,
+  getReviewStatus,
+  parseReviewPayload,
+} from "@/lib/propertyRequestReview";
 
 interface PropertyRequest {
   id: number;
@@ -33,64 +39,18 @@ interface PropertyRequest {
 
 type LifecycleStage = "all" | "submitted" | "pending" | "approved" | "declined";
 
-interface SubmitReviewPayload {
-  source?: string;
-  property?: {
-    title?: string | null;
-    type?: string | null;
-    category?: string | null;
-    price?: number | null;
-    area?: number | null;
-    rooms?: number | null;
-    bathrooms?: number | null;
-    location_id?: number | null;
-    location_name?: string | null;
-    floor?: number | null;
-    year_built?: number | null;
-  };
-  note?: string | null;
-  approved_property_id?: number;
-  approved_at?: string;
-  declined_at?: string;
-  pending_at?: string | null;
-  review_status?: "pending" | "approved" | "declined";
-}
-
-function parseReviewStatus(value: unknown): "pending" | "approved" | "declined" {
-  if (value === "approved" || value === "declined" || value === "pending") {
-    return value;
-  }
-  return "pending";
-}
-
-function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as SubmitReviewPayload;
-  } catch {
-    return null;
-  }
-}
-
 function getRequestLifecycleStatus(
   request: PropertyRequest,
-  payload: SubmitReviewPayload | null
+  payload: ReviewPayload | null
 ): Exclude<LifecycleStage, "all"> {
   if (request.review_status) {
     return request.review_status;
   }
 
-  const statusFromPayload = payload?.review_status
-    ? parseReviewStatus(payload.review_status)
-    : null;
-
+  const statusFromPayload = getReviewStatus(payload);
   if (statusFromPayload === "approved" || statusFromPayload === "declined") {
     return statusFromPayload;
   }
-  if (payload?.approved_property_id) return "approved";
-  if (payload?.declined_at) return "declined";
   if (payload?.pending_at) return "pending";
 
   return "submitted";
@@ -154,10 +114,9 @@ export default function AdminRequestsPage() {
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-    "Content-Type": "application/json",
-  });
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
 
   const buildServerFilterQuery = React.useCallback(() => {
     const params = new URLSearchParams();
@@ -182,7 +141,7 @@ export default function AdminRequestsPage() {
     }
 
     return params;
-  }, [fromDate, globalSearch, lifecycleFilter, locationFilter, searchParams, typeFilter]);
+  }, [fromDate, globalSearch, lifecycleFilter, locationFilter, searchParams, toDate, typeFilter]);
 
   const syncQuery = React.useCallback(
     (patch: Record<string, string>) => {
@@ -364,7 +323,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}/approve`, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
 
       const data = await res.json().catch(() => null);
@@ -398,7 +357,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ status: "pending" }),
       });
 
@@ -430,7 +389,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       const data = await res.json().catch(() => null);
 
@@ -674,20 +633,20 @@ export default function AdminRequestsPage() {
                   {selected.min_price ?? selected.max_price} EUR
                 </p>
               ) : null}
-              {selectedPayload?.area ? (
+              {selectedPayload?.property?.area ? (
                 <p>
-                  <span className="font-medium">Area:</span> {selectedPayload.area} m²
+                  <span className="font-medium">Area:</span> {selectedPayload.property.area} m²
                 </p>
               ) : null}
-              {selectedPayload?.rooms ? (
+              {selectedPayload?.property?.rooms ? (
                 <p>
-                  <span className="font-medium">Rooms:</span> {selectedPayload.rooms}
+                  <span className="font-medium">Rooms:</span> {selectedPayload.property.rooms}
                 </p>
               ) : null}
-              {selectedPayload?.bathrooms ? (
+              {selectedPayload?.property?.bathrooms ? (
                 <p>
                   <span className="font-medium">Bathrooms:</span>{" "}
-                  {selectedPayload.bathrooms}
+                  {selectedPayload.property.bathrooms}
                 </p>
               ) : null}
             </div>

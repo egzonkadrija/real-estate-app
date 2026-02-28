@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { contacts, propertyRequests } from "@/db/schema";
 import { type SQLWrapper, and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
 
 const createPropertyRequestSchema = z.object({
   type: z.enum(["buy", "rent", "sale"]),
@@ -60,14 +60,8 @@ function buildContactMessage(
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() || "";
@@ -154,7 +148,7 @@ export async function POST(request: NextRequest) {
     const validated = {
       ...parsed,
       type: parsed.type === "sale" ? "buy" : parsed.type,
-      review_status: "pending",
+      review_status: "pending" as const,
     };
 
     const [created] = await db
@@ -177,10 +171,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error creating property request:", error);
     return NextResponse.json(

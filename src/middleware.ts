@@ -1,9 +1,9 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
+import { ADMIN_TOKEN_COOKIE } from "@/lib/adminAuth";
+import { isSupportedLocale } from "@/lib/locales";
 
-const SUPPORTED_LOCALES = new Set(routing.locales);
-const ADMIN_TOKEN_COOKIE = "admin-token";
 const intlMiddleware = createMiddleware(routing);
 
 function isAdminJwtToken(token: string): boolean {
@@ -48,7 +48,7 @@ function getAdminContext(pathname: string) {
   const second = segments[1];
 
   const isRootAdmin = first === "admin";
-  const isLocaleAdmin = !!first && SUPPORTED_LOCALES.has(first) && second === "admin";
+  const isLocaleAdmin = !!first && isSupportedLocale(first) && second === "admin";
   const isAdminPath = isRootAdmin || isLocaleAdmin;
 
   if (!isAdminPath) {

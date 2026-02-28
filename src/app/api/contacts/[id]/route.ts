@@ -2,31 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { contacts } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { parseNumericId, requireAuth } from "@/lib/apiRouteUtils";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const contactId = Number(id);
-
-    if (isNaN(contactId)) {
-      return NextResponse.json(
-        { error: "Invalid contact ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid contact ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const contactId = parsedId;
 
     const [updated] = await db
       .update(contacts)
