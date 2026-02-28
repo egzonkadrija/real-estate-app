@@ -10,8 +10,9 @@ interface RevenueProperty {
   category: "house" | "apartment" | "office" | "land" | "store" | "warehouse" | "penthouse" | "object";
   type: "sale" | "rent";
   status: "active" | "pending" | "sold" | "rented";
-  price: number;
-  updated_at: Date | null;
+  price: number | null;
+  updated_at: Date;
+  created_at: Date;
 }
 
 interface MonthlyRevenueRow {
@@ -56,17 +57,34 @@ export async function GET(request: NextRequest) {
         status: properties.status,
         price: properties.price,
         updated_at: properties.updated_at,
+        created_at: properties.created_at,
       })
       .from(properties)
       .where(inArray(properties.status, statusFilter));
 
+    const toNumber = (value: number | null | undefined): number =>
+      typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+    const isRentedRevenueEntry = (row: RevenueProperty) =>
+      row.status === "rented" || (row.status === "sold" && row.type === "rent");
+    const isSoldRevenueEntry = (row: RevenueProperty) =>
+      row.status === "sold" && row.type === "sale";
+
     const soldRevenue = rows.reduce((sum, row) => {
-      if (row.status !== "sold") return sum;
-      return sum + (row.price ?? 0);
+      if (!isSoldRevenueEntry(row)) return sum;
+      return sum + toNumber(row.price);
+    }, 0);
+
+    const rentedRevenue = rows.reduce((sum, row) => {
+      if (!isRentedRevenueEntry(row)) return sum;
+      return sum + toNumber(row.price);
     }, 0);
 
     const soldProperties = rows
-      .filter((row): row is RevenueProperty => row.status === "sold" && row.price !== null)
+      .filter(
+        (row): row is RevenueProperty =>
+          isSoldRevenueEntry(row) && row.price !== null
+      )
       .map((row) => ({
         id: row.id,
         title: row.title,
@@ -79,33 +97,22 @@ export async function GET(request: NextRequest) {
 
     const monthlyMap = new Map<string, MonthlyRevenueRow>();
     for (const row of rows) {
-      if (row.status !== "rented") continue;
-      if (row.category !== "apartment" && row.category !== "office") continue;
-      const date = row.updated_at ? new Date(row.updated_at) : null;
+      if (!isRentedRevenueEntry(row)) continue;
+      const dateValue = row.updated_at ?? row.created_at;
+      const date = dateValue ? new Date(dateValue) : null;
       if (!date || Number.isNaN(date.getTime())) continue;
-      if (row.price === null) continue;
+      const price = toNumber(row.price);
+      if (!price) continue;
 
       const month = getMonthKey(date);
       const existing = monthlyMap.get(month);
-      const apartment = existing?.apartment ?? 0;
-      const office = existing?.office ?? 0;
-      if (row.category === "apartment") {
-        monthlyMap.set(month, {
-          month,
-          monthLabel: formatMonthLabel(date),
-          apartment: apartment + row.price,
-          office: existing?.office ?? 0,
-          total: (existing?.total ?? 0) + row.price,
-        });
-      } else {
-        monthlyMap.set(month, {
-          month,
-          monthLabel: formatMonthLabel(date),
-          apartment: existing?.apartment ?? 0,
-          office: office + row.price,
-          total: (existing?.total ?? 0) + row.price,
-        });
-      }
+      monthlyMap.set(month, {
+        month,
+        monthLabel: formatMonthLabel(date),
+        apartment: existing?.apartment ?? 0,
+        office: existing?.office ?? 0,
+        total: (existing?.total ?? 0) + price,
+      });
     }
 
     const monthlyRentedRevenue: MonthlyRevenueRow[] = Array.from(monthlyMap.values()).sort((a, b) =>
@@ -114,6 +121,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       soldRevenue,
+      rentedRevenue,
       soldProperties,
       monthlyRentedRevenue,
     });

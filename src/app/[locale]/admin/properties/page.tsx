@@ -43,7 +43,9 @@ export default function AdminPropertiesPage() {
   const loadMoreSentinelRef = React.useRef<HTMLDivElement | null>(null);
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
-  const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
+  const [markingAsCompletedId, setMarkingAsCompletedId] = React.useState<
+    number | null
+  >(null);
 
   const hasMore = properties.length < total;
   const hasData = properties.length > 0;
@@ -134,18 +136,35 @@ export default function AdminPropertiesPage() {
     }
   }
 
-  async function handleMarkSold(id: number) {
-    if (!confirm("Mark this property as sold and remove it from this list?")) return;
-    setMarkingAsSoldId(id);
+  const getCompletedStatusForType = (type: string) => {
+    return type === "rent" ? "rented" : "sold";
+  };
+
+  const getCompletedActionLabel = (type: string) => {
+    return type === "rent" ? "Rented" : "Sold";
+  };
+
+  async function handleMarkAsCompleted(id: number, propertyType: string) {
+    const nextStatus = getCompletedStatusForType(propertyType);
+    const actionLabel = getCompletedActionLabel(propertyType);
+    if (
+      !confirm(
+        `Mark this property as ${actionLabel.toLowerCase()} and remove it from this list?`
+      )
+    )
+      return;
+    setMarkingAsCompletedId(id);
     try {
       const res = await fetch(`/api/properties/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ status: "sold" }),
+        body: JSON.stringify({ status: nextStatus }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Failed to mark property as sold");
+        throw new Error(
+          data?.error || `Failed to mark property as ${actionLabel.toLowerCase()}`
+        );
       }
       setProperties((previous) => {
         const next = previous.filter((property) => property.id !== id);
@@ -155,7 +174,7 @@ export default function AdminPropertiesPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setMarkingAsSoldId(null);
+      setMarkingAsCompletedId(null);
     }
   }
 
@@ -225,8 +244,11 @@ export default function AdminPropertiesPage() {
                 </tr>
               ) : (
                 <>
-                  {properties.map((prop) => (
-                    <tr key={prop.id} className="hover:bg-gray-50">
+                  {properties.map((prop) => {
+                    const statusLabel =
+                      prop.type === "rent" && prop.status === "sold" ? "rented" : prop.status;
+                    return (
+                      <tr key={prop.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
@@ -269,18 +291,18 @@ export default function AdminPropertiesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs font-medium",
-                            {
-                              "bg-green-50 text-green-700": prop.status === "active",
-                              "bg-yellow-50 text-yellow-700": prop.status === "pending",
-                              "bg-gray-100 text-gray-700":
-                                prop.status === "sold" || prop.status === "rented",
-                            }
-                          )}
-                        >
-                          {prop.status}
-                        </span>
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-xs font-medium",
+                              {
+                                "bg-green-50 text-green-700": prop.status === "active",
+                                "bg-yellow-50 text-yellow-700": prop.status === "pending",
+                                "bg-gray-100 text-gray-700":
+                                  statusLabel === "sold" || statusLabel === "rented",
+                              }
+                            )}
+                          >
+                            {statusLabel}
+                          </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500">
                         {new Date(prop.created_at).toLocaleDateString()}
@@ -302,29 +324,30 @@ export default function AdminPropertiesPage() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                          {prop.status !== "sold" ? (
-                            <button
-                              onClick={() => handleMarkSold(prop.id)}
-                              disabled={markingAsSoldId === prop.id}
-                              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
-                            >
-                              {markingAsSoldId === prop.id ? (
-                                <span className="inline-flex items-center gap-2">
-                                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                  Sold
-                                </span>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  <span>Sold</span>
-                                </>
-                              )}
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          {statusLabel !== "sold" && statusLabel !== "rented" ? (
+                             <button
+                               onClick={() => handleMarkAsCompleted(prop.id, prop.type)}
+                               disabled={markingAsCompletedId === prop.id}
+                               className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
+                             >
+                               {markingAsCompletedId === prop.id ? (
+                                 <span className="inline-flex items-center gap-2">
+                                   <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                   {getCompletedActionLabel(prop.type)}
+                                 </span>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-4 w-4" />
+                              <span>{getCompletedActionLabel(prop.type)}</span>
+                            </>
+                          )}
+                        </button>
+                        ) : null}
+                       </div>
+                     </td>
+                   </tr>
+                    );
+                  })}
                   {loading && properties.length > 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-4">
