@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { contacts } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
 
 const createContactSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -15,14 +15,8 @@ const createContactSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const searchParams = request.nextUrl.searchParams;
     const isRead = searchParams.get("is_read");
@@ -63,10 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error creating contact:", error);
     return NextResponse.json(

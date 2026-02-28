@@ -1,11 +1,14 @@
-import {defineRouting} from 'next-intl/routing';
-import {createNavigation} from 'next-intl/navigation';
+import { defineRouting } from "next-intl/routing";
+import { createNavigation } from "next-intl/navigation";
+import { LOCALES, type Locale as DomainLocale } from "@/lib/constants";
+import { DEFAULT_LOCALE } from "@/lib/locales";
 
 export const routing = defineRouting({
-  locales: ['mk', 'al', 'en', 'de', 'tr'],
-  defaultLocale: 'al',
+  locales: [...LOCALES],
+  defaultLocale: DEFAULT_LOCALE,
 });
 
-export type Locale = (typeof routing.locales)[number];
+export type Locale = DomainLocale;
 
-export const {Link, redirect, usePathname, useRouter, getPathname} = createNavigation(routing);
+export const { Link, redirect, usePathname, useRouter, getPathname } =
+  createNavigation(routing);

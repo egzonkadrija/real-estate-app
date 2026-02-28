@@ -12,6 +12,12 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
+import {
+  type ReviewPayload,
+  getReviewStatus,
+  parseReviewPayload,
+} from "@/lib/propertyRequestReview";
 
 interface PropertyRequest {
   id: number;
@@ -53,6 +59,15 @@ interface SubmitReviewPayload {
   review_status?: "submitted" | "pending" | "approved" | "declined";
 }
 
+function getSubmitRequestSource(
+  payload: SubmitReviewPayload | null
+): "submit_property" | "request_property" {
+  if (payload?.source === "submit_property") {
+    return "submit_property";
+  }
+  return "request_property";
+}
+
 function parseReviewStatus(
   value: unknown
 ): "submitted" | "pending" | "approved" | "declined" {
@@ -80,16 +95,13 @@ function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
 
 function getRequestLifecycleStatus(
   request: PropertyRequest,
-  payload: SubmitReviewPayload | null
+  payload: ReviewPayload | null
 ): Exclude<LifecycleStage, "all"> {
   if (request.review_status) {
     return request.review_status;
   }
 
-  const statusFromPayload = payload?.review_status
-    ? parseReviewStatus(payload.review_status)
-    : null;
-
+  const statusFromPayload = getReviewStatus(payload);
   if (statusFromPayload === "approved" || statusFromPayload === "declined") {
     return statusFromPayload;
   }
@@ -173,10 +185,9 @@ export default function AdminRequestsPage() {
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-    "Content-Type": "application/json",
-  });
+  function getAuthHeaders(extraHeaders?: HeadersInit) {
+    return getBrowserAdminAuthHeaders(extraHeaders);
+  }
 
   const buildServerFilterQuery = React.useCallback(() => {
     const params = new URLSearchParams();
@@ -184,11 +195,11 @@ export default function AdminRequestsPage() {
     if (lifecycleFilter !== "all") {
       params.set("requestStage", lifecycleFilter);
     }
-    if (globalSearch) {
-      params.set("q", searchParams.get("q") ?? "");
-    }
+  if (globalSearch) {
+    params.set("q", searchParams.get("q") ?? "");
+  }
 
-    return params;
+  return params;
   }, [globalSearch, lifecycleFilter, searchParams]);
 
   const syncQuery = React.useCallback(
@@ -253,6 +264,11 @@ export default function AdminRequestsPage() {
     const list = requests.filter((request) => {
       const payload = parseReviewPayload(request.description);
       const status = getRequestLifecycleStatus(request, payload);
+      const source = getSubmitRequestSource(payload);
+
+      if (source !== "submit_property") {
+        return false;
+      }
 
       if (lifecycleFilter !== "all" && lifecycleFilter !== status) {
         return false;
@@ -282,6 +298,11 @@ export default function AdminRequestsPage() {
 
     for (const request of requests) {
       const payload = parseReviewPayload(request.description);
+      const source = getSubmitRequestSource(payload);
+      if (source !== "submit_property") {
+        continue;
+      }
+
       const status = getRequestLifecycleStatus(request, payload);
       if (status in stats) {
         stats[status]++;
@@ -332,7 +353,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}/approve`, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
 
       const data = await res.json().catch(() => null);
@@ -366,7 +387,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ status: "pending" }),
       });
 
@@ -398,7 +419,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       const data = await res.json().catch(() => null);
 
@@ -566,20 +587,20 @@ export default function AdminRequestsPage() {
                   {selected.min_price ?? selected.max_price} EUR
                 </p>
               ) : null}
-              {selectedPayload?.area ? (
+              {selectedPayload?.property?.area ? (
                 <p>
-                  <span className="font-medium">Area:</span> {selectedPayload.area} m²
+                  <span className="font-medium">Area:</span> {selectedPayload.property.area} m²
                 </p>
               ) : null}
-              {selectedPayload?.rooms ? (
+              {selectedPayload?.property?.rooms ? (
                 <p>
-                  <span className="font-medium">Rooms:</span> {selectedPayload.rooms}
+                  <span className="font-medium">Rooms:</span> {selectedPayload.property.rooms}
                 </p>
               ) : null}
-              {selectedPayload?.bathrooms ? (
+              {selectedPayload?.property?.bathrooms ? (
                 <p>
                   <span className="font-medium">Bathrooms:</span>{" "}
-                  {selectedPayload.bathrooms}
+                  {selectedPayload.property.bathrooms}
                 </p>
               ) : null}
             </div>

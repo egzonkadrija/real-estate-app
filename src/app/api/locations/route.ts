@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { locations } from "@/db/schema";
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc, and, type SQL } from "drizzle-orm";
+import { z } from "zod";
+
+const locationTypeSchema = z.enum(["state", "city", "neighborhood"]);
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,13 +12,19 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type");
     const parentId = searchParams.get("parent_id");
 
-    const conditions = [];
+    const conditions: SQL<unknown>[] = [];
 
     if (type) {
-      conditions.push(eq(locations.type, type as "state" | "city" | "neighborhood"));
+      const parsedType = locationTypeSchema.safeParse(type);
+      if (parsedType.success) {
+        conditions.push(eq(locations.type, parsedType.data));
+      }
     }
     if (parentId) {
-      conditions.push(eq(locations.parent_id, Number(parentId)));
+      const parsedParentId = Number(parentId);
+      if (Number.isInteger(parsedParentId)) {
+        conditions.push(eq(locations.parent_id, parsedParentId));
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { Building2, Lock, Mail } from "lucide-react";
+import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/adminAuth";
 
 export default function AdminLoginPage() {
   const t = useTranslations("admin");
@@ -34,7 +35,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      localStorage.setItem("admin-token", data.token);
+      localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
       router.push("/admin/dashboard");
     } catch {
       setError("Something went wrong");

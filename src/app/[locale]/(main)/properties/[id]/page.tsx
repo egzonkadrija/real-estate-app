@@ -192,7 +192,7 @@ const infoRows: Array<{ label: string; value: string }> = [];
   const normalizedAmenities = amenities.map(normalizeAmenity);
   const normalizedDescription = normalizeText(description);
 
-  const hasMentionedInDescription = (featureKeys: string[]) =>
+  const hasMentionedInDescription = (featureKeys: readonly string[]) =>
     featureKeys.some((featureKey) => normalizedDescription.includes(featureKey));
 
   const featuredAmenityLabels = [
@@ -470,4 +470,3 @@ const infoRows: Array<{ label: string; value: string }> = [];
     </div>
   );
 }
-

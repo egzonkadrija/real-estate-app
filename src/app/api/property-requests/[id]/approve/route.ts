@@ -2,75 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { agents, locations, properties, propertyRequests } from "@/db/schema";
-import { getTokenFromHeader, verifyToken } from "@/lib/auth";
 import { notifyPropertyRequestStatus } from "@/lib/propertyRequestNotifications";
-
-const ALLOWED_CATEGORIES = [
-  "house",
-  "apartment",
-  "office",
-  "land",
-  "store",
-  "warehouse",
-  "penthouse",
-  "object",
-] as const;
-
-type AllowedCategory = (typeof ALLOWED_CATEGORIES)[number];
-type PropertyType = "sale" | "rent";
-
-interface ReviewPayload {
-  source?: string;
-  property?: {
-    title?: string | null;
-    type?: string | null;
-    category?: string | null;
-    price?: number | null;
-    area?: number | null;
-    rooms?: number | null;
-    bathrooms?: number | null;
-    location_id?: number | null;
-    location_name?: string | null;
-    floor?: number | null;
-    year_built?: number | null;
-  };
-  note?: string | null;
-  approved_property_id?: number;
-  approved_at?: string;
-  declined_at?: string;
-  pending_at?: string | null;
-  review_status?: "pending" | "approved" | "declined";
-}
-
-const REVIEW_STATUSES = new Set(["pending", "approved", "declined"]);
-
-function isReviewStatus(value: unknown): value is "pending" | "approved" | "declined" {
-  return typeof value === "string" && REVIEW_STATUSES.has(value);
-}
-
-function getReviewStatus(payload: ReviewPayload | null): "pending" | "approved" | "declined" {
-  if (isReviewStatus(payload?.review_status)) {
-    return payload.review_status;
-  }
-  if (payload?.approved_property_id) {
-    return "approved";
-  }
-  if (payload?.declined_at) {
-    return "declined";
-  }
-  return "pending";
-}
-
-function parsePayload(raw: string | null): ReviewPayload | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as ReviewPayload;
-  } catch {
-    return null;
-  }
-}
+import { parseNumericId, requireAuth } from "@/lib/apiRouteUtils";
+import {
+  type ReviewPayload,
+  getReviewStatus,
+  parseReviewPayload,
+} from "@/lib/propertyRequestReview";
+import {
+  propertyCategorySchema,
+  type PropertyCategoryValue,
+  type PropertyTypeValue,
+} from "@/lib/propertyValidation";
 
 function sanitizeText(value: string | null | undefined, fallback: string): string {
   const trimmed = value?.trim();
@@ -88,17 +31,16 @@ function toNullableInteger(value: unknown): number | null {
   return Math.round(value);
 }
 
-function normalizeCategory(value: string | null | undefined): AllowedCategory {
-  if (value && ALLOWED_CATEGORIES.includes(value as AllowedCategory)) {
-    return value as AllowedCategory;
-  }
+function normalizeCategory(value: string | null | undefined): PropertyCategoryValue {
+  const parsed = propertyCategorySchema.safeParse(value);
+  if (parsed.success) return parsed.data;
   return "apartment";
 }
 
 function normalizeType(
   payloadType: string | null | undefined,
   requestType: "buy" | "rent"
-): PropertyType {
+): PropertyTypeValue {
   if (payloadType === "sale" || payloadType === "rent") return payloadType;
   return requestType === "rent" ? "rent" : "sale";
 }
@@ -108,20 +50,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const requestId = Number(id);
-    if (Number.isNaN(requestId)) {
-      return NextResponse.json({ error: "Invalid request id" }, { status: 400 });
-    }
+    const parsedId = await parseNumericId(params, "Invalid request id");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const requestId = parsedId;
 
     const [requestItem] = await db
       .select()
@@ -133,7 +67,7 @@ export async function POST(
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    const parsedPayload = parsePayload(requestItem.description);
+    const parsedPayload = parseReviewPayload(requestItem.description);
     const currentStatus =
       requestItem.review_status ??
       getReviewStatus(parsedPayload);

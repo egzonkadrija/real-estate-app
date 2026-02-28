@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { db } from "@/db";
 import { properties } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { LOCALES } from "@/lib/constants";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -10,7 +11,7 @@ if (!BASE_URL) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const locales = ["mk", "al", "en", "de", "tr"];
+  const locales = LOCALES;
 
   // Static pages
   const staticPages = [

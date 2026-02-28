@@ -8,53 +8,21 @@ import {
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
-
-const updatePropertySchema = z.object({
-  title_al: z.string().min(1).optional(),
-  title_en: z.string().min(1).optional(),
-  title_de: z.string().min(1).optional(),
-  description_al: z.string().optional(),
-  description_en: z.string().optional(),
-  description_de: z.string().optional(),
-  type: z.enum(["sale", "rent"]).optional(),
-  category: z.enum(["house", "apartment", "office", "land", "store", "warehouse"]).optional(),
-  price: z.number().positive().optional(),
-  currency: z.string().optional(),
-  surface_area: z.number().positive().optional(),
-  rooms: z.number().int().nullable().optional(),
-  bathrooms: z.number().int().nullable().optional(),
-  floor: z.number().int().nullable().optional(),
-  year_built: z.number().int().nullable().optional(),
-  latitude: z.number().nullable().optional(),
-  longitude: z.number().nullable().optional(),
-  location_id: z.number().int().optional(),
-  agent_id: z.number().int().optional(),
-  featured: z.boolean().optional(),
-  status: z.enum(["active", "pending", "sold", "rented"]).optional(),
-  amenities: z.array(z.string()).optional(),
-  images: z.array(z.object({
-    url: z.string(),
-    alt: z.string().optional(),
-    sort_order: z.number().default(0),
-    is_primary: z.boolean().default(false),
-  })).optional(),
-});
+import {
+  parseNumericId,
+  requireAuth,
+  validationErrorResponse,
+} from "@/lib/apiRouteUtils";
+import { updatePropertySchema } from "@/lib/propertyValidation";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const propertyId = Number(id);
-
-    if (isNaN(propertyId)) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid property ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const propertyId = parsedId;
 
     const [result] = await db
       .select()
@@ -98,24 +66,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const propertyId = Number(id);
-
-    if (isNaN(propertyId)) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid property ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const propertyId = parsedId;
 
     const body = await request.json();
     const { images: imageData, ...validated } = updatePropertySchema.parse(body);
@@ -125,6 +81,13 @@ export async function PUT(
       .set({ ...validated, updated_at: new Date() })
       .where(eq(properties.id, propertyId))
       .returning();
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Property not found" },
+        { status: 404 }
+      );
+    }
 
     if (imageData) {
       await db.delete(propertyImages).where(eq(propertyImages.property_id, propertyId));
@@ -141,20 +104,10 @@ export async function PUT(
       }
     }
 
-    if (!updated) {
-      return NextResponse.json(
-        { error: "Property not found" },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      );
+      return validationErrorResponse(error);
     }
     console.error("Error updating property:", error);
     return NextResponse.json(
@@ -169,24 +122,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
-    const { id } = await params;
-    const propertyId = Number(id);
-
-    if (isNaN(propertyId)) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 }
-      );
-    }
+    const parsedId = await parseNumericId(params, "Invalid property ID");
+    if (parsedId instanceof NextResponse) return parsedId;
+    const propertyId = parsedId;
 
     // Delete associated images first
     await db

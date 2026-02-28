@@ -1,4 +1,5 @@
 import type { Property, PropertyImage } from "@/types";
+import { LOCALES } from "@/lib/constants";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -72,7 +73,7 @@ export function generateOrganizationJsonLd() {
 export function generateHreflangLinks(
   path: string
 ): { locale: string; url: string }[] {
-  return ["mk", "al", "en", "de", "tr"].map((locale) => ({
+  return LOCALES.map((locale) => ({
     locale,
     url: `${BASE_URL}/${locale}${path}`,
   }));

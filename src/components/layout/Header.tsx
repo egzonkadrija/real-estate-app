@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
+import { type Locale } from "@/lib/constants";
 
 export function Header() {
   const t = useTranslations("common");
@@ -35,12 +36,12 @@ export function Header() {
     { href: "/request-property" as const, label: t("requestProperty"), icon: FileText },
   ];
 
-  const languages = [
-    { code: "mk" as const, label: "Macedonian", flag: "🇲🇰" },
-    { code: "al" as const, label: "Shqip", flag: "🇦🇱" },
-    { code: "en" as const, label: "English", flag: "🇬🇧" },
-    { code: "de" as const, label: "Deutsch", flag: "🇩🇪" },
-    { code: "tr" as const, label: "Türkçe", flag: "🇹🇷" },
+  const languages: Array<{ code: Locale; label: string; flag: string }> = [
+    { code: "mk", label: "Macedonian", flag: "🇲🇰" },
+    { code: "al", label: "Shqip", flag: "🇦🇱" },
+    { code: "en", label: "English", flag: "🇬🇧" },
+    { code: "de", label: "Deutsch", flag: "🇩🇪" },
+    { code: "tr", label: "Türkçe", flag: "🇹🇷" },
   ];
 
   const currentLang = languages.find((l) => l.code === locale) || languages[0];
@@ -50,7 +51,7 @@ export function Header() {
     [pathname]
   );
 
-  function switchLocale(newLocale: "mk" | "al" | "en" | "de" | "tr") {
+  function switchLocale(newLocale: Locale) {
     router.replace(pathname, { locale: newLocale });
     setLangOpen(false);
   }
@@ -193,4 +194,3 @@ export function Header() {
     </header>
   );
 }
-

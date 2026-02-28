@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { properties } from "@/db/schema";
 import { inArray } from "drizzle-orm";
-import { getTokenFromHeader, verifyToken } from "@/lib/auth";
+import { requireAuth } from "@/lib/apiRouteUtils";
 
 interface RevenueProperty {
   id: number;
@@ -11,7 +11,7 @@ interface RevenueProperty {
   type: "sale" | "rent";
   status: "active" | "pending" | "sold" | "rented";
   price: number;
-  updated_at: Date | null;
+  updated_at: Date;
 }
 
 interface MonthlyRevenueRow {
@@ -36,14 +36,8 @@ function getMonthKey(date: Date): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = verifyToken(token);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const unauthorized = requireAuth(request);
+    if (unauthorized) return unauthorized;
 
     const statusFilter = ["sold", "rented"] as const;
 
