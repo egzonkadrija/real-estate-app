@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Locale } from "@/i18n/routing";
 import { db } from "@/db";
 import { properties } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -12,7 +13,7 @@ import { HeroCTAActions } from "@/components/home/HeroCTAActions";
 export default async function HomePage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });
@@ -121,7 +122,6 @@ export default async function HomePage({
               <HeroCTAActions
                 submitLabel={t("common.submitProperty")}
                 requestLabel={t("common.requestProperty")}
-                aiLabel={t("common.searchWithAI")}
                 showSubmitRequest={false}
                 compact
               />
@@ -135,8 +135,6 @@ export default async function HomePage({
           <HeroCTAActions
             submitLabel={t("common.submitProperty")}
             requestLabel={t("common.requestProperty")}
-            aiLabel={t("common.searchWithAI")}
-            showSearchWithAI={false}
           />
         </div>
       </section>

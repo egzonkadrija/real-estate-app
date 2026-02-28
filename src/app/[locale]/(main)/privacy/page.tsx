@@ -1,9 +1,10 @@
 import { getTranslations } from "next-intl/server";
+import { Locale } from "@/i18n/routing";
 
 export default async function PrivacyPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });

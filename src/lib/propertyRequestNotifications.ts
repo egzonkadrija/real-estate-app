@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 type ReviewStatus = "pending" | "declined" | "approved";
 
 type NotificationInput = {
@@ -24,8 +22,7 @@ const mailerFrom = process.env.EMAIL_FROM?.trim();
 const mailerReplyTo = process.env.EMAIL_REPLY_TO?.trim();
 const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const appName = process.env.EMAIL_APP_NAME ?? "NovaBuildings";
-const simulateEmails =
-  process.env.EMAIL_SIMULATE?.toLowerCase() === "true";
+const simulateEmails = process.env.EMAIL_SIMULATE?.toLowerCase() === "true";
 
 function parseSmtpConfig(): SmtpConfig | null {
   const host = process.env.SMTP_HOST?.trim();
@@ -55,7 +52,7 @@ function getEmailStatusLabels(status: ReviewStatus): {
     return {
       subject: "Your property request was approved",
       message:
-        "Great news—your property request has been approved and the listing is now published.",
+        "Great news your property request has been approved and the listing is now published.",
       action: "published",
     };
   }
@@ -76,22 +73,30 @@ function getEmailStatusLabels(status: ReviewStatus): {
   };
 }
 
+function getLogOutput(input: NotificationInput, subject: string, textBody: string) {
+  return [
+    "[EMAIL_SIMULATION] Property request status notification",
+    `[EMAIL_SIMULATION] To: ${input.recipientEmail}`,
+    `[EMAIL_SIMULATION] Subject: ${subject}`,
+    `[EMAIL_SIMULATION] Body:\n${textBody}`,
+  ];
+}
+
 export async function notifyPropertyRequestStatus(
   input: NotificationInput
 ): Promise<void> {
   const config = parseSmtpConfig();
-
   const recipient = input.recipientEmail.trim();
+
   if (!recipient) {
     console.warn("Missing recipient email; skipping request status email.");
     return;
   }
 
-    const normalizedRequestType =
-      input.requestType === "rent" ? "Rent" : "Buy";
-    const details = [
-      `Request Type: ${normalizedRequestType}`,
-      `Category: ${input.category}`,
+  const normalizedRequestType = input.requestType === "rent" ? "Rent" : "Buy";
+  const details = [
+    `Request Type: ${normalizedRequestType}`,
+    `Category: ${input.category}`,
     `Location: ${input.location || "Not provided"}`,
   ];
   if (input.propertyId) {
@@ -99,9 +104,9 @@ export async function notifyPropertyRequestStatus(
     details.push(`Property Page: ${appBaseUrl}/en/properties/${input.propertyId}`);
   }
 
-    const labels = getEmailStatusLabels(input.status);
-    const subject = `${appName}: ${labels.subject}`;
-    const textBody = [
+  const labels = getEmailStatusLabels(input.status);
+  const subject = `${appName}: ${labels.subject}`;
+  const textBody = [
     `Hello ${input.recipientName},`,
     "",
     labels.message,
@@ -110,7 +115,7 @@ export async function notifyPropertyRequestStatus(
     "",
     `This request is now marked as ${labels.action}.`,
     "",
-    `If you have questions, you can contact our support team at ${process.env.EMAIL_REPLY_TO || appName}.`,
+    `If you have questions, you can contact our support team at ${mailerReplyTo || appName}.`,
   ].join("\n");
 
   const htmlBody = `
@@ -125,29 +130,19 @@ export async function notifyPropertyRequestStatus(
   `.trim();
 
   if (simulateEmails || !config || !mailerFrom) {
-    console.info("[EMAIL_SIMULATION] Property request status notification");
-    console.info(`[EMAIL_SIMULATION] To: ${recipient}`);
-    console.info(`[EMAIL_SIMULATION] Subject: ${subject}`);
-    console.info(`[EMAIL_SIMULATION] Body:\n${textBody}`);
+    const logs = getLogOutput(input, subject, textBody);
+    logs.forEach((line) => console.info(line));
     return;
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: { user: config.user, pass: config.pass },
-    });
-
-    await transporter.sendMail({
-      from: mailerFrom,
-      to: recipient,
-      replyTo: mailerReplyTo || undefined,
-      subject,
-      text: textBody,
-      html: htmlBody,
-    });
+    console.warn(
+      "SMTP configuration is present, but nodemailer is not wired in this build. " +
+        "Use EMAIL_SIMULATE=true to keep logs flowing, or install nodemailer for real delivery."
+    );
+    const logs = getLogOutput(input, subject, textBody);
+    logs.forEach((line) => console.info(line));
+    console.info("[EMAIL_SIMULATION] HTML preview:", htmlBody);
   } catch (error) {
     console.error("Failed to send property request status email:", error);
   }

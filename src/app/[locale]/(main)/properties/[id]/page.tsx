@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getLocalizedField, formatPrice, formatArea } from "@/lib/utils";
+import { Locale } from "@/i18n/routing";
 import { PropertyGallery } from "@/components/property/PropertyGallery";
 import { PropertyMap } from "@/components/property/PropertyMap";
 import { FloatingSidebar } from "@/components/property/FloatingSidebar";
@@ -26,7 +27,7 @@ import { MortgageCalculator } from "./MortgageCalculator";
 import type { Metadata } from "next";
 
 interface PropertyDetailPageProps {
-  params: Promise<{ id: string; locale: string }>;
+  params: Promise<{ id: string; locale: Locale }>;
 }
 
 export async function generateMetadata({

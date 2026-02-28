@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/card";
 import { NORTH_MACEDONIA_CENTER } from "@/lib/constants";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { Locale } from "@/i18n/routing";
 
 export default async function ContactPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });

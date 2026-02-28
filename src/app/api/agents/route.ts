@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { agents } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { agents, properties } from "@/db/schema";
+import { count, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
@@ -15,12 +15,100 @@ const createAgentSchema = z.object({
   bio_de: z.string().nullable().optional(),
 });
 
+type AgentPropertyItem = {
+  id: number;
+  title: string;
+  status:
+    | "active"
+    | "pending"
+    | "sold"
+    | "rented";
+  type: "sale" | "rent";
+  price: number | null;
+};
+
+type AgentListItem = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  avatar: string | null;
+  bio_al: string | null;
+  bio_en: string | null;
+  bio_de: string | null;
+  totalProperties: number;
+  soldProperties: number;
+  soldRevenue: number;
+  properties: AgentPropertyItem[];
+};
+
 export async function GET() {
   try {
-    const data = await db
-      .select()
+    const agentsWithStats = await db
+      .select({
+        id: agents.id,
+        name: agents.name,
+        email: agents.email,
+        phone: agents.phone,
+        avatar: agents.avatar,
+        bio_al: agents.bio_al,
+        bio_en: agents.bio_en,
+        bio_de: agents.bio_de,
+        totalProperties: count(properties.id).as("totalProperties"),
+        soldProperties: count(
+          sql`CASE WHEN ${properties.status} = 'sold' THEN 1 END`
+        ).as("soldProperties"),
+        soldRevenue: sql<number | null>`
+          COALESCE(
+            SUM(CASE WHEN ${properties.status} = 'sold' THEN ${properties.price} ELSE 0 END),
+            0
+          )
+        `.as("soldRevenue"),
+      })
       .from(agents)
+      .leftJoin(properties, eq(properties.agent_id, agents.id))
+      .groupBy(agents.id)
       .orderBy(desc(agents.created_at));
+
+    const propertiesRows = await db
+      .select({
+        agent_id: properties.agent_id,
+        id: properties.id,
+        title_en: properties.title_en,
+        status: properties.status,
+        type: properties.type,
+        price: properties.price,
+      })
+      .from(properties)
+      .orderBy(desc(properties.created_at));
+
+    const propertiesByAgent = new Map<number, AgentPropertyItem[]>();
+    for (const property of propertiesRows) {
+      if (!property.agent_id) {
+        continue;
+      }
+
+      const list = propertiesByAgent.get(property.agent_id) ?? [];
+      list.push({
+        id: property.id,
+        title: property.title_en,
+        status: property.status,
+        type: property.type,
+        price: property.price,
+      });
+      propertiesByAgent.set(property.agent_id, list);
+    }
+
+    const data: AgentListItem[] = agentsWithStats.map((agent) => {
+      const properties = propertiesByAgent.get(agent.id) ?? [];
+      return {
+        ...agent,
+        totalProperties: Number(agent.totalProperties),
+        soldProperties: Number(agent.soldProperties),
+        soldRevenue: Number(agent.soldRevenue),
+        properties,
+      };
+    });
 
     return NextResponse.json(data);
   } catch (error) {

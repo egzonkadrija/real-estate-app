@@ -1,0 +1,789 @@
+{
+    "id":  "4eba2d7d-3858-401c-b15b-09c4150cb769",
+    "prevId":  "2ba82e43-0b17-41a7-8a4f-f9dc72296446",
+    "version":  "7",
+    "dialect":  "postgresql",
+    "tables":  {
+                   "public.admin_users":  {
+                                              "name":  "admin_users",
+                                              "schema":  "",
+                                              "columns":  {
+                                                              "id":  {
+                                                                         "name":  "id",
+                                                                         "type":  "serial",
+                                                                         "primaryKey":  true,
+                                                                         "notNull":  true
+                                                                     },
+                                                              "email":  {
+                                                                            "name":  "email",
+                                                                            "type":  "varchar(255)",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true
+                                                                        },
+                                                              "password_hash":  {
+                                                                                    "name":  "password_hash",
+                                                                                    "type":  "text",
+                                                                                    "primaryKey":  false,
+                                                                                    "notNull":  true
+                                                                                },
+                                                              "name":  {
+                                                                           "name":  "name",
+                                                                           "type":  "varchar(255)",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  true
+                                                                       },
+                                                              "role":  {
+                                                                           "name":  "role",
+                                                                           "type":  "varchar(50)",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  true,
+                                                                           "default":  "\u0027admin\u0027"
+                                                                       },
+                                                              "created_at":  {
+                                                                                 "name":  "created_at",
+                                                                                 "type":  "timestamp",
+                                                                                 "primaryKey":  false,
+                                                                                 "notNull":  true,
+                                                                                 "default":  "now()"
+                                                                             }
+                                                          },
+                                              "indexes":  {
+
+                                                          },
+                                              "foreignKeys":  {
+
+                                                              },
+                                              "compositePrimaryKeys":  {
+
+                                                                       },
+                                              "uniqueConstraints":  {
+                                                                        "admin_users_email_unique":  {
+                                                                                                         "name":  "admin_users_email_unique",
+                                                                                                         "nullsNotDistinct":  false,
+                                                                                                         "columns":  [
+                                                                                                                         "email"
+                                                                                                                     ]
+                                                                                                     }
+                                                                    },
+                                              "policies":  {
+
+                                                           },
+                                              "checkConstraints":  {
+
+                                                                   },
+                                              "isRLSEnabled":  false
+                                          },
+                   "public.agents":  {
+                                         "name":  "agents",
+                                         "schema":  "",
+                                         "columns":  {
+                                                         "id":  {
+                                                                    "name":  "id",
+                                                                    "type":  "serial",
+                                                                    "primaryKey":  true,
+                                                                    "notNull":  true
+                                                                },
+                                                         "name":  {
+                                                                      "name":  "name",
+                                                                      "type":  "varchar(255)",
+                                                                      "primaryKey":  false,
+                                                                      "notNull":  true
+                                                                  },
+                                                         "email":  {
+                                                                       "name":  "email",
+                                                                       "type":  "varchar(255)",
+                                                                       "primaryKey":  false,
+                                                                       "notNull":  true
+                                                                   },
+                                                         "phone":  {
+                                                                       "name":  "phone",
+                                                                       "type":  "varchar(50)",
+                                                                       "primaryKey":  false,
+                                                                       "notNull":  true
+                                                                   },
+                                                         "avatar":  {
+                                                                        "name":  "avatar",
+                                                                        "type":  "text",
+                                                                        "primaryKey":  false,
+                                                                        "notNull":  false
+                                                                    },
+                                                         "bio_al":  {
+                                                                        "name":  "bio_al",
+                                                                        "type":  "text",
+                                                                        "primaryKey":  false,
+                                                                        "notNull":  false
+                                                                    },
+                                                         "bio_en":  {
+                                                                        "name":  "bio_en",
+                                                                        "type":  "text",
+                                                                        "primaryKey":  false,
+                                                                        "notNull":  false
+                                                                    },
+                                                         "bio_de":  {
+                                                                        "name":  "bio_de",
+                                                                        "type":  "text",
+                                                                        "primaryKey":  false,
+                                                                        "notNull":  false
+                                                                    },
+                                                         "created_at":  {
+                                                                            "name":  "created_at",
+                                                                            "type":  "timestamp",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true,
+                                                                            "default":  "now()"
+                                                                        }
+                                                     },
+                                         "indexes":  {
+
+                                                     },
+                                         "foreignKeys":  {
+
+                                                         },
+                                         "compositePrimaryKeys":  {
+
+                                                                  },
+                                         "uniqueConstraints":  {
+
+                                                               },
+                                         "policies":  {
+
+                                                      },
+                                         "checkConstraints":  {
+
+                                                              },
+                                         "isRLSEnabled":  false
+                                     },
+                   "public.contacts":  {
+                                           "name":  "contacts",
+                                           "schema":  "",
+                                           "columns":  {
+                                                           "id":  {
+                                                                      "name":  "id",
+                                                                      "type":  "serial",
+                                                                      "primaryKey":  true,
+                                                                      "notNull":  true
+                                                                  },
+                                                           "property_id":  {
+                                                                               "name":  "property_id",
+                                                                               "type":  "integer",
+                                                                               "primaryKey":  false,
+                                                                               "notNull":  false
+                                                                           },
+                                                           "name":  {
+                                                                        "name":  "name",
+                                                                        "type":  "varchar(255)",
+                                                                        "primaryKey":  false,
+                                                                        "notNull":  true
+                                                                    },
+                                                           "email":  {
+                                                                         "name":  "email",
+                                                                         "type":  "varchar(255)",
+                                                                         "primaryKey":  false,
+                                                                         "notNull":  true
+                                                                     },
+                                                           "phone":  {
+                                                                         "name":  "phone",
+                                                                         "type":  "varchar(50)",
+                                                                         "primaryKey":  false,
+                                                                         "notNull":  false
+                                                                     },
+                                                           "message":  {
+                                                                           "name":  "message",
+                                                                           "type":  "text",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  true
+                                                                       },
+                                                           "created_at":  {
+                                                                              "name":  "created_at",
+                                                                              "type":  "timestamp",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true,
+                                                                              "default":  "now()"
+                                                                          },
+                                                           "is_read":  {
+                                                                           "name":  "is_read",
+                                                                           "type":  "boolean",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  true,
+                                                                           "default":  false
+                                                                       }
+                                                       },
+                                           "indexes":  {
+
+                                                       },
+                                           "foreignKeys":  {
+                                                               "contacts_property_id_properties_id_fk":  {
+                                                                                                             "name":  "contacts_property_id_properties_id_fk",
+                                                                                                             "tableFrom":  "contacts",
+                                                                                                             "tableTo":  "properties",
+                                                                                                             "columnsFrom":  [
+                                                                                                                                 "property_id"
+                                                                                                                             ],
+                                                                                                             "columnsTo":  [
+                                                                                                                               "id"
+                                                                                                                           ],
+                                                                                                             "onDelete":  "no action",
+                                                                                                             "onUpdate":  "no action"
+                                                                                                         }
+                                                           },
+                                           "compositePrimaryKeys":  {
+
+                                                                    },
+                                           "uniqueConstraints":  {
+
+                                                                 },
+                                           "policies":  {
+
+                                                        },
+                                           "checkConstraints":  {
+
+                                                                },
+                                           "isRLSEnabled":  false
+                                       },
+                   "public.locations":  {
+                                            "name":  "locations",
+                                            "schema":  "",
+                                            "columns":  {
+                                                            "id":  {
+                                                                       "name":  "id",
+                                                                       "type":  "serial",
+                                                                       "primaryKey":  true,
+                                                                       "notNull":  true
+                                                                   },
+                                                            "type":  {
+                                                                         "name":  "type",
+                                                                         "type":  "location_type",
+                                                                         "typeSchema":  "public",
+                                                                         "primaryKey":  false,
+                                                                         "notNull":  true
+                                                                     },
+                                                            "name_al":  {
+                                                                            "name":  "name_al",
+                                                                            "type":  "varchar(255)",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true
+                                                                        },
+                                                            "name_en":  {
+                                                                            "name":  "name_en",
+                                                                            "type":  "varchar(255)",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true
+                                                                        },
+                                                            "name_de":  {
+                                                                            "name":  "name_de",
+                                                                            "type":  "varchar(255)",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true
+                                                                        },
+                                                            "parent_id":  {
+                                                                              "name":  "parent_id",
+                                                                              "type":  "integer",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  false
+                                                                          },
+                                                            "slug":  {
+                                                                         "name":  "slug",
+                                                                         "type":  "varchar(255)",
+                                                                         "primaryKey":  false,
+                                                                         "notNull":  true
+                                                                     }
+                                                        },
+                                            "indexes":  {
+
+                                                        },
+                                            "foreignKeys":  {
+
+                                                            },
+                                            "compositePrimaryKeys":  {
+
+                                                                     },
+                                            "uniqueConstraints":  {
+                                                                      "locations_slug_unique":  {
+                                                                                                    "name":  "locations_slug_unique",
+                                                                                                    "nullsNotDistinct":  false,
+                                                                                                    "columns":  [
+                                                                                                                    "slug"
+                                                                                                                ]
+                                                                                                }
+                                                                  },
+                                            "policies":  {
+
+                                                         },
+                                            "checkConstraints":  {
+
+                                                                 },
+                                            "isRLSEnabled":  false
+                                        },
+                   "public.properties":  {
+                                             "name":  "properties",
+                                             "schema":  "",
+                                             "columns":  {
+                                                             "id":  {
+                                                                        "name":  "id",
+                                                                        "type":  "serial",
+                                                                        "primaryKey":  true,
+                                                                        "notNull":  true
+                                                                    },
+                                                             "title_al":  {
+                                                                              "name":  "title_al",
+                                                                              "type":  "varchar(500)",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                             "title_en":  {
+                                                                              "name":  "title_en",
+                                                                              "type":  "varchar(500)",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                             "title_de":  {
+                                                                              "name":  "title_de",
+                                                                              "type":  "varchar(500)",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                             "description_al":  {
+                                                                                    "name":  "description_al",
+                                                                                    "type":  "text",
+                                                                                    "primaryKey":  false,
+                                                                                    "notNull":  true
+                                                                                },
+                                                             "description_en":  {
+                                                                                    "name":  "description_en",
+                                                                                    "type":  "text",
+                                                                                    "primaryKey":  false,
+                                                                                    "notNull":  true
+                                                                                },
+                                                             "description_de":  {
+                                                                                    "name":  "description_de",
+                                                                                    "type":  "text",
+                                                                                    "primaryKey":  false,
+                                                                                    "notNull":  true
+                                                                                },
+                                                             "type":  {
+                                                                          "name":  "type",
+                                                                          "type":  "property_type",
+                                                                          "typeSchema":  "public",
+                                                                          "primaryKey":  false,
+                                                                          "notNull":  true
+                                                                      },
+                                                             "category":  {
+                                                                              "name":  "category",
+                                                                              "type":  "property_category",
+                                                                              "typeSchema":  "public",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                             "price":  {
+                                                                           "name":  "price",
+                                                                           "type":  "integer",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  true
+                                                                       },
+                                                             "currency":  {
+                                                                              "name":  "currency",
+                                                                              "type":  "varchar(10)",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true,
+                                                                              "default":  "\u0027EUR\u0027"
+                                                                          },
+                                                             "surface_area":  {
+                                                                                  "name":  "surface_area",
+                                                                                  "type":  "integer",
+                                                                                  "primaryKey":  false,
+                                                                                  "notNull":  true
+                                                                              },
+                                                             "rooms":  {
+                                                                           "name":  "rooms",
+                                                                           "type":  "integer",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  false
+                                                                       },
+                                                             "bathrooms":  {
+                                                                               "name":  "bathrooms",
+                                                                               "type":  "integer",
+                                                                               "primaryKey":  false,
+                                                                               "notNull":  false
+                                                                           },
+                                                             "floor":  {
+                                                                           "name":  "floor",
+                                                                           "type":  "integer",
+                                                                           "primaryKey":  false,
+                                                                           "notNull":  false
+                                                                       },
+                                                             "year_built":  {
+                                                                                "name":  "year_built",
+                                                                                "type":  "integer",
+                                                                                "primaryKey":  false,
+                                                                                "notNull":  false
+                                                                            },
+                                                             "latitude":  {
+                                                                              "name":  "latitude",
+                                                                              "type":  "real",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  false
+                                                                          },
+                                                             "longitude":  {
+                                                                               "name":  "longitude",
+                                                                               "type":  "real",
+                                                                               "primaryKey":  false,
+                                                                               "notNull":  false
+                                                                           },
+                                                             "location_id":  {
+                                                                                 "name":  "location_id",
+                                                                                 "type":  "integer",
+                                                                                 "primaryKey":  false,
+                                                                                 "notNull":  true
+                                                                             },
+                                                             "agent_id":  {
+                                                                              "name":  "agent_id",
+                                                                              "type":  "integer",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                             "featured":  {
+                                                                              "name":  "featured",
+                                                                              "type":  "boolean",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true,
+                                                                              "default":  false
+                                                                          },
+                                                             "status":  {
+                                                                            "name":  "status",
+                                                                            "type":  "property_status",
+                                                                            "typeSchema":  "public",
+                                                                            "primaryKey":  false,
+                                                                            "notNull":  true,
+                                                                            "default":  "\u0027active\u0027"
+                                                                        },
+                                                             "amenities":  {
+                                                                               "name":  "amenities",
+                                                                               "type":  "jsonb",
+                                                                               "primaryKey":  false,
+                                                                               "notNull":  true,
+                                                                               "default":  "\u0027[]\u0027::jsonb"
+                                                                           },
+                                                             "created_at":  {
+                                                                                "name":  "created_at",
+                                                                                "type":  "timestamp",
+                                                                                "primaryKey":  false,
+                                                                                "notNull":  true,
+                                                                                "default":  "now()"
+                                                                            },
+                                                             "updated_at":  {
+                                                                                "name":  "updated_at",
+                                                                                "type":  "timestamp",
+                                                                                "primaryKey":  false,
+                                                                                "notNull":  true,
+                                                                                "default":  "now()"
+                                                                            }
+                                                         },
+                                             "indexes":  {
+
+                                                         },
+                                             "foreignKeys":  {
+                                                                 "properties_location_id_locations_id_fk":  {
+                                                                                                                "name":  "properties_location_id_locations_id_fk",
+                                                                                                                "tableFrom":  "properties",
+                                                                                                                "tableTo":  "locations",
+                                                                                                                "columnsFrom":  [
+                                                                                                                                    "location_id"
+                                                                                                                                ],
+                                                                                                                "columnsTo":  [
+                                                                                                                                  "id"
+                                                                                                                              ],
+                                                                                                                "onDelete":  "no action",
+                                                                                                                "onUpdate":  "no action"
+                                                                                                            },
+                                                                 "properties_agent_id_agents_id_fk":  {
+                                                                                                          "name":  "properties_agent_id_agents_id_fk",
+                                                                                                          "tableFrom":  "properties",
+                                                                                                          "tableTo":  "agents",
+                                                                                                          "columnsFrom":  [
+                                                                                                                              "agent_id"
+                                                                                                                          ],
+                                                                                                          "columnsTo":  [
+                                                                                                                            "id"
+                                                                                                                        ],
+                                                                                                          "onDelete":  "no action",
+                                                                                                          "onUpdate":  "no action"
+                                                                                                      }
+                                                             },
+                                             "compositePrimaryKeys":  {
+
+                                                                      },
+                                             "uniqueConstraints":  {
+
+                                                                   },
+                                             "policies":  {
+
+                                                          },
+                                             "checkConstraints":  {
+
+                                                                  },
+                                             "isRLSEnabled":  false
+                                         },
+                   "public.property_images":  {
+                                                  "name":  "property_images",
+                                                  "schema":  "",
+                                                  "columns":  {
+                                                                  "id":  {
+                                                                             "name":  "id",
+                                                                             "type":  "serial",
+                                                                             "primaryKey":  true,
+                                                                             "notNull":  true
+                                                                         },
+                                                                  "property_id":  {
+                                                                                      "name":  "property_id",
+                                                                                      "type":  "integer",
+                                                                                      "primaryKey":  false,
+                                                                                      "notNull":  true
+                                                                                  },
+                                                                  "url":  {
+                                                                              "name":  "url",
+                                                                              "type":  "text",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  true
+                                                                          },
+                                                                  "alt":  {
+                                                                              "name":  "alt",
+                                                                              "type":  "varchar(255)",
+                                                                              "primaryKey":  false,
+                                                                              "notNull":  false
+                                                                          },
+                                                                  "sort_order":  {
+                                                                                     "name":  "sort_order",
+                                                                                     "type":  "integer",
+                                                                                     "primaryKey":  false,
+                                                                                     "notNull":  true,
+                                                                                     "default":  0
+                                                                                 },
+                                                                  "is_primary":  {
+                                                                                     "name":  "is_primary",
+                                                                                     "type":  "boolean",
+                                                                                     "primaryKey":  false,
+                                                                                     "notNull":  true,
+                                                                                     "default":  false
+                                                                                 }
+                                                              },
+                                                  "indexes":  {
+
+                                                              },
+                                                  "foreignKeys":  {
+                                                                      "property_images_property_id_properties_id_fk":  {
+                                                                                                                           "name":  "property_images_property_id_properties_id_fk",
+                                                                                                                           "tableFrom":  "property_images",
+                                                                                                                           "tableTo":  "properties",
+                                                                                                                           "columnsFrom":  [
+                                                                                                                                               "property_id"
+                                                                                                                                           ],
+                                                                                                                           "columnsTo":  [
+                                                                                                                                             "id"
+                                                                                                                                         ],
+                                                                                                                           "onDelete":  "cascade",
+                                                                                                                           "onUpdate":  "no action"
+                                                                                                                       }
+                                                                  },
+                                                  "compositePrimaryKeys":  {
+
+                                                                           },
+                                                  "uniqueConstraints":  {
+
+                                                                        },
+                                                  "policies":  {
+
+                                                               },
+                                                  "checkConstraints":  {
+
+                                                                       },
+                                                  "isRLSEnabled":  false
+                                              },
+                   "public.property_requests":  {
+                                                    "name":  "property_requests",
+                                                    "schema":  "",
+                                                    "columns":  {
+                                                                    "id":  {
+                                                                               "name":  "id",
+                                                                               "type":  "serial",
+                                                                               "primaryKey":  true,
+                                                                               "notNull":  true
+                                                                           },
+                                                                    "type":  {
+                                                                                 "name":  "type",
+                                                                                 "type":  "property_request_type",
+                                                                                 "typeSchema":  "public",
+                                                                                 "primaryKey":  false,
+                                                                                 "notNull":  true
+                                                                             },
+                                                                    "category":  {
+                                                                                     "name":  "category",
+                                                                                     "type":  "varchar(50)",
+                                                                                     "primaryKey":  false,
+                                                                                     "notNull":  true
+                                                                                 },
+                                                                    "min_price":  {
+                                                                                      "name":  "min_price",
+                                                                                      "type":  "integer",
+                                                                                      "primaryKey":  false,
+                                                                                      "notNull":  false
+                                                                                  },
+                                                                    "max_price":  {
+                                                                                      "name":  "max_price",
+                                                                                      "type":  "integer",
+                                                                                      "primaryKey":  false,
+                                                                                      "notNull":  false
+                                                                                  },
+                                                                    "location":  {
+                                                                                     "name":  "location",
+                                                                                     "type":  "varchar(255)",
+                                                                                     "primaryKey":  false,
+                                                                                     "notNull":  false
+                                                                                 },
+                                                                    "name":  {
+                                                                                 "name":  "name",
+                                                                                 "type":  "varchar(255)",
+                                                                                 "primaryKey":  false,
+                                                                                 "notNull":  true
+                                                                             },
+                                                                    "email":  {
+                                                                                  "name":  "email",
+                                                                                  "type":  "varchar(255)",
+                                                                                  "primaryKey":  false,
+                                                                                  "notNull":  true
+                                                                              },
+                                                                    "phone":  {
+                                                                                  "name":  "phone",
+                                                                                  "type":  "varchar(50)",
+                                                                                  "primaryKey":  false,
+                                                                                  "notNull":  false
+                                                                              },
+                                                                    "description":  {
+                                                                                        "name":  "description",
+                                                                                        "type":  "text",
+                                                                                        "primaryKey":  false,
+                                                                                        "notNull":  false
+                                                                                    },
+                                                                    "created_at":  {
+                                                                                       "name":  "created_at",
+                                                                                       "type":  "timestamp",
+                                                                                       "primaryKey":  false,
+                                                                                       "notNull":  true,
+                                                                                       "default":  "now()"
+                                                                                   },
+                                                                    "review_status":  {
+                                                                                          "name":  "review_status",
+                                                                                          "type":  "property_request_review_status",
+                                                                                          "typeSchema":  "public",
+                                                                                          "primaryKey":  false,
+                                                                                          "notNull":  true,
+                                                                                          "default":  "\u0027pending\u0027"
+                                                                                      }
+                                                                },
+                                                    "indexes":  {
+
+                                                                },
+                                                    "foreignKeys":  {
+
+                                                                    },
+                                                    "compositePrimaryKeys":  {
+
+                                                                             },
+                                                    "uniqueConstraints":  {
+
+                                                                          },
+                                                    "policies":  {
+
+                                                                 },
+                                                    "checkConstraints":  {
+
+                                                                         },
+                                                    "isRLSEnabled":  false
+                                                }
+               },
+    "enums":  {
+                  "public.location_type":  {
+                                               "name":  "location_type",
+                                               "schema":  "public",
+                                               "values":  [
+                                                              "state",
+                                                              "city",
+                                                              "neighborhood"
+                                                          ]
+                                           },
+                  "public.property_category":  {
+                                                   "name":  "property_category",
+                                                   "schema":  "public",
+                                                   "values":  [
+                                                                  "house",
+                                                                  "apartment",
+                                                                  "office",
+                                                                  "land",
+                                                                  "store",
+                                                                  "warehouse",
+                                                                  "penthouse",
+                                                                  "object"
+                                                              ]
+                                               },
+                  "public.property_request_type":  {
+                                                       "name":  "property_request_type",
+                                                       "schema":  "public",
+                                                       "values":  [
+                                                                      "buy",
+                                                                      "rent"
+                                                                  ]
+                                                   },
+                  "public.property_status":  {
+                                                 "name":  "property_status",
+                                                 "schema":  "public",
+                                                 "values":  [
+                                                                "active",
+                                                                "pending",
+                                                                "sold",
+                                                                "rented"
+                                                            ]
+                                             },
+                  "public.property_type":  {
+                                               "name":  "property_type",
+                                               "schema":  "public",
+                                               "values":  [
+                                                              "sale",
+                                                              "rent"
+                                                          ]
+                                           },
+                  "public.property_request_review_status":  {
+                                                                "name":  "property_request_review_status",
+                                                                "schema":  "public",
+                                                                "values":  [
+                                                                               "pending",
+                                                                               "approved",
+                                                                               "declined"
+                                                                           ]
+                                                            }
+              },
+    "schemas":  {
+
+                },
+    "sequences":  {
+
+                  },
+    "roles":  {
+
+              },
+    "policies":  {
+
+                 },
+    "views":  {
+
+              },
+    "_meta":  {
+                  "columns":  {
+
+                              },
+                  "schemas":  {
+
+                              },
+                  "tables":  {
+
+                             }
+              }
+}

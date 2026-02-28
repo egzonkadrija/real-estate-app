@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { properties, propertyImages, locations } from "@/db/schema";
+import { properties, propertyImages, locations, agents } from "@/db/schema";
 import { eq, desc, and, gte, lte, sql, count, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
@@ -28,12 +28,16 @@ const createPropertySchema = z.object({
   featured: z.boolean().default(false),
   status: z.enum(["active", "pending", "sold", "rented"]).default("active"),
   amenities: z.array(z.string()).default([]),
-  images: z.array(z.object({
-    url: z.string(),
-    alt: z.string().optional(),
-    sort_order: z.number().default(0),
-    is_primary: z.boolean().default(false),
-  })).optional(),
+  images: z
+    .array(
+      z.object({
+        url: z.string(),
+        alt: z.string().optional(),
+        sort_order: z.number().default(0),
+        is_primary: z.boolean().default(false),
+      })
+    )
+    .optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -54,6 +58,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "12", 10);
     const featured = searchParams.get("featured");
     const status = searchParams.get("status");
+    const agentId = searchParams.get("agentId");
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const conditions: any[] = [];
@@ -69,39 +76,63 @@ export async function GET(request: NextRequest) {
         );
       }
     }
+
     if (q?.trim()) {
       const term = `%${q.trim()}%`;
       conditions.push(
         sql`(${properties.title_al} ILIKE ${term} OR ${properties.title_en} ILIKE ${term} OR ${properties.title_de} ILIKE ${term})`
       );
     }
+
     if (type) {
       conditions.push(eq(properties.type, type as "sale" | "rent"));
     }
+
     if (category) {
-      conditions.push(eq(properties.category, category as "house" | "apartment" | "office" | "land" | "store" | "warehouse" | "penthouse" | "object"));
+      conditions.push(
+        eq(
+          properties.category,
+          category as
+            | "house"
+            | "apartment"
+            | "office"
+            | "land"
+            | "store"
+            | "warehouse"
+            | "penthouse"
+            | "object"
+        )
+      );
     }
+
     if (minPrice) {
       conditions.push(gte(properties.price, Number(minPrice)));
     }
+
     if (maxPrice) {
       conditions.push(lte(properties.price, Number(maxPrice)));
     }
+
     if (minArea) {
       conditions.push(gte(properties.surface_area, Number(minArea)));
     }
+
     if (maxArea) {
       conditions.push(lte(properties.surface_area, Number(maxArea)));
     }
+
     if (locationId) {
       conditions.push(eq(properties.location_id, Number(locationId)));
     }
+
     if (rooms) {
       conditions.push(gte(properties.rooms, Number(rooms)));
     }
+
     if (featured === "true") {
       conditions.push(eq(properties.featured, true));
     }
+
     if (status) {
       const allowedStatuses = ["active", "pending", "sold", "rented"] as const;
       const normalizedStatuses = status
@@ -117,14 +148,35 @@ export async function GET(request: NextRequest) {
         conditions.push(
           inArray(
             properties.status,
-            normalizedStatuses as (
+            normalizedStatuses as
               | "active"
               | "pending"
               | "sold"
               | "rented"
-            )[]
           )
         );
+      }
+    }
+
+    if (agentId) {
+      const resolvedAgentId = Number(agentId);
+      if (!Number.isNaN(resolvedAgentId)) {
+        conditions.push(eq(properties.agent_id, resolvedAgentId));
+      }
+    }
+
+    if (fromDate) {
+      const parsedFrom = new Date(fromDate);
+      if (!Number.isNaN(parsedFrom.getTime())) {
+        conditions.push(gte(properties.created_at, parsedFrom));
+      }
+    }
+
+    if (toDate) {
+      const parsedTo = new Date(toDate);
+      if (!Number.isNaN(parsedTo.getTime())) {
+        parsedTo.setHours(23, 59, 59, 999);
+        conditions.push(lte(properties.created_at, parsedTo));
       }
     }
 
@@ -142,6 +194,7 @@ export async function GET(request: NextRequest) {
       .select()
       .from(properties)
       .leftJoin(locations, eq(properties.location_id, locations.id))
+      .leftJoin(agents, eq(properties.agent_id, agents.id))
       .where(whereClause)
       .orderBy(desc(properties.created_at))
       .limit(limit)
@@ -165,6 +218,12 @@ export async function GET(request: NextRequest) {
     const result = data.map((row) => ({
       ...row.properties,
       location: row.locations,
+      agent: row.agents
+        ? {
+            id: row.agents.id,
+            name: row.agents.name,
+          }
+        : null,
       images: images.filter((img) => img.property_id === row.properties.id),
     }));
 

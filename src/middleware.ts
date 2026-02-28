@@ -81,7 +81,7 @@ export function middleware(request: NextRequest) {
       const response = NextResponse.redirect(
         new URL(adminContext.loginPath, request.url)
       );
-      response.cookies.delete(ADMIN_TOKEN_COOKIE, { path: "/" });
+      response.cookies.delete({ name: ADMIN_TOKEN_COOKIE, path: "/" });
       return response;
     }
 

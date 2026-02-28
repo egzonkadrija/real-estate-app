@@ -14,7 +14,6 @@ import {
   Info,
   Send,
   FileText,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -56,10 +55,6 @@ export function Header() {
     setLangOpen(false);
   }
 
-  function openAIChat() {
-    window.dispatchEvent(new Event("open-ai-chat"));
-  }
-
   return (
     <header className="fixed inset-x-0 top-0 z-[70] w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-4">
@@ -99,15 +94,6 @@ export function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Search with AI Button */}
-          <button
-            onClick={openAIChat}
-            className="hidden items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)] sm:inline-flex"
-          >
-            <Sparkles className="h-4 w-4" />
-            AI
-          </button>
-
           <Link
             href="/favorites"
             className="relative rounded-[var(--radius-md)] p-2 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
@@ -201,16 +187,6 @@ export function Header() {
                 </Link>
               );
             })}
-            <button
-              onClick={() => {
-                setMobileOpen(false);
-                openAIChat();
-              }}
-              className="mt-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI
-            </button>
           </nav>
         </div>
       )}

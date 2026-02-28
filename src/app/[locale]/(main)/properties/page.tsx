@@ -8,10 +8,11 @@ import { PropertiesGrid } from "./PropertiesGrid";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Locale } from "@/i18n/routing";
 import type { PropertyCategory, PropertyType } from "@/types";
 
 interface PropertiesPageProps {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
   searchParams: Promise<{
     q?: string;
     type?: string;

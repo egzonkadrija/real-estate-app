@@ -5,160 +5,386 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import {
   Building2,
-  Mail,
-  Users,
-  TrendingUp,
-  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  DollarSign,
+  ListChecks,
+  MailOpen,
+  ChevronDown,
 } from "lucide-react";
 
-interface Stats {
-  totalProperties: number;
-  totalContacts: number;
-  unreadContacts: number;
-  totalAgents: number;
+interface PropertyRequest {
+  id: number;
+  review_status: "pending" | "approved" | "declined";
+  description: string | null;
 }
 
-interface RecentContact {
-  id: number;
-  name: string;
-  email: string;
-  message: string;
+interface ContactRecord {
   is_read: boolean;
-  created_at: string;
+}
+
+interface PropertyListResponse {
+  data: unknown[];
+  total: number;
+}
+
+interface AdminHQStats {
+  pendingRequests: number;
+  pendingProperties: number;
+  activeListings: number;
+  soldProperties: number;
+  rentedProperties: number;
+  supportRequests: number;
+}
+
+interface MonthlyRevenue {
+  month: string;
+  monthLabel: string;
+  apartment: number;
+  office: number;
+  total: number;
+}
+
+interface SoldPropertyForAdmin {
+  id: number;
+  title: string;
+  category: string;
+  type: string;
+  price: number;
+}
+
+interface RevenueSnapshot {
+  soldRevenue: number;
+  soldProperties: SoldPropertyForAdmin[];
+  monthlyRentedRevenue: MonthlyRevenue[];
+}
+
+function parseRequestReviewStatus(
+  request: PropertyRequest,
+  fallback: "pending" | "approved" | "declined" = "pending"
+): "pending" | "approved" | "declined" {
+  if (request.review_status) {
+    if (
+      request.review_status === "approved" ||
+      request.review_status === "declined" ||
+      request.review_status === "pending"
+    ) {
+      return request.review_status;
+    }
+  }
+
+  return fallback;
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
 }
 
 export default function AdminDashboard() {
   const t = useTranslations("admin");
-  const [stats, setStats] = React.useState<Stats | null>(null);
-  const [recentContacts, setRecentContacts] = React.useState<RecentContact[]>([]);
+  const [stats, setStats] = React.useState<AdminHQStats>({
+    pendingRequests: 0,
+    pendingProperties: 0,
+    activeListings: 0,
+    soldProperties: 0,
+    rentedProperties: 0,
+    supportRequests: 0,
+  });
+  const [loading, setLoading] = React.useState(true);
+  const [showRevenueDetails, setShowRevenueDetails] = React.useState(false);
+  const [revenue, setRevenue] = React.useState<RevenueSnapshot>({
+    soldRevenue: 0,
+    soldProperties: [],
+    monthlyRentedRevenue: [],
+  });
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
   });
 
   React.useEffect(() => {
+    let isMounted = true;
+
     async function fetchData() {
+      setLoading(true);
       try {
-        const [propsRes, contactsRes, agentsRes] = await Promise.all([
-          fetch("/api/properties?limit=1", { headers: getAuthHeaders() }),
-          fetch("/api/contacts", { headers: getAuthHeaders() }),
-          fetch("/api/agents"),
+        const [
+          requestsRes,
+          pendingPropertiesRes,
+          activePropertiesRes,
+          soldPropertiesRes,
+          rentedPropertiesRes,
+          contactsRes,
+          revenueRes,
+        ] = await Promise.all([
+          fetch("/api/property-requests", {
+            headers: getAuthHeaders(),
+          }),
+          fetch("/api/properties?status=pending&limit=1"),
+          fetch("/api/properties?status=active&limit=1"),
+          fetch("/api/properties?status=sold&limit=1"),
+          fetch("/api/properties?status=rented&limit=1"),
+          fetch("/api/contacts?is_read=false"),
+          fetch("/api/dashboard/revenue", { headers: getAuthHeaders() }),
         ]);
 
-        const propsData = await propsRes.json();
-        const contactsData = await contactsRes.json();
-        const agentsData = await agentsRes.json();
+        const requestsJson = await requestsRes.json();
+        const pendingPropertiesJson: PropertyListResponse =
+          await pendingPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
+        const activePropertiesJson: PropertyListResponse =
+          await activePropertiesRes.json().catch(() => ({ data: [], total: 0 }));
+        const soldPropertiesJson: PropertyListResponse =
+          await soldPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
+        const rentedPropertiesJson: PropertyListResponse =
+          await rentedPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
+        const contactsJson = await contactsRes.json().catch(() => []);
+        const revenueJson = await revenueRes.json().catch(() => ({
+          soldRevenue: 0,
+          soldProperties: [],
+          monthlyRentedRevenue: [],
+        }));
 
-        const contacts = Array.isArray(contactsData) ? contactsData : contactsData.data || [];
-        const agents = Array.isArray(agentsData) ? agentsData : agentsData.data || [];
+        const requests = Array.isArray(requestsJson) ? requestsJson : requestsJson?.data || [];
+        const contacts = Array.isArray(contactsJson)
+          ? contactsJson
+          : contactsJson?.data || [];
 
+        const parsedRequests = Array.isArray(requests)
+          ? (requests as PropertyRequest[])
+          : [];
+
+        const pendingRequests = parsedRequests.filter((request) => {
+          const status = parseRequestReviewStatus(request);
+          return status === "pending";
+        }).length;
+
+        const supportRequests = (contacts as ContactRecord[]).filter(
+          (contact) => !contact.is_read
+        ).length;
+
+        const soldProperties = Array.isArray(revenueJson?.soldProperties)
+          ? revenueJson.soldProperties
+          : [];
+        const monthlyRentedRevenue = Array.isArray(revenueJson?.monthlyRentedRevenue)
+          ? revenueJson.monthlyRentedRevenue
+          : [];
+
+        if (!isMounted) return;
         setStats({
-          totalProperties: propsData.total || 0,
-          totalContacts: contacts.length,
-          unreadContacts: contacts.filter((c: RecentContact) => !c.is_read).length,
-          totalAgents: agents.length,
+          pendingRequests,
+          pendingProperties:
+            typeof pendingPropertiesJson.total === "number"
+              ? pendingPropertiesJson.total
+              : pendingPropertiesJson.data.length,
+          activeListings:
+            typeof activePropertiesJson.total === "number"
+              ? activePropertiesJson.total
+              : activePropertiesJson.data.length,
+          soldProperties:
+            typeof soldPropertiesJson.total === "number"
+              ? soldPropertiesJson.total
+              : soldPropertiesJson.data.length,
+          rentedProperties:
+            typeof rentedPropertiesJson.total === "number"
+              ? rentedPropertiesJson.total
+              : rentedPropertiesJson.data.length,
+          supportRequests,
         });
-
-        setRecentContacts(contacts.slice(0, 5));
+        setRevenue({
+          soldRevenue:
+            typeof revenueJson.soldRevenue === "number" ? revenueJson.soldRevenue : 0,
+          soldProperties: Array.isArray(soldProperties)
+            ? soldProperties.map((property) => ({
+                id: property.id,
+                title: property.title,
+                category: property.category,
+                type: property.type,
+                price: typeof property.price === "number" ? property.price : 0,
+              }))
+            : [],
+          monthlyRentedRevenue,
+        });
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        console.error("Failed to fetch admin HQ data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
+
     fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const statCards = [
+  const cardItems = [
     {
-      label: t("totalProperties"),
-      value: stats?.totalProperties ?? "—",
+      label: "Pending Requests",
+      value: loading ? "..." : stats.pendingRequests,
+      icon: Clock3,
+      href: "/admin/requests?requestStage=pending",
+      tone: "bg-amber-50 text-amber-700",
+      hint: "Unreviewed customer requests",
+    },
+    {
+      label: "Pending Properties",
+      value: loading ? "..." : stats.pendingProperties,
+      icon: ListChecks,
+      href: "/admin/properties?propertyStatus=pending",
+      tone: "bg-yellow-50 text-yellow-700",
+      hint: "Listings waiting for status action",
+    },
+    {
+      label: "Active Listings",
+      value: loading ? "..." : stats.activeListings,
+      icon: CheckCircle2,
+      href: "/admin/properties?propertyStatus=active",
+      tone: "bg-emerald-50 text-emerald-700",
+      hint: "Live properties for public view",
+    },
+    {
+      label: "Sold",
+      value: loading ? "..." : stats.soldProperties,
       icon: Building2,
-      color: "text-blue-600 bg-blue-50",
+      href: "/admin/properties?propertyStatus=sold",
+      tone: "bg-blue-50 text-blue-700",
+      hint: "Completed property sales",
     },
     {
-      label: t("totalContacts"),
-      value: stats?.totalContacts ?? "—",
-      icon: Mail,
-      color: "text-emerald-600 bg-emerald-50",
+      label: "Rented",
+      value: loading ? "..." : stats.rentedProperties,
+      icon: DollarSign,
+      href: "/admin/properties?propertyStatus=rented",
+      tone: "bg-violet-50 text-violet-700",
+      hint: "Current and past rental deals",
     },
     {
-      label: t("unreadMessages"),
-      value: stats?.unreadContacts ?? "—",
-      icon: TrendingUp,
-      color: "text-amber-600 bg-amber-50",
-    },
-    {
-      label: t("totalAgents"),
-      value: stats?.totalAgents ?? "—",
-      icon: Users,
-      color: "text-purple-600 bg-purple-50",
+      label: "Support Requests",
+      value: loading ? "..." : stats.supportRequests,
+      icon: MailOpen,
+      href: "/admin/contacts?status=unread",
+      tone: "bg-cyan-50 text-cyan-700",
+      hint: "Unread messages from clients",
     },
   ];
 
+  const totalMonthlyRentalRevenue = revenue.monthlyRentedRevenue.reduce(
+    (sum, row) => sum + row.total,
+    0
+  );
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t("dashboard")}</h1>
-
-      {/* Stats Grid */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
-          >
-            <div className="flex items-center gap-4">
-              <div className={`rounded-lg p-3 ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Admin HQ</h1>
+      <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
+        {t("dashboard")}
       </div>
 
-      {/* Recent Contacts */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {t("recentContacts")}
-          </h2>
-          <Link
-            href="/admin/contacts"
-            className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm text-gray-500">Revenue snapshot</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">
+              {loading ? "..." : formatCurrency(revenue.soldRevenue)}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">Total sold revenue</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowRevenueDetails((current) => !current)}
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
           >
-            View all <ArrowRight className="h-4 w-4" />
-          </Link>
+            {showRevenueDetails ? "Hide" : "Show"} rent revenue timeline
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                showRevenueDetails ? "rotate-180" : ""
+              }`}
+            />
+          </button>
         </div>
-        <div className="divide-y divide-gray-100">
-          {recentContacts.length === 0 ? (
-            <div className="p-6 text-center text-sm text-gray-500">
-              No contacts yet
-            </div>
-          ) : (
-            recentContacts.map((contact) => (
-              <div key={contact.id} className="flex items-center gap-4 px-6 py-4">
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    contact.is_read ? "bg-gray-300" : "bg-blue-600"
-                  }`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900">
-                    {contact.name}
-                  </p>
-                  <p className="truncate text-xs text-gray-500">
-                    {contact.message}
-                  </p>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(contact.created_at).toLocaleDateString()}
-                </span>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <p className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-900">
+            {loading
+              ? "Loading rental revenue..."
+              : `${formatCurrency(totalMonthlyRentalRevenue)} total from rentals`}
+          </p>
+          <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
+            {loading
+              ? "Loading sold list..."
+              : `${revenue.soldProperties.length} sold properties tracked`}
+          </p>
+        </div>
+
+        {showRevenueDetails ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-y border-gray-200 bg-gray-50 text-left text-xs uppercase text-gray-500">
+                  <th className="px-3 py-2">Month</th>
+                  <th className="px-3 py-2">Apartment</th>
+                  <th className="px-3 py-2">Office</th>
+                  <th className="px-3 py-2">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {revenue.monthlyRentedRevenue.length === 0 ? (
+                  <tr>
+                    <td
+                      className="px-3 py-4 text-center text-xs text-gray-500"
+                      colSpan={4}
+                    >
+                      No rental revenue data yet.
+                    </td>
+                  </tr>
+                ) : (
+                  revenue.monthlyRentedRevenue.map((row) => (
+                    <tr key={row.month} className="border-b border-gray-100">
+                      <td className="px-3 py-2 text-gray-700">{row.monthLabel}</td>
+                      <td className="px-3 py-2 text-gray-700">
+                        {formatCurrency(row.apartment)}
+                      </td>
+                      <td className="px-3 py-2 text-gray-700">
+                        {formatCurrency(row.office)}
+                      </td>
+                      <td className="px-3 py-2 font-semibold text-gray-900">
+                        {formatCurrency(row.total)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        {cardItems.map((card) => (
+          <Link
+            key={card.label}
+            href={card.href}
+            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">{card.label}</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
               </div>
-            ))
-          )}
-        </div>
+              <span className={`rounded-lg p-2 ${card.tone}`}>
+                <card.icon className="h-5 w-5" />
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">{card.hint}</p>
+          </Link>
+        ))}
       </div>
     </div>
   );

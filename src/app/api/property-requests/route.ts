@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { contacts, propertyRequests } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { type SQLWrapper, and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
@@ -69,9 +69,72 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const q = searchParams.get("q")?.trim() || "";
+    const requestStage = searchParams.get("requestStage") || "all";
+    const requestType = searchParams.get("requestType") || "";
+    const requestLocation = searchParams.get("requestLocation") || "";
+    const fromDate = searchParams.get("requestFrom") || "";
+    const toDate = searchParams.get("requestTo") || "";
+
+    const filters: SQLWrapper[] = [];
+
+    if (q) {
+      const term = `%${q}%`;
+      filters.push(
+        sql`(
+          lower(${propertyRequests.name}) LIKE lower(${term}) OR
+          lower(${propertyRequests.email}) LIKE lower(${term}) OR
+          lower(${propertyRequests.phone}) LIKE lower(${term}) OR
+          lower(${propertyRequests.location}) LIKE lower(${term}) OR
+          lower(${propertyRequests.category}) LIKE lower(${term}) OR
+          lower(COALESCE(${propertyRequests.description}, '')) LIKE lower(${term})
+        )`
+      );
+    }
+
+    if (requestStage && requestStage !== "all") {
+      if (requestStage === "submitted") {
+        filters.push(eq(propertyRequests.review_status, "pending"));
+      } else if (
+        requestStage === "pending" ||
+        requestStage === "approved" ||
+        requestStage === "declined"
+      ) {
+        filters.push(eq(propertyRequests.review_status, requestStage));
+      }
+    }
+
+    if (requestType === "buy" || requestType === "rent") {
+      filters.push(eq(propertyRequests.type, requestType));
+    }
+
+    if (requestLocation) {
+      const locationPattern = `%${requestLocation}%`;
+      filters.push(sql`lower(${propertyRequests.location}) LIKE lower(${locationPattern})`);
+    }
+
+    if (fromDate) {
+      const from = new Date(fromDate);
+      if (!Number.isNaN(from.getTime())) {
+        filters.push(gte(propertyRequests.created_at, from));
+      }
+    }
+
+    if (toDate) {
+      const to = new Date(toDate);
+      if (!Number.isNaN(to.getTime())) {
+        to.setHours(23, 59, 59, 999);
+        filters.push(lte(propertyRequests.created_at, to));
+      }
+    }
+
+    const whereClause = filters.length > 0 ? and(...filters) : undefined;
+
     const data = await db
       .select()
       .from(propertyRequests)
+      .where(whereClause)
       .orderBy(desc(propertyRequests.created_at));
 
     return NextResponse.json(data);
@@ -91,6 +154,7 @@ export async function POST(request: NextRequest) {
     const validated = {
       ...parsed,
       type: parsed.type === "sale" ? "buy" : parsed.type,
+      review_status: "pending",
     };
 
     const [created] = await db

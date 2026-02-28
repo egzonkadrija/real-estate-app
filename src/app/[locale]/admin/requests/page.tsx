@@ -1,8 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Link } from "@/i18n/routing";
-import { CheckCircle2, Clock3, Mail, MapPin, Phone, User, X } from "lucide-react";
+import { useLocale } from "next-intl";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Locale, useRouter } from "@/i18n/routing";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Mail,
+  MapPin,
+  Phone,
+  User,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PropertyRequest {
@@ -16,8 +27,11 @@ interface PropertyRequest {
   email: string;
   phone: string | null;
   description: string | null;
+  review_status: "pending" | "approved" | "declined";
   created_at: string;
 }
+
+type LifecycleStage = "all" | "submitted" | "pending" | "approved" | "declined";
 
 interface SubmitReviewPayload {
   source?: string;
@@ -38,7 +52,15 @@ interface SubmitReviewPayload {
   approved_property_id?: number;
   approved_at?: string;
   declined_at?: string;
-  pending_at?: string;
+  pending_at?: string | null;
+  review_status?: "pending" | "approved" | "declined";
+}
+
+function parseReviewStatus(value: unknown): "pending" | "approved" | "declined" {
+  if (value === "approved" || value === "declined" || value === "pending") {
+    return value;
+  }
+  return "pending";
 }
 
 function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
@@ -52,46 +74,285 @@ function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
   }
 }
 
+function getRequestLifecycleStatus(
+  request: PropertyRequest,
+  payload: SubmitReviewPayload | null
+): Exclude<LifecycleStage, "all"> {
+  if (request.review_status) {
+    return request.review_status;
+  }
+
+  const statusFromPayload = payload?.review_status
+    ? parseReviewStatus(payload.review_status)
+    : null;
+
+  if (statusFromPayload === "approved" || statusFromPayload === "declined") {
+    return statusFromPayload;
+  }
+  if (payload?.approved_property_id) return "approved";
+  if (payload?.declined_at) return "declined";
+  if (payload?.pending_at) return "pending";
+
+  return "submitted";
+}
+
+function formatStatusBadge(status: Exclude<LifecycleStage, "all">) {
+  if (status === "approved") {
+    return {
+      className:
+        "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700",
+      text: "Approved",
+      tone: "success",
+    };
+  }
+  if (status === "declined") {
+    return {
+      className:
+        "inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700",
+      text: "Declined",
+      tone: "danger",
+    };
+  }
+  if (status === "pending") {
+    return {
+      className:
+        "inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700",
+      text: "Pending",
+      tone: "warning",
+    };
+  }
+
+  return {
+    className:
+      "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700",
+    text: "Submitted",
+    tone: "info",
+  };
+}
+
 export default function AdminRequestsPage() {
+  const locale = useLocale() as Locale;
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const lifecycleFilter = searchParams.get("requestStage") || "all";
+  const typeFilter = searchParams.get("requestType") || "all";
+  const locationFilter = searchParams.get("requestLocation") || "all";
+  const fromDate = searchParams.get("requestFrom") || "";
+  const toDate = searchParams.get("requestTo") || "";
+  const globalSearch = (searchParams.get("q") || "").trim().toLowerCase();
+
   const [loading, setLoading] = React.useState(true);
   const [requests, setRequests] = React.useState<PropertyRequest[]>([]);
   const [selected, setSelected] = React.useState<PropertyRequest | null>(null);
-  const [approvingId, setApprovingId] = React.useState<number | null>(null);
-  const [decliningId, setDecliningId] = React.useState<number | null>(null);
-  const [pendingId, setPendingId] = React.useState<number | null>(null);
+  const [showDrawer, setShowDrawer] = React.useState(false);
   const [showDeclineModal, setShowDeclineModal] = React.useState(false);
+  const [approvingId, setApprovingId] = React.useState<number | null>(null);
+  const [pendingId, setPendingId] = React.useState<number | null>(null);
+  const [decliningId, setDecliningId] = React.useState<number | null>(null);
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
+    "Content-Type": "application/json",
   });
+
+  const buildServerFilterQuery = React.useCallback(() => {
+    const params = new URLSearchParams();
+
+    if (lifecycleFilter !== "all") {
+      params.set("requestStage", lifecycleFilter);
+    }
+    if (typeFilter !== "all") {
+      params.set("requestType", typeFilter);
+    }
+    if (locationFilter !== "all") {
+      params.set("requestLocation", locationFilter);
+    }
+    if (fromDate) {
+      params.set("requestFrom", fromDate);
+    }
+    if (toDate) {
+      params.set("requestTo", toDate);
+    }
+    if (globalSearch) {
+      params.set("q", searchParams.get("q") ?? "");
+    }
+
+    return params;
+  }, [fromDate, globalSearch, lifecycleFilter, locationFilter, searchParams, typeFilter]);
+
+  const syncQuery = React.useCallback(
+    (patch: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (!value || value === "all") {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      });
+
+      const query = params.toString();
+      const target = query ? `${pathname}?${query}` : pathname;
+      router.replace(target, { locale });
+    },
+    [locale, pathname, router, searchParams]
+  );
 
   const fetchRequests = React.useCallback(async () => {
     setLoading(true);
+    setActionMessage("");
+    setActionError("");
+
     try {
-      const res = await fetch("/api/property-requests", {
+      const query = buildServerFilterQuery();
+      const endpoint = `/api/property-requests${query.toString() ? `?${query.toString()}` : ""}`;
+      const res = await fetch(endpoint, {
         headers: getAuthHeaders(),
       });
+
       const data = await res.json();
-      const list = Array.isArray(data) ? data : [];
-      setRequests(list);
-      setSelected((previous) => {
-        if (!previous) return list[0] ?? null;
-        return list.find((item) => item.id === previous.id) ?? list[0] ?? null;
+      if (!Array.isArray(data)) {
+        throw new Error(data?.error || "Failed to load requests");
+      }
+
+      setRequests(data);
+      setSelected((current) => {
+        if (current && data.some((item: PropertyRequest) => item.id === current.id)) {
+          return data.find((item) => item.id === current.id) ?? null;
+        }
+        return data[0] ?? null;
       });
-      return list;
     } catch (error) {
       console.error("Failed to fetch property requests:", error);
-      return [];
+      setRequests([]);
+      setSelected(null);
+      setActionError(
+        error instanceof Error ? error.message : "Failed to load property requests"
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [buildServerFilterQuery]);
 
   React.useEffect(() => {
-    fetchRequests();
+    void fetchRequests();
   }, [fetchRequests]);
+
+  const requestRows = React.useMemo(() => {
+    const list = requests.filter((request) => {
+      const payload = parseReviewPayload(request.description);
+      const status = getRequestLifecycleStatus(request, payload);
+
+      if (lifecycleFilter !== "all" && lifecycleFilter !== status) {
+        return false;
+      }
+
+      if (typeFilter !== "all" && request.type !== typeFilter) {
+        return false;
+      }
+
+      if (locationFilter !== "all" && request.location !== locationFilter) {
+        return false;
+      }
+
+      if (fromDate) {
+        const from = new Date(fromDate);
+        if (!Number.isNaN(from.getTime()) && new Date(request.created_at) < from) {
+          return false;
+        }
+      }
+
+      if (toDate) {
+        const to = new Date(toDate);
+        if (!Number.isNaN(to.getTime())) {
+          to.setHours(23, 59, 59, 999);
+          if (new Date(request.created_at) > to) {
+            return false;
+          }
+        }
+      }
+
+      if (globalSearch) {
+        const searchPool = `${request.name} ${request.email} ${request.phone || ""} ${
+          request.location || ""
+        } ${request.category} ${request.type} ${payload?.property?.title || ""}`.toLowerCase();
+        if (!searchPool.includes(globalSearch)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    return list;
+  }, [globalSearch, fromDate, locationFilter, lifecycleFilter, requests, toDate, typeFilter]);
+
+  const lifecycleStats = React.useMemo(() => {
+    const stats = {
+      all: requests.length,
+      submitted: 0,
+      pending: 0,
+      approved: 0,
+      declined: 0,
+    };
+
+    for (const request of requests) {
+      const payload = parseReviewPayload(request.description);
+      const status = getRequestLifecycleStatus(request, payload);
+      if (status in stats) {
+        stats[status]++;
+      } else {
+        stats.submitted++;
+      }
+    }
+
+    return stats;
+  }, [requests]);
+
+  const locations = React.useMemo(() => {
+    const unique = new Set<string>();
+    for (const request of requests) {
+      if (request.location) {
+        unique.add(request.location);
+      }
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [requests]);
+
+  React.useEffect(() => {
+    if (requestRows.length === 0) {
+      setSelected(null);
+      setShowDrawer(false);
+      return;
+    }
+
+    if (!selected) {
+      setSelected(requestRows[0]);
+      setShowDrawer(true);
+      return;
+    }
+
+    if (!requestRows.some((request) => request.id === selected.id)) {
+      setSelected(requestRows[0]);
+      setShowDrawer(true);
+    }
+  }, [requestRows, selected]);
+
+  const selectedPayload = React.useMemo(
+    () => parseReviewPayload(selected?.description ?? null),
+    [selected]
+  );
+  const selectedStatus = selected
+    ? getRequestLifecycleStatus(selected, selectedPayload)
+    : null;
+  const selectedStatusBadge = selectedStatus
+    ? formatStatusBadge(selectedStatus)
+    : null;
+  const approvedPropertyId = selectedPayload?.approved_property_id ?? null;
 
   async function handleApprove() {
     if (!selected) return;
@@ -103,29 +364,24 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}/approve`, {
         method: "POST",
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
       });
-      const data = await res.json().catch(() => null);
 
+      const data = await res.json().catch(() => null);
       if (!res.ok && res.status !== 409) {
         throw new Error(data?.error || "Failed to approve request");
       }
 
-      const propertyId = data?.propertyId;
-      if (propertyId) {
-        setActionMessage(`Approved. Property #${propertyId} is now listed.`);
-      } else {
-        setActionMessage("Approved. Property is now listed.");
-      }
+      setActionMessage(
+        data?.propertyId
+          ? `Approved. Property #${data.propertyId} is now published.`
+          : "Approved. Property is now published."
+      );
+      setShowDrawer(true);
       await fetchRequests();
     } catch (error) {
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Failed to approve request"
+        error instanceof Error ? error.message : "Failed to approve request"
       );
     } finally {
       setApprovingId(null);
@@ -142,25 +398,22 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "PATCH",
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: "pending" }),
       });
-      const data = await res.json().catch(() => null);
 
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error || "Failed to mark request as pending");
       }
 
-      setActionMessage("Request moved back to pending review.");
+      setActionMessage("Request moved back to pending.");
       await fetchRequests();
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
-          : "Failed to mark request as pending"
+          : "Failed to update request state"
       );
     } finally {
       setPendingId(null);
@@ -185,13 +438,13 @@ export default function AdminRequestsPage() {
         throw new Error(data?.error || "Failed to decline request");
       }
 
-      setActionMessage("Request declined and removed from publish workflow.");
+      setActionMessage("Request declined.");
+      setShowDrawer(false);
+      setShowDeclineModal(false);
       await fetchRequests();
     } catch (error) {
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Failed to decline request"
+        error instanceof Error ? error.message : "Failed to decline request"
       );
     } finally {
       setDecliningId(null);
@@ -199,287 +452,338 @@ export default function AdminRequestsPage() {
     }
   }
 
-  function openDeclineModal() {
+  function openRequest(request: PropertyRequest) {
+    setSelected(request);
+    setShowDrawer(true);
     setActionMessage("");
     setActionError("");
-    setShowDeclineModal(true);
   }
-
-  function cancelDecline() {
-    setShowDeclineModal(false);
-  }
-
-  const selectedPayload = parseReviewPayload(selected?.description ?? null);
-  const selectedProperty = selectedPayload?.property;
-  const approvedPropertyId = selectedPayload?.approved_property_id ?? null;
-  const isSelectedDeclined = Boolean(selectedPayload?.declined_at);
-  const selectedStatus = approvedPropertyId
-    ? "approved"
-    : isSelectedDeclined
-      ? "declined"
-      : "pending";
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Submitted Properties</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Review submitted properties before creating live listings.
-        </p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Submitted Properties</h1>
+          <p className="mt-1 text-sm text-gray-500">Lifecycle review</p>
+        </div>
+        <span className="text-sm text-gray-500">
+          Showing {requestRows.length} request(s)
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="divide-y divide-gray-100">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="p-4">
-                    <div className="h-4 animate-pulse rounded bg-gray-200" />
-                  </div>
-                ))
-              ) : requests.length === 0 ? (
-                <div className="p-8 text-center text-sm text-gray-500">
-                  No property requests found.
-                </div>
-              ) : (
-                requests.map((request) => {
-                  const payload = parseReviewPayload(request.description);
-                  const title = payload?.property?.title || "No title";
-                  const isApproved = Boolean(payload?.approved_property_id);
-                  const isDeclined = Boolean(payload?.declined_at);
-                  const isPending = !isApproved && !isDeclined;
+      <div className="mb-4 space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: "all", label: "All" },
+            { key: "submitted", label: "Submitted" },
+            { key: "pending", label: "Pending" },
+            { key: "approved", label: "Approved" },
+            { key: "declined", label: "Declined" },
+          ].map((tab) => {
+            const active = lifecycleFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => syncQuery({ requestStage: tab.key })}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                )}
+              >
+                {tab.label} ({lifecycleStats[tab.key as keyof typeof lifecycleStats]})
+              </button>
+            );
+          })}
+        </div>
 
-                  return (
-                    <button
-                      key={request.id}
-                      onClick={() => setSelected(request)}
-                      className={cn(
-                        "w-full px-4 py-4 text-left transition-colors hover:bg-gray-50",
-                        selected?.id === request.id && "bg-blue-50"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-gray-900">
-                            {title}
-                          </p>
-                          <p className="mt-0.5 text-xs text-gray-500">
-                            {request.category} | {request.type}
-                          </p>
-                          <p className="mt-1 text-xs text-gray-600">
-                            {request.name} ({request.email})
-                          </p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <span className="block text-xs text-gray-400">
-                            {new Date(request.created_at).toLocaleDateString()}
-                          </span>
-                          {isApproved && (
-                            <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                              Approved
-                            </span>
-                          )}
-                          {isDeclined && (
-                            <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
-                              Declined
-                            </span>
-                          )}
-                          {isPending && (
-                            <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                              Pending
-                            </span>
-                          )}
-                        </div>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-5">
+          <select
+            value={typeFilter}
+            onChange={(e) => syncQuery({ requestType: e.target.value })}
+            className="rounded-lg border border-gray-300 p-2 text-sm"
+          >
+            <option value="all">Type: All</option>
+            <option value="buy">Buy</option>
+            <option value="rent">Rent</option>
+          </select>
+
+          <select
+            value={locationFilter}
+            onChange={(e) => syncQuery({ requestLocation: e.target.value })}
+            className="rounded-lg border border-gray-300 p-2 text-sm"
+          >
+            <option value="all">Location: All</option>
+            {locations.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex items-center rounded-lg border border-gray-300 px-2">
+            <Calendar className="h-4 w-4 text-gray-400" />
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => syncQuery({ requestFrom: e.target.value })}
+              className="h-9 w-full px-2 text-sm outline-none"
+            />
+          </div>
+
+          <div className="flex items-center rounded-lg border border-gray-300 px-2">
+            <Clock className="h-4 w-4 text-gray-400" />
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => syncQuery({ requestTo: e.target.value })}
+              className="h-9 w-full px-2 text-sm outline-none"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              syncQuery({
+                requestStage: "all",
+                requestType: "all",
+                requestLocation: "all",
+                requestFrom: "",
+                requestTo: "",
+              })
+            }
+            className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Reset filters
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="divide-y divide-gray-100">
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="p-4">
+                  <div className="h-4 animate-pulse rounded bg-gray-200" />
+                </div>
+              ))
+            ) : requestRows.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-500">
+                No matching requests.
+              </div>
+            ) : (
+              requestRows.map((request) => {
+                const payload = parseReviewPayload(request.description);
+                const stage = getRequestLifecycleStatus(request, payload);
+                const status = formatStatusBadge(stage);
+                const payloadTitle = payload?.property?.title || "No title provided";
+
+                return (
+                  <button
+                    key={request.id}
+                    onClick={() => openRequest(request)}
+                    type="button"
+                    className={cn(
+                      "w-full px-4 py-4 text-left transition-colors hover:bg-gray-50",
+                      selected?.id === request.id && "bg-blue-50"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900">
+                          {payloadTitle}
+                        </p>
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          {request.category} | {request.type}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-600">
+                          {request.name} ({request.email})
+                        </p>
+                        <p className="mt-0.5 text-xs text-gray-500">{request.location}</p>
                       </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
+                      <div className="shrink-0 text-right">
+                        <span className="block text-xs text-gray-400">
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </span>
+                        <span className={cn("mt-1", status.className)}>{status.text}</span>
+                        {selected?.id === request.id && (
+                          <span className="mt-1 block text-[11px] font-medium text-blue-600">
+                            Open
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
-        <div>
-          {selected ? (
-            <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-base font-semibold text-gray-900">
+        {showDrawer && selected ? (
+          <aside className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
                 Request #{selected.id}
               </h2>
+              <button
+                type="button"
+                onClick={() => setShowDrawer(false)}
+                className="rounded-lg p-2 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-              <div className="mt-4 space-y-2 text-sm text-gray-700">
+            <div className="space-y-2 text-sm text-gray-700">
+              <p className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-400" />
+                {selected.name}
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gray-400" />
+                {selected.email}
+              </p>
+              {selected.phone ? (
                 <p className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-400" />
-                  {selected.name}
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  {selected.phone}
                 </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  {selected.email}
-                </p>
-                {selected.phone && (
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    {selected.phone}
-                  </p>
-                )}
-                {selected.location && (
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    {selected.location}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-                <p>
-                  <span className="font-medium">Type:</span> {selected.type}
-                </p>
-                <p>
-                  <span className="font-medium">Category:</span> {selected.category}
-                </p>
-                {(selected.min_price ?? selected.max_price) && (
-                  <p>
-                    <span className="font-medium">Price:</span>{" "}
-                    {selected.min_price ?? selected.max_price} EUR
-                  </p>
-                )}
-                {selectedProperty?.area ? (
-                  <p>
-                    <span className="font-medium">Area:</span> {selectedProperty.area} m²
-                  </p>
-                ) : null}
-                {selectedProperty?.rooms ? (
-                  <p>
-                    <span className="font-medium">Rooms:</span> {selectedProperty.rooms}
-                  </p>
-                ) : null}
-                {selectedProperty?.bathrooms ? (
-                  <p>
-                    <span className="font-medium">Bathrooms:</span>{" "}
-                    {selectedProperty.bathrooms}
-                  </p>
-                ) : null}
-              </div>
-
-              {selectedProperty?.title && (
-                <div className="mt-4 rounded-lg border border-gray-200 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Property Title
-                  </p>
-                  <p className="mt-1 text-sm text-gray-900">{selectedProperty.title}</p>
-                </div>
-              )}
-
-              {selectedPayload?.note ? (
-                <div className="mt-3 rounded-lg border border-gray-200 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Notes
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                    {selectedPayload.note}
-                  </p>
-                </div>
-              ) : selected.description ? (
-                <div className="mt-3 rounded-lg border border-gray-200 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Notes
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                    {selected.description}
-                  </p>
-                </div>
               ) : null}
+              {selected.location ? (
+                <p className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-400" />
+                  {selected.location}
+                </p>
+              ) : null}
+            </div>
 
-              <div className="mt-4">
-              {approvedPropertyId ? (
-                <div className="space-y-2">
-                  <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Approved
-                  </div>
-                  <p className="text-xs font-medium text-emerald-700">
-                    Already approved as property #{approvedPropertyId}.
-                  </p>
-                  <Link
-                    href="/admin/properties"
-                    className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                  >
-                    Open Properties
-                  </Link>
-                </div>
-                ) : selectedStatus === "pending" ? (
-                  <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Pending review
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleApprove}
-                      disabled={approvingId === selected.id}
-                      className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-                    >
-                      {approvingId === selected.id ? "Approving..." : "Approve & Publish"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handlePending}
-                      disabled={pendingId === selected.id}
-                      className="inline-flex rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-60"
-                    >
-                      {pendingId === selected.id ? "Setting Pending..." : "Pending"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openDeclineModal}
-                      disabled={decliningId === selected.id}
-                      className="inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
-                    >
-                      {decliningId === selected.id ? (
-                        "Declining..."
-                      ) : (
-                        <>
-                          <X className="mr-1 h-4 w-4" />
-                          Decline
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )
-                }
-                {actionMessage && (
-                  <p className="mt-2 text-xs font-medium text-emerald-700">
-                    {actionMessage}
-                  </p>
-                )}
-                {actionError && (
-                  <p className="mt-2 text-xs font-medium text-red-600">
-                    {actionError}
-                  </p>
-                )}
+            <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+              <p>
+                <span className="font-medium">Type:</span> {selected.type}
+              </p>
+              <p>
+                <span className="font-medium">Category:</span> {selected.category}
+              </p>
+              {(selected.min_price ?? selected.max_price) ? (
+                <p>
+                  <span className="font-medium">Price:</span>{" "}
+                  {selected.min_price ?? selected.max_price} EUR
+                </p>
+              ) : null}
+              {selectedPayload?.area ? (
+                <p>
+                  <span className="font-medium">Area:</span> {selectedPayload.area} m²
+                </p>
+              ) : null}
+              {selectedPayload?.rooms ? (
+                <p>
+                  <span className="font-medium">Rooms:</span> {selectedPayload.rooms}
+                </p>
+              ) : null}
+              {selectedPayload?.bathrooms ? (
+                <p>
+                  <span className="font-medium">Bathrooms:</span>{" "}
+                  {selectedPayload.bathrooms}
+                </p>
+              ) : null}
+            </div>
+
+            {selectedPayload?.note ? (
+              <div className="mt-3 rounded-lg border border-gray-200 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Notes
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
+                  {selectedPayload.note}
+                </p>
               </div>
+            ) : null}
+
+            {selectedStatus ? (
+              <span
+                className={cn(
+                  "mt-4 inline-flex items-center gap-1 text-xs font-medium",
+                  selectedStatusBadge?.className ?? ""
+                )}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {selectedStatusBadge?.text}
+              </span>
+            ) : null}
+
+            {selectedStatus === "approved" && approvedPropertyId ? (
+              <p className="mt-2 text-xs font-medium text-emerald-700">
+                Approved as property #{approvedPropertyId}
+              </p>
+            ) : null}
+
+            <p className="mt-2 text-xs text-gray-500">
+              Request payload is{" "}
+              {selected.description ? "stored as structured payload" : "plain text"}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {selectedStatus !== "approved" ? (
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={approvingId === selected.id}
+                  className="inline-flex w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {approvingId === selected.id
+                    ? "Approving..."
+                    : "Approve & Publish"}
+                </button>
+              ) : null}
+              {selectedStatus !== "pending" ? (
+                <button
+                  type="button"
+                  onClick={handlePending}
+                  disabled={pendingId === selected.id}
+                  className="inline-flex w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-60"
+                >
+                  {pendingId === selected.id ? "Setting pending..." : "Set pending"}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setShowDeclineModal(true)}
+                disabled={decliningId === selected.id}
+                className="inline-flex w-full items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
+              >
+                {decliningId === selected.id ? "Declining..." : "Decline"}
+              </button>
             </div>
-          ) : (
-            <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm">
-              Select a request to review details.
-            </div>
-          )}
-        </div>
+
+            {actionMessage ? (
+              <p className="mt-3 text-xs font-medium text-emerald-700">
+                {actionMessage}
+              </p>
+            ) : null}
+            {actionError ? (
+              <p className="mt-3 text-xs font-medium text-red-600">
+                {actionError}
+              </p>
+            ) : null}
+          </aside>
+        ) : null}
       </div>
 
-      {showDeclineModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {showDeclineModal && selected ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <p className="text-lg font-semibold text-gray-900">Decline request</p>
             <p className="mt-2 text-sm text-gray-600">
-              Are you sure you want to decline this request? This will keep it
-              in records as declined but remove it from publish workflow.
+              This will mark the request as declined and keep it in history for audit.
             </p>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={cancelDecline}
+                onClick={() => setShowDeclineModal(false)}
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel
@@ -487,10 +791,10 @@ export default function AdminRequestsPage() {
               <button
                 type="button"
                 onClick={handleDecline}
-                disabled={decliningId === selected?.id}
+                disabled={decliningId === selected.id}
                 className="rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-60"
               >
-                {decliningId === selected?.id ? "Declining..." : "Yes, decline"}
+                {decliningId === selected.id ? "Declining..." : "Yes, decline"}
               </button>
             </div>
           </div>

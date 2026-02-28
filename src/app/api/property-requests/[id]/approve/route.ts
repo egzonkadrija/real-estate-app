@@ -37,6 +37,28 @@ interface ReviewPayload {
   note?: string | null;
   approved_property_id?: number;
   approved_at?: string;
+  declined_at?: string;
+  pending_at?: string | null;
+  review_status?: "pending" | "approved" | "declined";
+}
+
+const REVIEW_STATUSES = new Set(["pending", "approved", "declined"]);
+
+function isReviewStatus(value: unknown): value is "pending" | "approved" | "declined" {
+  return typeof value === "string" && REVIEW_STATUSES.has(value);
+}
+
+function getReviewStatus(payload: ReviewPayload | null): "pending" | "approved" | "declined" {
+  if (isReviewStatus(payload?.review_status)) {
+    return payload.review_status;
+  }
+  if (payload?.approved_property_id) {
+    return "approved";
+  }
+  if (payload?.declined_at) {
+    return "declined";
+  }
+  return "pending";
 }
 
 function parsePayload(raw: string | null): ReviewPayload | null {
@@ -112,11 +134,14 @@ export async function POST(
     }
 
     const parsedPayload = parsePayload(requestItem.description);
-    if (parsedPayload?.approved_property_id) {
+    const currentStatus =
+      requestItem.review_status ??
+      getReviewStatus(parsedPayload);
+    if (currentStatus === "approved") {
       return NextResponse.json(
         {
           message: "Request already approved",
-          propertyId: parsedPayload.approved_property_id,
+          propertyId: parsedPayload?.approved_property_id,
         },
         { status: 409 }
       );
@@ -225,13 +250,19 @@ export async function POST(
         ...(payloadProperty || {}),
       },
       note: parsedPayload?.note ?? null,
-      approved_property_id: createdProperty.id,
+      review_status: "approved",
+      declined_at: undefined,
+      pending_at: null,
       approved_at: new Date().toISOString(),
+      approved_property_id: createdProperty.id,
     };
 
     await db
       .update(propertyRequests)
-      .set({ description: JSON.stringify(updatedPayload) })
+      .set({
+        description: JSON.stringify(updatedPayload),
+        review_status: "approved",
+      })
       .where(eq(propertyRequests.id, requestId));
 
     void notifyPropertyRequestStatus({

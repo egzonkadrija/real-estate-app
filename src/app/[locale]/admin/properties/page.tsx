@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Locale, useRouter } from "@/i18n/routing";
 import {
   Plus,
   Edit,
@@ -33,9 +35,25 @@ interface PropertyItem {
   location?: { name_al: string; name_en: string; name_de: string };
 }
 
+interface AgentOption {
+  id: number;
+  name: string;
+}
+
 export default function AdminPropertiesPage() {
   const t = useTranslations();
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const statusFilter = searchParams.get("propertyStatus") || searchParams.get("status") || "all";
+  const typeFilter = searchParams.get("propertyType") || "all";
+  const agentFilter = searchParams.get("agentId") || "all";
+  const fromDate = searchParams.get("fromDate") || "";
+  const toDate = searchParams.get("toDate") || "";
+  const globalSearch = searchParams.get("q") || "";
+
   const [properties, setProperties] = React.useState<PropertyItem[]>([]);
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(1);
@@ -43,22 +61,64 @@ export default function AdminPropertiesPage() {
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
-  const [showSoldOnly, setShowSoldOnly] = React.useState(false);
+  const [agentsForFilter, setAgentsForFilter] = React.useState<AgentOption[]>([]);
+
+  const syncQuery = React.useCallback(
+    (patch: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (!value || value === "all") {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      });
+
+      const query = params.toString();
+      const target = query ? `${pathname}?${query}` : pathname;
+      router.replace(target, { locale });
+      setPage(1);
+    },
+    [locale, pathname, router, searchParams]
+  );
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
     "Content-Type": "application/json",
   });
 
+  const formatAgentFilter = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/agents");
+      const data = await res.json();
+      setAgentsForFilter(
+        Array.isArray(data)
+          ? data.map((item: { id: number; name: string }) => ({
+              id: item.id,
+              name: item.name,
+            }))
+          : []
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   const fetchProperties = React.useCallback(async () => {
     setLoading(true);
     try {
-      const statusFilter = showSoldOnly
-        ? "sold"
-        : "active,pending,rented";
-      const res = await fetch(
-        `/api/properties?page=${page}&limit=10&status=${encodeURIComponent(statusFilter)}`
-      );
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: "10",
+      });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (typeFilter !== "all") params.set("type", typeFilter);
+      if (agentFilter !== "all") params.set("agentId", agentFilter);
+      if (fromDate) params.set("fromDate", fromDate);
+      if (toDate) params.set("toDate", toDate);
+      if (globalSearch) params.set("q", globalSearch);
+
+      const res = await fetch(`/api/properties?${params.toString()}`);
       const data = await res.json();
       setProperties(data.data || []);
       setTotal(data.total || 0);
@@ -67,7 +127,11 @@ export default function AdminPropertiesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, showSoldOnly]);
+  }, [agentFilter, fromDate, globalSearch, page, statusFilter, toDate, typeFilter]);
+
+  React.useEffect(() => {
+    formatAgentFilter();
+  }, [formatAgentFilter]);
 
   React.useEffect(() => {
     fetchProperties();
@@ -125,22 +189,10 @@ export default function AdminPropertiesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900">
           {t("admin.properties")}
         </h1>
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={showSoldOnly}
-            onChange={(e) => {
-              setShowSoldOnly(e.target.checked);
-              setPage(1);
-            }}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600"
-          />
-          Show sold properties
-        </label>
         <button
           onClick={() => {
             setEditingId(null);
@@ -150,6 +202,71 @@ export default function AdminPropertiesPage() {
         >
           <Plus className="h-4 w-4" />
           {t("admin.addProperty")}
+        </button>
+      </div>
+      <div className="mb-4 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-5">
+        <select
+          value={statusFilter}
+          onChange={(e) => syncQuery({ propertyStatus: e.target.value })}
+          className="rounded-lg border border-gray-300 p-2 text-sm"
+        >
+          <option value="all">Status: All</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="sold">Sold</option>
+          <option value="rented">Rented</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => syncQuery({ propertyType: e.target.value })}
+          className="rounded-lg border border-gray-300 p-2 text-sm"
+        >
+          <option value="all">Type: All</option>
+          <option value="sale">For Sale</option>
+          <option value="rent">For Rent</option>
+        </select>
+        <select
+          value={agentFilter}
+          onChange={(e) => syncQuery({ agentId: e.target.value })}
+          className="rounded-lg border border-gray-300 p-2 text-sm"
+        >
+          <option value="all">Agent: All</option>
+          {agentsForFilter.map((agent) => (
+            <option key={agent.id} value={agent.id}>
+              {agent.name}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center rounded-lg border border-gray-300 px-2">
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => syncQuery({ fromDate: e.target.value })}
+            className="h-9 w-full text-sm outline-none"
+          />
+        </div>
+        <div className="flex items-center rounded-lg border border-gray-300 px-2">
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => syncQuery({ toDate: e.target.value })}
+            className="h-9 w-full text-sm outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            syncQuery({
+              propertyStatus: "all",
+              propertyType: "all",
+              agentId: "all",
+              fromDate: "",
+              toDate: "",
+            })
+          }
+          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 md:col-span-2 lg:col-span-1"
+        >
+          Reset filters
         </button>
       </div>
 

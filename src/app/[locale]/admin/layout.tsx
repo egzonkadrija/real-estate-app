@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/routing";
+import { Link, Locale, usePathname, useRouter } from "@/i18n/routing";
+import { usePathname as useNativePathname, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -12,6 +13,7 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,11 +23,41 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const t = useTranslations("admin");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const nativePathname = useNativePathname();
+  const searchParams = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [globalSearch, setGlobalSearch] = React.useState(searchParams.get("q") ?? "");
   const isLoginPage = pathname === "/admin/login" || pathname.endsWith("/admin/login");
+
+  React.useEffect(() => {
+    setGlobalSearch(searchParams.get("q") ?? "");
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const next = new URLSearchParams(searchParams);
+      const nextValue = globalSearch.trim();
+
+      if (nextValue) {
+        next.set("q", nextValue);
+      } else {
+        next.delete("q");
+      }
+
+      const nextQuery = next.toString();
+      const target = nextQuery ? `${nativePathname}?${nextQuery}` : nativePathname;
+      const current = `${nativePathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
+
+      if (target !== current) {
+        router.replace(target, { locale });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [globalSearch, locale, nativePathname, router, searchParams]);
 
   async function handleLogout() {
     localStorage.removeItem("admin-token");
@@ -112,6 +144,26 @@ export default function AdminLayout({
                 <X className="h-5 w-5" />
               </button>
             </div>
+            <div className="px-4 pb-3 pt-3">
+              <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm">
+                <Search className="h-4 w-4 text-gray-500" />
+                <input
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="w-full bg-transparent outline-none"
+                  placeholder="Search..."
+                />
+                {globalSearch ? (
+                  <button
+                    type="button"
+                    onClick={() => setGlobalSearch("")}
+                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
             <nav className="flex flex-col gap-1 p-4">
               {navItems.map((item) => (
                 <Link
@@ -157,7 +209,27 @@ export default function AdminLayout({
             </span>
           </span>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <div className="mb-4 hidden items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm lg:flex">
+            <Search className="h-4 w-4 text-gray-500" />
+            <input
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="flex-1 bg-transparent outline-none"
+              placeholder="Search..."
+            />
+            {globalSearch ? (
+              <button
+                type="button"
+                onClick={() => setGlobalSearch("")}
+                className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Locale } from "@/i18n/routing";
 import {
   Accordion,
   AccordionContent,
@@ -9,7 +10,7 @@ import {
 export default async function FaqPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });

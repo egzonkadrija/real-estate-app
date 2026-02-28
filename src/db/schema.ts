@@ -47,6 +47,12 @@ export const propertyRequestTypeEnum = pgEnum('property_request_type', [
   'rent',
 ]);
 
+export const propertyRequestReviewStatusEnum = pgEnum('property_request_review_status', [
+  'pending',
+  'approved',
+  'declined',
+]);
+
 // ──────────────────────────────────────────────
 // Tables
 // ──────────────────────────────────────────────
@@ -143,6 +149,9 @@ export const propertyRequests = pgTable('property_requests', {
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
   phone: varchar('phone', { length: 50 }),
+  review_status: propertyRequestReviewStatusEnum('review_status')
+    .default('pending')
+    .notNull(),
   description: text('description'),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
