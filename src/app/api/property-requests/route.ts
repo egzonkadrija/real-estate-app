@@ -17,6 +17,21 @@ const createPropertyRequestSchema = z.object({
   description: z.string().nullable().optional(),
 });
 
+function isSubmitPropertyPayload(raw: string | null): boolean {
+  if (!raw) return false;
+
+  try {
+    const parsed = JSON.parse(raw);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      (parsed as Record<string, unknown>).source === "submit_property"
+    );
+  } catch {
+    return false;
+  }
+}
+
 function buildContactMessage(
   request: typeof propertyRequests.$inferInsert
 ) {
@@ -156,16 +171,21 @@ export async function POST(request: NextRequest) {
       .values(validated)
       .returning();
 
-    try {
-      await db.insert(contacts).values({
-        name: created.name,
-        email: created.email,
-        phone: created.phone,
-        message: buildContactMessage(created),
-        property_id: null,
-      });
-    } catch (contactError) {
-      console.error("Failed to create contact notification for property request:", contactError);
+    if (!isSubmitPropertyPayload(created.description)) {
+      try {
+        await db.insert(contacts).values({
+          name: created.name,
+          email: created.email,
+          phone: created.phone,
+          message: buildContactMessage(created),
+          property_id: null,
+        });
+      } catch (contactError) {
+        console.error(
+          "Failed to create contact notification for property request:",
+          contactError
+        );
+      }
     }
 
     return NextResponse.json(created, { status: 201 });
