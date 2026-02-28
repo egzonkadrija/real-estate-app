@@ -56,7 +56,6 @@ interface SoldPropertyForAdmin {
 
 interface RevenueSnapshot {
   soldRevenue: number;
-  rentedRevenue: number;
   soldProperties: SoldPropertyForAdmin[];
   monthlyRentedRevenue: MonthlyRevenue[];
 }
@@ -90,7 +89,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = React.useState(true);
   const [revenue, setRevenue] = React.useState<RevenueSnapshot>({
     soldRevenue: 0,
-    rentedRevenue: 0,
     soldProperties: [],
     monthlyRentedRevenue: [],
   });
@@ -119,8 +117,8 @@ export default function AdminDashboard() {
           }),
           fetch("/api/properties?status=pending&limit=1"),
           fetch("/api/properties?status=active&limit=1"),
-          fetch("/api/properties?type=sale&status=sold&limit=1"),
-          fetch("/api/properties?type=rent&status=sold,rented&limit=1"),
+          fetch("/api/properties?status=sold&limit=1"),
+          fetch("/api/properties?status=rented&limit=1"),
           fetch("/api/contacts?is_read=false"),
           fetch("/api/dashboard/revenue", { headers: getAuthHeaders() }),
         ]);
@@ -137,7 +135,6 @@ export default function AdminDashboard() {
         const contactsJson = await contactsRes.json().catch(() => []);
         const revenueJson = await revenueRes.json().catch(() => ({
           soldRevenue: 0,
-          rentedRevenue: 0,
           soldProperties: [],
           monthlyRentedRevenue: [],
         }));
@@ -191,10 +188,6 @@ export default function AdminDashboard() {
         setRevenue({
           soldRevenue:
             typeof revenueJson.soldRevenue === "number" ? revenueJson.soldRevenue : 0,
-          rentedRevenue:
-            typeof revenueJson.rentedRevenue === "number"
-              ? revenueJson.rentedRevenue
-              : 0,
           soldProperties: Array.isArray(soldProperties)
             ? soldProperties.map((property) => ({
                 id: property.id,
@@ -277,8 +270,6 @@ export default function AdminDashboard() {
     (sum, row) => sum + row.total,
     0
   );
-  const totalRentalRevenue =
-    revenue.rentedRevenue !== 0 ? revenue.rentedRevenue : totalMonthlyRentalRevenue;
 
   return (
     <div>
@@ -302,7 +293,7 @@ export default function AdminDashboard() {
           <p className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-900">
             {loading
               ? "Loading rental revenue..."
-              : `${formatCurrency(totalRentalRevenue)} total from rentals`}
+              : `${formatCurrency(totalMonthlyRentalRevenue)} total from rentals`}
           </p>
           <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
             {loading

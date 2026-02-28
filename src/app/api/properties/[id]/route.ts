@@ -73,39 +73,12 @@ export async function PUT(
     if (parsedId instanceof NextResponse) return parsedId;
     const propertyId = parsedId;
 
-    const [currentProperty] = await db
-      .select({
-        type: properties.type,
-      })
-      .from(properties)
-      .where(eq(properties.id, propertyId))
-      .limit(1);
-
-    if (!currentProperty) {
-      return NextResponse.json(
-        { error: "Property not found" },
-        { status: 404 }
-      );
-    }
-
     const body = await request.json();
     const { images: imageData, ...validated } = updatePropertySchema.parse(body);
 
-    const normalizedPayload = (() => {
-      const { status } = validated;
-      if (!status) return validated;
-      if (status === "sold" && currentProperty.type === "rent") {
-        return { ...validated, status: "rented" };
-      }
-      if (status === "rented" && currentProperty.type === "sale") {
-        return { ...validated, status: "sold" };
-      }
-      return validated;
-    })();
-
     const [updated] = await db
       .update(properties)
-      .set({ ...normalizedPayload, updated_at: new Date() })
+      .set({ ...validated, updated_at: new Date() })
       .where(eq(properties.id, propertyId))
       .returning();
 
