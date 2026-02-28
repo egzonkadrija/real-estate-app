@@ -3,15 +3,12 @@
 import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Locale, useRouter } from "@/i18n/routing";
+import { Locale } from "@/i18n/routing";
 import {
   Plus,
   Edit,
   Trash2,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   X,
   Upload,
 } from "lucide-react";
@@ -35,106 +32,89 @@ interface PropertyItem {
   location?: { name_al: string; name_en: string; name_de: string };
 }
 
-interface AgentOption {
-  id: number;
-  name: string;
-}
-
 export default function AdminPropertiesPage() {
   const t = useTranslations();
   const locale = useLocale() as Locale;
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const statusFilter = searchParams.get("propertyStatus") || searchParams.get("status") || "all";
-  const typeFilter = searchParams.get("propertyType") || "all";
-  const agentFilter = searchParams.get("agentId") || "all";
-  const fromDate = searchParams.get("fromDate") || "";
-  const toDate = searchParams.get("toDate") || "";
-  const globalSearch = searchParams.get("q") || "";
 
   const [properties, setProperties] = React.useState<PropertyItem[]>([]);
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
+  const loadMoreSentinelRef = React.useRef<HTMLDivElement | null>(null);
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
-  const [agentsForFilter, setAgentsForFilter] = React.useState<AgentOption[]>([]);
 
-  const syncQuery = React.useCallback(
-    (patch: Record<string, string>) => {
-      const params = new URLSearchParams(searchParams);
-      Object.entries(patch).forEach(([key, value]) => {
-        if (!value || value === "all") {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-
-      const query = params.toString();
-      const target = query ? `${pathname}?${query}` : pathname;
-      router.replace(target, { locale });
-      setPage(1);
-    },
-    [locale, pathname, router, searchParams]
-  );
+  const hasMore = properties.length < total;
+  const hasData = properties.length > 0;
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
     "Content-Type": "application/json",
   });
 
-  const formatAgentFilter = React.useCallback(async () => {
-    try {
-      const res = await fetch("/api/agents");
-      const data = await res.json();
-      setAgentsForFilter(
-        Array.isArray(data)
-          ? data.map((item: { id: number; name: string }) => ({
-              id: item.id,
-              name: item.name,
-            }))
-          : []
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
+  const fetchProperties = React.useCallback(
+    async (targetPage = 1, reset = false) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: String(targetPage),
+          limit: "10",
+        });
 
-  const fetchProperties = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: "10",
-      });
-      if (statusFilter !== "all") params.set("status", statusFilter);
-      if (typeFilter !== "all") params.set("type", typeFilter);
-      if (agentFilter !== "all") params.set("agentId", agentFilter);
-      if (fromDate) params.set("fromDate", fromDate);
-      if (toDate) params.set("toDate", toDate);
-      if (globalSearch) params.set("q", globalSearch);
+        const res = await fetch(`/api/properties?${params.toString()}`);
+        const data = await res.json();
+        const nextItems = Array.isArray(data.data) ? data.data : [];
+        const nextTotal =
+          typeof data.total === "number" ? data.total : nextItems.length;
 
-      const res = await fetch(`/api/properties?${params.toString()}`);
-      const data = await res.json();
-      setProperties(data.data || []);
-      setTotal(data.total || 0);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [agentFilter, fromDate, globalSearch, page, statusFilter, toDate, typeFilter]);
+        setTotal(nextTotal);
+        setProperties((previous) => {
+          if (reset) return nextItems;
+          const seen = new Set(previous.map((property) => property.id));
+          const unique = nextItems.filter((property) => !seen.has(property.id));
+          return [...previous, ...unique];
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   React.useEffect(() => {
-    formatAgentFilter();
-  }, [formatAgentFilter]);
+    fetchProperties(page, page === 1);
+  }, [fetchProperties, page]);
 
   React.useEffect(() => {
-    fetchProperties();
+    if (!loadMoreSentinelRef.current || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const shouldLoadMore = entries[0]?.isIntersecting && !loading && hasMore;
+        if (shouldLoadMore) {
+          setPage((previous) => previous + 1);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "240px",
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(loadMoreSentinelRef.current);
+
+    return () => observer.disconnect();
+  }, [hasMore, loading]);
+
+  const onResetList = React.useCallback(() => {
+    setPage(1);
+    setProperties([]);
+    setTotal(0);
+    fetchProperties(1, true);
   }, [fetchProperties]);
 
   async function handleDelete(id: number) {
@@ -146,9 +126,6 @@ export default function AdminPropertiesPage() {
       });
       setProperties((previous) => {
         const next = previous.filter((property) => property.id !== id);
-        if (next.length === 0 && page > 1) {
-          setPage((current) => Math.max(1, current - 1));
-        }
         return next;
       });
       setTotal((previous) => Math.max(0, previous - 1));
@@ -172,9 +149,6 @@ export default function AdminPropertiesPage() {
       }
       setProperties((previous) => {
         const next = previous.filter((property) => property.id !== id);
-        if (next.length === 0 && page > 1) {
-          setPage((current) => Math.max(1, current - 1));
-        }
         return next;
       });
       setTotal((previous) => Math.max(0, previous - 1));
@@ -185,7 +159,11 @@ export default function AdminPropertiesPage() {
     }
   }
 
-  const totalPages = Math.ceil(total / 10);
+  React.useEffect(() => {
+    if (properties.length > total && total > 0) {
+      setProperties((previous) => previous.slice(0, total));
+    }
+  }, [properties.length, total]);
 
   return (
     <div>
@@ -204,72 +182,6 @@ export default function AdminPropertiesPage() {
           {t("admin.addProperty")}
         </button>
       </div>
-      <div className="mb-4 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-5">
-        <select
-          value={statusFilter}
-          onChange={(e) => syncQuery({ propertyStatus: e.target.value })}
-          className="rounded-lg border border-gray-300 p-2 text-sm"
-        >
-          <option value="all">Status: All</option>
-          <option value="active">Active</option>
-          <option value="pending">Pending</option>
-          <option value="sold">Sold</option>
-          <option value="rented">Rented</option>
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => syncQuery({ propertyType: e.target.value })}
-          className="rounded-lg border border-gray-300 p-2 text-sm"
-        >
-          <option value="all">Type: All</option>
-          <option value="sale">For Sale</option>
-          <option value="rent">For Rent</option>
-        </select>
-        <select
-          value={agentFilter}
-          onChange={(e) => syncQuery({ agentId: e.target.value })}
-          className="rounded-lg border border-gray-300 p-2 text-sm"
-        >
-          <option value="all">Agent: All</option>
-          {agentsForFilter.map((agent) => (
-            <option key={agent.id} value={agent.id}>
-              {agent.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex items-center rounded-lg border border-gray-300 px-2">
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => syncQuery({ fromDate: e.target.value })}
-            className="h-9 w-full text-sm outline-none"
-          />
-        </div>
-        <div className="flex items-center rounded-lg border border-gray-300 px-2">
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => syncQuery({ toDate: e.target.value })}
-            className="h-9 w-full text-sm outline-none"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() =>
-            syncQuery({
-              propertyStatus: "all",
-              propertyType: "all",
-              agentId: "all",
-              fromDate: "",
-              toDate: "",
-            })
-          }
-          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 md:col-span-2 lg:col-span-1"
-        >
-          Reset filters
-        </button>
-      </div>
-
       {/* Properties Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -297,7 +209,7 @@ export default function AdminPropertiesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {loading ? (
+              {loading && properties.length === 0 ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
                     <td colSpan={6} className="px-4 py-4">
@@ -312,134 +224,133 @@ export default function AdminPropertiesPage() {
                   </td>
                 </tr>
               ) : (
-                properties.map((prop) => (
-                  <tr key={prop.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
-                          {prop.images?.[0] && (
-                            <Image
-                              src={prop.images[0].url}
-                              alt=""
-                              width={56}
-                              height={40}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {getLocalizedField(prop, "title", locale)}
-                          </p>
-                          {prop.location && (
-                            <p className="text-xs text-gray-500">
-                              {getLocalizedField(prop.location, "name", locale)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-xs font-medium",
-                          prop.type === "sale"
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-emerald-50 text-emerald-700"
-                        )}
-                      >
-                        {prop.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {formatPrice(prop.price, prop.currency)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-xs font-medium",
-                          {
-                            "bg-green-50 text-green-700": prop.status === "active",
-                            "bg-yellow-50 text-yellow-700": prop.status === "pending",
-                            "bg-gray-100 text-gray-700": prop.status === "sold" || prop.status === "rented",
-                          }
-                        )}
-                      >
-                        {prop.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
-                      {new Date(prop.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingId(prop.id);
-                            setShowForm(true);
-                          }}
-                          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                    <button
-                          onClick={() => handleDelete(prop.id)}
-                          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        {prop.status !== "sold" ? (
-                          <button
-                            onClick={() => handleMarkSold(prop.id)}
-                            disabled={markingAsSoldId === prop.id}
-                            className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
-                          >
-                            {markingAsSoldId === prop.id ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                Sold
-                              </span>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span>Sold</span>
-                              </>
+                <>
+                  {properties.map((prop) => (
+                    <tr key={prop.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
+                            {prop.images?.[0] && (
+                              <Image
+                                src={prop.images[0].url}
+                                alt=""
+                                width={56}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
                             )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {getLocalizedField(prop, "title", locale)}
+                            </p>
+                            {prop.location && (
+                              <p className="text-xs text-gray-500">
+                                {getLocalizedField(prop.location, "name", locale)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-xs font-medium",
+                            prop.type === "sale"
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-emerald-50 text-emerald-700"
+                          )}
+                        >
+                          {prop.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatPrice(prop.price, prop.currency)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-xs font-medium",
+                            {
+                              "bg-green-50 text-green-700": prop.status === "active",
+                              "bg-yellow-50 text-yellow-700": prop.status === "pending",
+                              "bg-gray-100 text-gray-700":
+                                prop.status === "sold" || prop.status === "rented",
+                            }
+                          )}
+                        >
+                          {prop.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500">
+                        {new Date(prop.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingId(prop.id);
+                              setShowForm(true);
+                            }}
+                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+                          >
+                            <Edit className="h-4 w-4" />
                           </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          <button
+                            onClick={() => handleDelete(prop.id)}
+                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          {prop.status !== "sold" ? (
+                            <button
+                              onClick={() => handleMarkSold(prop.id)}
+                              disabled={markingAsSoldId === prop.id}
+                              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
+                            >
+                              {markingAsSoldId === prop.id ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                  Sold
+                                </span>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span>Sold</span>
+                                </>
+                              )}
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {loading && properties.length > 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-4">
+                        <div className="h-4 animate-pulse rounded bg-gray-200" />
+                      </td>
+                    </tr>
+                  ) : null}
+                </>
               )}
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
-            <p className="text-sm text-gray-500">
-              Page {page} of {totalPages} ({total} total)
-            </p>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-50"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+        {hasData && hasMore ? (
+          <div
+            ref={loadMoreSentinelRef}
+            className="border-t border-gray-200 px-4 py-3 text-center text-xs text-gray-500"
+          >
+            Load more as you scroll
           </div>
-        )}
+        ) : null}
+
+        {hasData && !loading && !hasMore ? (
+          <div className="border-t border-gray-200 px-4 py-3 text-center text-xs text-gray-500">
+            No more properties.
+          </div>
+        ) : null}
       </div>
 
       {/* Add/Edit Property Modal */}
@@ -453,7 +364,7 @@ export default function AdminPropertiesPage() {
           onSaved={() => {
             setShowForm(false);
             setEditingId(null);
-            fetchProperties();
+            onResetList();
           }}
         />
       )}

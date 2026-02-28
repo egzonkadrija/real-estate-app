@@ -10,7 +10,6 @@ import {
   DollarSign,
   ListChecks,
   MailOpen,
-  ChevronDown,
 } from "lucide-react";
 
 interface PropertyRequest {
@@ -95,7 +94,6 @@ export default function AdminDashboard() {
     supportRequests: 0,
   });
   const [loading, setLoading] = React.useState(true);
-  const [showRevenueDetails, setShowRevenueDetails] = React.useState(false);
   const [revenue, setRevenue] = React.useState<RevenueSnapshot>({
     soldRevenue: 0,
     soldProperties: [],
@@ -296,18 +294,6 @@ export default function AdminDashboard() {
             </p>
             <p className="mt-1 text-xs text-gray-500">Total sold revenue</p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowRevenueDetails((current) => !current)}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
-          >
-            {showRevenueDetails ? "Hide" : "Show"} rent revenue timeline
-            <ChevronDown
-              className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                showRevenueDetails ? "rotate-180" : ""
-              }`}
-            />
-          </button>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -323,47 +309,30 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {showRevenueDetails ? (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-y border-gray-200 bg-gray-50 text-left text-xs uppercase text-gray-500">
-                  <th className="px-3 py-2">Month</th>
-                  <th className="px-3 py-2">Apartment</th>
-                  <th className="px-3 py-2">Office</th>
-                  <th className="px-3 py-2">Total</th>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <tbody>
+              {revenue.monthlyRentedRevenue.length === 0 ? (
+                <tr>
+                  <td
+                    className="px-3 py-4 text-center text-xs text-gray-500"
+                    colSpan={1}
+                  >
+                    No rental revenue data yet.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {revenue.monthlyRentedRevenue.length === 0 ? (
-                  <tr>
-                    <td
-                      className="px-3 py-4 text-center text-xs text-gray-500"
-                      colSpan={4}
-                    >
-                      No rental revenue data yet.
+              ) : (
+                revenue.monthlyRentedRevenue.map((row) => (
+                  <tr key={row.month} className="border-b border-gray-100">
+                    <td className="px-3 py-2 text-gray-700">
+                      {formatCurrency(row.total)}
                     </td>
                   </tr>
-                ) : (
-                  revenue.monthlyRentedRevenue.map((row) => (
-                    <tr key={row.month} className="border-b border-gray-100">
-                      <td className="px-3 py-2 text-gray-700">{row.monthLabel}</td>
-                      <td className="px-3 py-2 text-gray-700">
-                        {formatCurrency(row.apartment)}
-                      </td>
-                      <td className="px-3 py-2 text-gray-700">
-                        {formatCurrency(row.office)}
-                      </td>
-                      <td className="px-3 py-2 font-semibold text-gray-900">
-                        {formatCurrency(row.total)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">

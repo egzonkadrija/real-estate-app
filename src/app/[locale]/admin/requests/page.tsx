@@ -5,11 +5,8 @@ import { useLocale } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Locale, useRouter } from "@/i18n/routing";
 import {
-  Calendar,
   CheckCircle2,
-  Clock,
   Mail,
-  MapPin,
   Phone,
   User,
   X,
@@ -53,11 +50,18 @@ interface SubmitReviewPayload {
   approved_at?: string;
   declined_at?: string;
   pending_at?: string | null;
-  review_status?: "pending" | "approved" | "declined";
+  review_status?: "submitted" | "pending" | "approved" | "declined";
 }
 
-function parseReviewStatus(value: unknown): "pending" | "approved" | "declined" {
-  if (value === "approved" || value === "declined" || value === "pending") {
+function parseReviewStatus(
+  value: unknown
+): "submitted" | "pending" | "approved" | "declined" {
+  if (
+    value === "submitted" ||
+    value === "approved" ||
+    value === "declined" ||
+    value === "pending"
+  ) {
     return value;
   }
   return "pending";
@@ -87,6 +91,9 @@ function getRequestLifecycleStatus(
     : null;
 
   if (statusFromPayload === "approved" || statusFromPayload === "declined") {
+    return statusFromPayload;
+  }
+  if (statusFromPayload === "submitted" || statusFromPayload === "pending") {
     return statusFromPayload;
   }
   if (payload?.approved_property_id) return "approved";
@@ -121,11 +128,19 @@ function formatStatusBadge(status: Exclude<LifecycleStage, "all">) {
       tone: "warning",
     };
   }
+  if (status === "submitted") {
+    return {
+      className:
+        "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700",
+      text: "Submitted",
+      tone: "info",
+    };
+  }
 
   return {
     className:
       "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700",
-    text: "Submitted",
+    text: "Pending",
     tone: "info",
   };
 }
@@ -136,11 +151,15 @@ export default function AdminRequestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const lifecycleFilter = searchParams.get("requestStage") || "all";
-  const typeFilter = searchParams.get("requestType") || "all";
-  const locationFilter = searchParams.get("requestLocation") || "all";
-  const fromDate = searchParams.get("requestFrom") || "";
-  const toDate = searchParams.get("requestTo") || "";
+  const requestStage = searchParams.get("requestStage");
+  const lifecycleFilter =
+    requestStage === "all" ||
+    requestStage === "submitted" ||
+    requestStage === "pending" ||
+    requestStage === "approved" ||
+    requestStage === "declined"
+      ? requestStage
+      : "all";
   const globalSearch = (searchParams.get("q") || "").trim().toLowerCase();
 
   const [loading, setLoading] = React.useState(true);
@@ -165,24 +184,12 @@ export default function AdminRequestsPage() {
     if (lifecycleFilter !== "all") {
       params.set("requestStage", lifecycleFilter);
     }
-    if (typeFilter !== "all") {
-      params.set("requestType", typeFilter);
-    }
-    if (locationFilter !== "all") {
-      params.set("requestLocation", locationFilter);
-    }
-    if (fromDate) {
-      params.set("requestFrom", fromDate);
-    }
-    if (toDate) {
-      params.set("requestTo", toDate);
-    }
     if (globalSearch) {
       params.set("q", searchParams.get("q") ?? "");
     }
 
     return params;
-  }, [fromDate, globalSearch, lifecycleFilter, locationFilter, searchParams, typeFilter]);
+  }, [globalSearch, lifecycleFilter, searchParams]);
 
   const syncQuery = React.useCallback(
     (patch: Record<string, string>) => {
@@ -251,35 +258,8 @@ export default function AdminRequestsPage() {
         return false;
       }
 
-      if (typeFilter !== "all" && request.type !== typeFilter) {
-        return false;
-      }
-
-      if (locationFilter !== "all" && request.location !== locationFilter) {
-        return false;
-      }
-
-      if (fromDate) {
-        const from = new Date(fromDate);
-        if (!Number.isNaN(from.getTime()) && new Date(request.created_at) < from) {
-          return false;
-        }
-      }
-
-      if (toDate) {
-        const to = new Date(toDate);
-        if (!Number.isNaN(to.getTime())) {
-          to.setHours(23, 59, 59, 999);
-          if (new Date(request.created_at) > to) {
-            return false;
-          }
-        }
-      }
-
       if (globalSearch) {
-        const searchPool = `${request.name} ${request.email} ${request.phone || ""} ${
-          request.location || ""
-        } ${request.category} ${request.type} ${payload?.property?.title || ""}`.toLowerCase();
+        const searchPool = `${request.name} ${request.email} ${request.phone || ""} ${request.category} ${payload?.property?.title || ""}`.toLowerCase();
         if (!searchPool.includes(globalSearch)) {
           return false;
         }
@@ -289,7 +269,7 @@ export default function AdminRequestsPage() {
     });
 
     return list;
-  }, [globalSearch, fromDate, locationFilter, lifecycleFilter, requests, toDate, typeFilter]);
+  }, [globalSearch, lifecycleFilter, requests]);
 
   const lifecycleStats = React.useMemo(() => {
     const stats = {
@@ -305,22 +285,10 @@ export default function AdminRequestsPage() {
       const status = getRequestLifecycleStatus(request, payload);
       if (status in stats) {
         stats[status]++;
-      } else {
-        stats.submitted++;
       }
     }
 
     return stats;
-  }, [requests]);
-
-  const locations = React.useMemo(() => {
-    const unique = new Set<string>();
-    for (const request of requests) {
-      if (request.location) {
-        unique.add(request.location);
-      }
-    }
-    return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }, [requests]);
 
   React.useEffect(() => {
@@ -499,66 +467,6 @@ export default function AdminRequestsPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-5">
-          <select
-            value={typeFilter}
-            onChange={(e) => syncQuery({ requestType: e.target.value })}
-            className="rounded-lg border border-gray-300 p-2 text-sm"
-          >
-            <option value="all">Type: All</option>
-            <option value="buy">Buy</option>
-            <option value="rent">Rent</option>
-          </select>
-
-          <select
-            value={locationFilter}
-            onChange={(e) => syncQuery({ requestLocation: e.target.value })}
-            className="rounded-lg border border-gray-300 p-2 text-sm"
-          >
-            <option value="all">Location: All</option>
-            {locations.map((location) => (
-              <option key={location} value={location}>
-                {location}
-              </option>
-            ))}
-          </select>
-
-          <div className="flex items-center rounded-lg border border-gray-300 px-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => syncQuery({ requestFrom: e.target.value })}
-              className="h-9 w-full px-2 text-sm outline-none"
-            />
-          </div>
-
-          <div className="flex items-center rounded-lg border border-gray-300 px-2">
-            <Clock className="h-4 w-4 text-gray-400" />
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => syncQuery({ requestTo: e.target.value })}
-              className="h-9 w-full px-2 text-sm outline-none"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              syncQuery({
-                requestStage: "all",
-                requestType: "all",
-                requestLocation: "all",
-                requestFrom: "",
-                requestTo: "",
-              })
-            }
-            className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-          >
-            Reset filters
-          </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -592,22 +500,15 @@ export default function AdminRequestsPage() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                    <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-gray-900">
                           {payloadTitle}
-                        </p>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {request.category} | {request.type}
                         </p>
                         <p className="mt-1 text-xs text-gray-600">
                           {request.name} ({request.email})
                         </p>
-                        <p className="mt-0.5 text-xs text-gray-500">{request.location}</p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="block text-xs text-gray-400">
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </span>
                         <span className={cn("mt-1", status.className)}>{status.text}</span>
                         {selected?.id === request.id && (
                           <span className="mt-1 block text-[11px] font-medium text-blue-600">
@@ -653,18 +554,9 @@ export default function AdminRequestsPage() {
                   {selected.phone}
                 </p>
               ) : null}
-              {selected.location ? (
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  {selected.location}
-                </p>
-              ) : null}
             </div>
 
             <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-              <p>
-                <span className="font-medium">Type:</span> {selected.type}
-              </p>
               <p>
                 <span className="font-medium">Category:</span> {selected.category}
               </p>

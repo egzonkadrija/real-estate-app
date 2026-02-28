@@ -4,8 +4,6 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
-  ChevronDown,
-  ChevronUp,
   Edit,
   Plus,
   Trash2,
@@ -46,37 +44,11 @@ function formatPrice(value: number | null): string {
   }).format(value);
 }
 
-function getStatusBadgeClass(status: AgentProperty["status"]): string {
-  if (status === "active") return "bg-emerald-100 text-emerald-700";
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "sold") return "bg-slate-100 text-slate-700";
-  return "bg-blue-100 text-blue-700";
-}
-
-function PropertyBadge({ status }: { status: AgentProperty["status"] }) {
-  return (
-    <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(
-        status
-      )}`}
-    >
-      {status}
-    </span>
-  );
-}
-
 function getStatusCount(
   properties: AgentProperty[] | undefined,
   status: AgentProperty["status"]
 ) {
   return properties?.filter((property) => property.status === status).length ?? 0;
-}
-
-function getTypeProperties(
-  properties: AgentProperty[] | undefined,
-  type: AgentProperty["type"]
-) {
-  return properties?.filter((property) => property.type === type) ?? [];
 }
 
 export default function AdminAgentsPage() {
@@ -85,7 +57,6 @@ export default function AdminAgentsPage() {
   const [loading, setLoading] = React.useState(true);
   const [showForm, setShowForm] = React.useState(false);
   const [editingAgent, setEditingAgent] = React.useState<Agent | null>(null);
-  const [expandedAgents, setExpandedAgents] = React.useState<Record<string, boolean>>({});
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
@@ -122,71 +93,6 @@ export default function AdminAgentsPage() {
     }
   }
 
-  function toggleSection(sectionKey: string) {
-    setExpandedAgents((previous) => ({
-      ...previous,
-      [sectionKey]: !previous[sectionKey],
-    }));
-  }
-
-  function renderPropertySection(
-    sectionKey: string,
-    sectionTitle: string,
-    properties: AgentProperty[]
-  ) {
-    const isExpanded = expandedAgents[sectionKey];
-    const visibleProperties = isExpanded ? properties : properties.slice(0, 4);
-
-    return (
-      <div key={sectionKey} className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-          {sectionTitle} ({properties.length})
-        </p>
-        {properties.length > 0 ? (
-          <ul className="space-y-1">
-            {visibleProperties.map((property) => (
-              <li
-                key={property.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded bg-gray-50 px-2 py-1.5 text-xs text-gray-700"
-              >
-                <span className="max-w-[240px] truncate font-medium">
-                  {property.title}
-                </span>
-                  <span className="inline-flex items-center gap-2">
-                    <PropertyBadge status={property.status} />
-                    <span className="text-[11px] text-gray-500">
-                      {formatPrice(property.price)}
-                    </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-gray-500">No properties.</p>
-        )}
-        {properties.length > 4 ? (
-          <button
-            type="button"
-            onClick={() => toggleSection(sectionKey)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="h-3.5 w-3.5" />
-                Show fewer
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-3.5 w-3.5" />
-                Show {properties.length - 4} more
-              </>
-            )}
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -216,18 +122,6 @@ export default function AdminAgentsPage() {
               </div>
             ))
           : agents.map((agent) => {
-              const sale = getTypeProperties(agent.properties, "sale");
-              const rent = getTypeProperties(agent.properties, "rent");
-              const activeSales = sale.filter((property) => property.status === "active");
-              const pendingSales = sale.filter((property) => property.status === "pending");
-              const activeRent = rent.filter((property) => property.status === "active");
-              const pendingRent = rent.filter((property) => property.status === "pending");
-              const soldProperties = (agent.properties ?? []).filter(
-                (property) => property.status === "sold"
-              );
-              const rentedProperties = (agent.properties ?? []).filter(
-                (property) => property.status === "rented"
-              );
               const activeCount = getStatusCount(agent.properties, "active");
               const pendingCount = getStatusCount(agent.properties, "pending");
               const soldCount = getStatusCount(agent.properties, "sold");
@@ -287,23 +181,6 @@ export default function AdminAgentsPage() {
                         {formatPrice(agent.soldRevenue ?? 0)}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="mb-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-left">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Properties by deal type
-                  </p>
-
-                    {renderPropertySection(`${agent.id}-forsale-active`, "For Sale Active", activeSales)}
-                    {renderPropertySection(`${agent.id}-forsale-pending`, "For Sale Pending", pendingSales)}
-                    {renderPropertySection(`${agent.id}-forrent-active`, "For Rent Active", activeRent)}
-                    {renderPropertySection(`${agent.id}-forrent-pending`, "For Rent Pending", pendingRent)}
-                    {renderPropertySection(`${agent.id}-sold`, "Sold", soldProperties)}
-                    {renderPropertySection(`${agent.id}-rented`, "Rented", rentedProperties)}
-
-                    {(agent.properties?.length ?? 0) === 0 ? (
-                      <p className="text-xs text-gray-500">No properties assigned.</p>
-                    ) : null}
                   </div>
 
                   <div className="flex justify-center gap-2">
