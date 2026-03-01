@@ -5,6 +5,7 @@ import {
   eq,
   desc,
   and,
+  or,
   gte,
   lte,
   sql,
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       Math.min(100, parseIntegerParam(searchParams.get("limit")) ?? 12)
     );
     const featured = searchParams.get("featured");
+    const homeFilter = searchParams.get("homeFilter");
     const status = searchParams.get("status");
     const agentId = searchParams.get("agentId");
     const fromDate = searchParams.get("fromDate");
@@ -126,6 +128,38 @@ export async function GET(request: NextRequest) {
 
     if (featured === "true") {
       conditions.push(eq(properties.featured, true));
+    }
+    if (featured === "false") {
+      conditions.push(eq(properties.featured, false));
+    }
+
+    if (homeFilter?.trim()) {
+      const selectedFilters = homeFilter
+        .split(",")
+        .map((value) => value.trim())
+        .filter(
+          (
+            value
+          ): value is "sale" | "rent" | "exclusive" =>
+            value === "sale" || value === "rent" || value === "exclusive"
+        );
+
+      const homeFilterConditions: SQL<unknown>[] = [];
+      if (selectedFilters.includes("sale")) {
+        homeFilterConditions.push(eq(properties.type, "sale"));
+      }
+      if (selectedFilters.includes("rent")) {
+        homeFilterConditions.push(eq(properties.type, "rent"));
+      }
+      if (selectedFilters.includes("exclusive")) {
+        homeFilterConditions.push(eq(properties.featured, true));
+      }
+
+      if (homeFilterConditions.length === 1) {
+        conditions.push(homeFilterConditions[0]);
+      } else if (homeFilterConditions.length > 1) {
+        conditions.push(or(...homeFilterConditions) as SQL<unknown>);
+      }
     }
 
     if (status) {

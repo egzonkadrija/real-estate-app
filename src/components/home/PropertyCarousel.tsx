@@ -36,14 +36,75 @@ const CATEGORIES = [
 interface PropertyCarouselProps {
   properties: (Property & { images?: PropertyImage[]; location?: Location })[];
   title?: string;
+  activePropertyFilters?: Array<"sale" | "rent" | "exclusive">;
 }
 
-export function PropertyCarousel({ properties, title }: PropertyCarouselProps) {
+export function PropertyCarousel({
+  properties,
+  title,
+  activePropertyFilters = [],
+}: PropertyCarouselProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const normalizedPropertyFilters = React.useMemo(() => {
+    const orderedFilters: Array<"sale" | "rent" | "exclusive"> = [];
+    for (const filter of ["sale", "rent", "exclusive"] as const) {
+      if (activePropertyFilters.includes(filter)) {
+        orderedFilters.push(filter);
+      }
+    }
+    return orderedFilters;
+  }, [activePropertyFilters]);
+
+  const isFilterActive = React.useCallback(
+    (filter: "sale" | "rent" | "exclusive") => normalizedPropertyFilters.includes(filter),
+    [normalizedPropertyFilters]
+  );
+
+  const getFilterHref = React.useCallback(
+    (filter: "sale" | "rent" | "exclusive") => {
+      const nextFilters = isFilterActive(filter)
+        ? normalizedPropertyFilters.filter((value) => value !== filter)
+        : [...normalizedPropertyFilters, filter];
+
+      const orderedNextFilters = (["sale", "rent", "exclusive"] as const).filter((value) =>
+        nextFilters.includes(value)
+      );
+
+      // Empty selection means "show all" with no active highlight.
+      if (orderedNextFilters.length === 0) {
+        return "?";
+      }
+
+      const params = new URLSearchParams();
+      for (const value of orderedNextFilters) {
+        params.append("propertyFilter", value);
+      }
+      return `?${params.toString()}`;
+    },
+    [isFilterActive, normalizedPropertyFilters]
+  );
+
+  const getFilterButtonClass = React.useCallback(
+    (filter: "sale" | "rent" | "exclusive") => {
+      const colorClassByFilter: Record<"sale" | "rent" | "exclusive", string> = {
+        sale: "bg-[var(--brand-600)] hover:bg-[var(--brand-700)]",
+        rent: "bg-gray-700 hover:bg-gray-800",
+        exclusive: "bg-teal-700 hover:bg-teal-800",
+      };
+
+      const isActive = isFilterActive(filter);
+      const activeClass = "opacity-100 ring-2 ring-offset-1 ring-black/20";
+      const inactiveClass = "opacity-60 ring-1 ring-transparent";
+
+      return `rounded-[var(--radius-pill)] px-4 py-2 text-center text-sm font-medium text-white transition-all duration-200 ${colorClassByFilter[filter]} ${isActive ? activeClass : inactiveClass}`;
+    },
+    [isFilterActive]
+  );
+
   const [search, setSearch] = React.useState("");
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = React.useState(-1);
@@ -405,20 +466,20 @@ export function PropertyCarousel({ properties, title }: PropertyCarouselProps) {
         <div className="flex min-w-full items-center justify-between gap-8">
           <div className="flex items-center gap-2">
             <Link
-              href="/properties?type=sale"
-              className="rounded-[var(--radius-pill)] bg-[var(--brand-600)] px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-[var(--brand-700)]"
+              href={getFilterHref("sale")}
+              className={getFilterButtonClass("sale")}
             >
               {t("property.forSale")}
             </Link>
             <Link
-              href="/properties?type=rent"
-              className="rounded-[var(--radius-pill)] bg-gray-700 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800"
+              href={getFilterHref("rent")}
+              className={getFilterButtonClass("rent")}
             >
               {t("property.forRent")}
             </Link>
             <Link
-              href="/properties?featured=true"
-              className="rounded-[var(--radius-pill)] bg-teal-700 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-teal-800"
+              href={getFilterHref("exclusive")}
+              className={getFilterButtonClass("exclusive")}
             >
               {t("common.exclusive")}
             </Link>
