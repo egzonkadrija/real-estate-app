@@ -27,6 +27,7 @@ export function Header() {
   const { favorites } = useFavorites();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [langOpen, setLangOpen] = React.useState(false);
+  const langMenuRef = React.useRef<HTMLDivElement | null>(null);
 
   const navLinks = [
     { href: "/" as const, label: t("properties"), icon: Building2 },
@@ -56,6 +57,32 @@ export function Header() {
     setLangOpen(false);
   }
 
+  React.useEffect(() => {
+    if (!langOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setLangOpen(false);
+      }
+    }
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      if (!langMenuRef.current) return;
+      if (langMenuRef.current.contains(event.target as Node)) return;
+      setLangOpen(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [langOpen]);
+
   return (
     <header className="fixed inset-x-0 top-0 z-[70] w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-4">
@@ -73,7 +100,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-4 lg:flex">
+        <nav className="hidden items-center gap-5 lg:flex">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href);
             return (
@@ -81,7 +108,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded-[var(--radius-md)] border px-4 py-2.5 text-sm font-medium transition-colors",
+                  "rounded-[var(--radius-md)] border px-5 py-2.5 text-sm font-medium transition-colors",
                   active
                     ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                     : "border-transparent text-gray-700 hover:border-[var(--border)] hover:bg-[var(--surface-muted)] hover:text-[var(--brand-700)]"
@@ -113,10 +140,12 @@ export function Header() {
           </Link>
 
           {/* Language Switcher */}
-          <div className="relative">
+          <div ref={langMenuRef} className="relative">
             <button
               onClick={() => setLangOpen(!langOpen)}
               className="flex items-center gap-1 rounded-[var(--radius-md)] p-2 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+              aria-expanded={langOpen}
+              aria-haspopup="menu"
             >
               <Globe className="h-5 w-5" />
               <span className="hidden text-sm sm:inline">
@@ -125,29 +154,23 @@ export function Header() {
               <ChevronDown className="h-3 w-3" />
             </button>
             {langOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setLangOpen(false)}
-                />
-                <div className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => switchLocale(lang.code)}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100",
-                        locale === lang.code
-                          ? "bg-[var(--brand-50)] text-[var(--brand-700)]"
-                          : "text-gray-700"
-                      )}
-                    >
-                      <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => switchLocale(lang.code)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100",
+                      locale === lang.code
+                        ? "bg-[var(--brand-50)] text-[var(--brand-700)]"
+                        : "text-gray-700"
+                    )}
+                  >
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 

@@ -86,10 +86,10 @@ export function FilterBar({ locations = [] }: FilterBarProps) {
           {t("property.forRent")}
         </button>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full items-center justify-end gap-2 sm:ml-auto sm:w-auto">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+            className="flex items-center gap-2 whitespace-nowrap rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
           >
             <SlidersHorizontal className="h-4 w-4" />
             {t("common.filter")}

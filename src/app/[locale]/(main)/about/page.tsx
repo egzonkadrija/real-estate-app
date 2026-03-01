@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { Building2, Search, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Search, Shield } from "lucide-react";
 import { Locale } from "@/i18n/routing";
 
 type ProcessStep = {
+  title: string;
+  description: string;
+};
+
+type ValueCard = {
   title: string;
   description: string;
 };
@@ -23,22 +28,179 @@ type AboutCopy = {
   whyPoints: string[];
 };
 
-const valueCards = {
+const aboutCopyByLocale: Record<Locale, AboutCopy> = {
+  mk: {
+    missionTitle: "Наша мисија",
+    missionText:
+      "Ја поедноставуваме потрагата по недвижности со јасни информации, проверени огласи и директна комуникација со локални агенти.",
+    aboutSectionTitle: "За платформата",
+    aboutSectionText:
+      "Создадовме брза и прегледна платформа што ве води од првото пребарување до сигурна одлука.",
+    processTitle: "Како работиме",
+    processText: "Три јасни чекори за полесно и побрзо да ја најдете вистинската недвижност.",
+    processSteps: [
+      { title: "1) Пребарај", description: "Филтрирај по цена, површина, локација и тип на имот." },
+      {
+        title: "2) Спореди",
+        description: "Прегледај клучни детали и контактирај агент директно.",
+      },
+      {
+        title: "3) Одлучи",
+        description: "Направи сигурен следен чекор со јасни информации.",
+      },
+    ],
+    ctaButton: "Прегледај недвижности",
+    whyTitle: "Зошто ние",
+    whyPoints: [
+      "Брзо и прецизно пребарување",
+      "Директен контакт со локални агенти",
+      "Транспарентни и проверени огласи",
+    ],
+  },
+  al: {
+    missionTitle: "Misioni ynë",
+    missionText:
+      "Ne e thjeshtojmë kërkimin e pronave me informacione të qarta, lista të verifikuara dhe lidhje direkte me agjentë lokalë.",
+    aboutSectionTitle: "Rreth platformës",
+    aboutSectionText:
+      "Kemi ndërtuar një përvojë të shpejtë dhe të pastër që ju çon nga kërkimi i parë deri te vendimi me siguri.",
+    processTitle: "Si funksionon",
+    processText: "Tre hapa të qartë për ta gjetur më lehtë pronën e duhur.",
+    processSteps: [
+      { title: "1) Kërko", description: "Filtroni sipas çmimit, sipërfaqes, lokacionit dhe tipit." },
+      {
+        title: "2) Krahaso",
+        description: "Shikoni detajet kryesore dhe kontaktoni agjentin direkt.",
+      },
+      {
+        title: "3) Vendos",
+        description: "Vazhdoni me hapin e radhës me informacion të qartë.",
+      },
+    ],
+    ctaButton: "Shiko pronat",
+    whyTitle: "Pse ne",
+    whyPoints: [
+      "Kërkim i fokusuar dhe i shpejtë",
+      "Komunikim direkt me agjentët",
+      "Lista të verifikuara dhe transparente",
+    ],
+  },
+  en: {
+    missionTitle: "Our Mission",
+    missionText:
+      "We simplify real estate in North Macedonia through clear, fast, and transparent property workflows.",
+    aboutSectionTitle: "About NovaBuildings",
+    aboutSectionText:
+      "A cleaner, simpler journey from discovery to decision with less friction and better clarity.",
+    processTitle: "How we work",
+    processText: "Three steps help you move from interest to decision quickly.",
+    processSteps: [
+      { title: "1) Search", description: "Filter by location, type, and budget." },
+      {
+        title: "2) Compare",
+        description: "Review key details and connect directly with an agent.",
+      },
+      {
+        title: "3) Proceed",
+        description: "Take the next step with a transparent update path.",
+      },
+    ],
+    ctaButton: "Browse properties",
+    whyTitle: "Why choose us",
+    whyPoints: [
+      "Focused discovery and quick filtering",
+      "Direct local support",
+      "Verified listings and clear details",
+    ],
+  },
+  de: {
+    missionTitle: "Unsere Mission",
+    missionText:
+      "Wir vereinfachen die Immobiliensuche mit klaren Informationen, verifizierten Inseraten und direktem Kontakt zu lokalen Maklern.",
+    aboutSectionTitle: "Über die Plattform",
+    aboutSectionText:
+      "Wir bieten einen klaren und schnellen Weg von der ersten Suche bis zur sicheren Entscheidung.",
+    processTitle: "So funktioniert es",
+    processText: "Drei klare Schritte, um schneller die passende Immobilie zu finden.",
+    processSteps: [
+      { title: "1) Suchen", description: "Filtern Sie nach Preis, Fläche, Lage und Typ." },
+      {
+        title: "2) Vergleichen",
+        description: "Prüfen Sie die wichtigsten Details und kontaktieren Sie den Makler direkt.",
+      },
+      {
+        title: "3) Entscheiden",
+        description: "Gehen Sie mit klaren Informationen sicher zum nächsten Schritt.",
+      },
+    ],
+    ctaButton: "Immobilien ansehen",
+    whyTitle: "Warum wir",
+    whyPoints: [
+      "Schnelle und präzise Suche",
+      "Direkte Kommunikation mit lokalen Maklern",
+      "Verifizierte und transparente Inserate",
+    ],
+  },
+  tr: {
+    missionTitle: "Misyonumuz",
+    missionText:
+      "Gayrimenkul aramayı; net bilgiler, doğrulanmış ilanlar ve yerel danışmanlarla doğrudan iletişim ile kolaylaştırıyoruz.",
+    aboutSectionTitle: "Platform hakkında",
+    aboutSectionText:
+      "İlk aramadan güvenli karara kadar daha hızlı ve daha anlaşılır bir deneyim sunuyoruz.",
+    processTitle: "Nasıl çalışır",
+    processText: "Doğru mülkü daha hızlı bulmanız için üç net adım.",
+    processSteps: [
+      { title: "1) Ara", description: "Fiyat, metrekare, konum ve türe göre filtreleyin." },
+      {
+        title: "2) Karşılaştır",
+        description: "Ana detayları inceleyin ve danışmanla doğrudan iletişim kurun.",
+      },
+      {
+        title: "3) Karar ver",
+        description: "Net bilgilerle bir sonraki adıma güvenle ilerleyin.",
+      },
+    ],
+    ctaButton: "İlanları görüntüle",
+    whyTitle: "Neden biz",
+    whyPoints: [
+      "Hızlı ve odaklı arama",
+      "Yerel danışmanlarla doğrudan iletişim",
+      "Doğrulanmış ve şeffaf ilanlar",
+    ],
+  },
+};
+
+const valueCardsByLocale: Record<Locale, ValueCard[]> = {
+  mk: [
+    {
+      title: "Голем избор",
+      description: "Пребарувајте проверени недвижности низ цела Северна Македонија.",
+    },
+    {
+      title: "Локални агенти",
+      description: "Добијте поддршка од локални агенти во секој чекор.",
+    },
+    {
+      title: "Транспарентност",
+      description: "Јасни детали за огласите и едноставен процес на купување или наем.",
+    },
+  ],
   al: [
     {
-      title: "Zgjedhje e gjere",
-      description: "Shfletoni prona në disa hapa të shpejtë.",
+      title: "Zgjedhje e gjerë",
+      description: "Shfletoni prona të verifikuara në gjithë Maqedoninë e Veriut.",
     },
     {
       title: "Agjentë lokalë",
-      description: "Merrni guida nga ekspertët tanë të zonës.",
+      description: "Merrni mbështetje nga agjentë lokalë në çdo hap.",
     },
     {
       title: "Transparencë",
-      description: "Duke punuar me të dhëna të qarta dhe transparente.",
+      description: "Detaje të qarta dhe proces i thjeshtë për blerje ose qira.",
     },
   ],
-  default: [
+  en: [
     {
       title: "Wide Selection",
       description: "Browse thousands of verified properties across North Macedonia.",
@@ -52,6 +214,34 @@ const valueCards = {
       description: "Clear listing details and a straightforward buying/renting path.",
     },
   ],
+  de: [
+    {
+      title: "Große Auswahl",
+      description: "Durchsuchen Sie verifizierte Immobilien in ganz Nordmazedonien.",
+    },
+    {
+      title: "Lokale Makler",
+      description: "Erhalten Sie Unterstützung von lokalen Maklern auf jedem Schritt.",
+    },
+    {
+      title: "Transparenz",
+      description: "Klare Inseratsdetails und ein einfacher Kauf- oder Mietprozess.",
+    },
+  ],
+  tr: [
+    {
+      title: "Geniş Seçenek",
+      description: "Kuzey Makedonya genelinde doğrulanmış ilanları inceleyin.",
+    },
+    {
+      title: "Yerel Danışmanlar",
+      description: "Her adımda yerel danışmanlardan destek alın.",
+    },
+    {
+      title: "Şeffaflık",
+      description: "Net ilan detayları ve sade bir satın alma/kiralama süreci.",
+    },
+  ],
 };
 
 export default async function AboutPage({
@@ -62,165 +252,11 @@ export default async function AboutPage({
   const { locale } = await params;
   const t = await getTranslations({ locale });
 
-  const coreCopy: AboutCopy =
-    locale === "al"
-      ? {
-          missionTitle: "Misioni Yne",
-          missionText:
-            "Ne thjeshtojmë procesin e pasurive të paluajtshme dhe e lidhim klientin me agjentin në një hap më të qartë.",
-          aboutSectionTitle: "Mbi platformën tone",
-          aboutSectionText:
-            "Ne i shkurtojmë hapat e tepërt dhe e bëjmë kërkimin të qartë, të shpejtë dhe të besueshëm.",
-          processTitle: "Si funksionojmë",
-          processText:
-            "Tri hapa të qartë nga kërkimi i parë deri tek vendimi i rregullt.",
-          processSteps: [
-            { title: "1) Kërko", description: "Përdor kërkim me filtrat e nevojshëm." },
-            {
-              title: "2) Krahaso",
-              description: "Shikoni detajet kryesore dhe kontaktoni agjentin.",
-            },
-            { title: "3) Vendos", description: "Përfundoni me një hap të sigurt me mbështetje." },
-          ],
-          ctaButton: "Shiko Pronat",
-          whyTitle: "Pse të na zgjidhni",
-          whyPoints: [
-            "Filtra të thjeshtë dhe të shpejtë",
-            "Kontakt i drejtpërdrejtë me agjentin",
-            "Listime të verifikuara",
-          ],
-        }
-      : locale === "mk"
-        ? {
-            missionTitle: "Nasa misija",
-            missionText:
-              "Ni gi napraveno i procesot so poradi i kupuvaci i prosta i brzina do sporedba.",
-            aboutSectionTitle: "За нас",
-            aboutSectionText:
-              "Нудиме јасна и брза платформа со проверени листинзи и поддршка.",
-            processTitle: "Како работиме",
-            processText:
-              "Три чекори: прецизен пребарување, проверка и финален чекор.",
-            processSteps: [
-              { title: "1) Барај", description: "Филтрирај според буџет, локација и тип." },
-              {
-                title: "2) Провери",
-                description: "Спореди детали dhe kontakto agjentin direkt.",
-              },
-              {
-                title: "3) Одлучи",
-                description: "Shko me hapin e ardhshëm me qartësi dhe shpejtësi.",
-              },
-            ],
-            ctaButton: "Vidi nekretnini",
-            whyTitle: "Зошто нас",
-            whyPoints: [
-              "Брзо пребарување",
-              "Местна поддршка",
-              "Транспарентни информации",
-            ],
-          }
-        : locale === "de"
-          ? {
-              missionTitle: "Unsere Mission",
-              missionText:
-                "Wir vereinfachen Immobilienprozesse und stellen klare, sichere Informationen bereit.",
-              aboutSectionTitle: "Über unsere Plattform",
-              aboutSectionText:
-                "Eine klare, schnelle und transparente Erfahrung von der Suche bis zur Entscheidung.",
-              processTitle: "Wie wir arbeiten",
-              processText: "Drei klare Schritte für Ihren nächsten Schritt.",
-              processSteps: [
-                { title: "1) Suchen", description: "Filtern nach Preis, Lage und Typ." },
-                {
-                  title: "2) Prüfen",
-                  description: "Vergleichen Sie Details und schreiben Sie direkt mit dem Agenten.",
-                },
-                {
-                  title: "3) Entscheiden",
-                  description: "Gehen Sie mit klarer Information zum nächsten Schritt.",
-                },
-              ],
-              ctaButton: "Immobilien durchsuchen",
-              whyTitle: "Warum wir",
-              whyPoints: [
-                "Schnelle, fokussierte Suche",
-                "Direkte Kommunikation",
-                "Verifizierte Immobilieninserate",
-              ],
-            }
-          : locale === "tr"
-            ? {
-                missionTitle: "Misyonumuz",
-                missionText:
-                  "Emlak sürecini basitleştiriyoruz ve adaylara net, güvenli bir yol sunuyoruz.",
-                aboutSectionTitle: "Hakkımızda",
-                aboutSectionText:
-                  "Aramadan onaya kadar her adım net ve şeffaf bir şekilde ilerler.",
-                processTitle: "Nasıl çalışırız",
-                processText: "Üç basit adım ile sonuç odaklı ilerleme.",
-                processSteps: [
-                  { title: "1) Bul", description: "Bütçenize ve konumunuza göre filtreleyin." },
-                  {
-                    title: "2) Karşılaştır",
-                    description: "Detayları karşılaştırın ve ajan ile doğrudan iletişim kurun.",
-                  },
-                  {
-                    title: "3) İlerle",
-                    description: "Net adımlarla ilerleyin ve güvenle karar verin.",
-                  },
-                ],
-                ctaButton: "İlanları görüntüle",
-                whyTitle: "Neden biz",
-                whyPoints: [
-                  "Hızlı filtreleme",
-                  "Yerel uzmanlarla destek",
-                  "Doğrulanmış ilanlar",
-                ],
-              }
-            : {
-                missionTitle: "Our Mission",
-                missionText:
-                  "We simplify real estate in North Macedonia through clear, fast, and transparent property workflows.",
-                aboutSectionTitle: "About NovaBuildings",
-                aboutSectionText:
-                  "A cleaner, simpler journey from discovery to decision with less friction and better clarity.",
-                processTitle: "How we work",
-                processText: "Three steps help you move from interest to decision quickly.",
-                processSteps: [
-                  { title: "1) Search", description: "Filter by location, type, and budget." },
-                  {
-                    title: "2) Compare",
-                    description: "Review key details and connect directly with an agent.",
-                  },
-                  {
-                    title: "3) Proceed",
-                    description: "Take the next step with a transparent update path.",
-                  },
-                ],
-                ctaButton: "Browse properties",
-                whyTitle: "Why choose us",
-                whyPoints: [
-                  "Focused discovery and quick filtering",
-                  "Direct local support",
-                  "Verified listings and clear details",
-                ],
-              };
-
-const aboutHeadingClass = "font-semibold";
+  const coreCopy = aboutCopyByLocale[locale] ?? aboutCopyByLocale.en;
+  const values = valueCardsByLocale[locale] ?? valueCardsByLocale.en;
+  const aboutHeadingClass = "font-semibold";
   const aboutParagraphClass =
     "leading-relaxed antialiased text-[14px] text-[rgba(75,85,99,0.95)] sm:text-sm";
-
-  const values =
-    locale === "al"
-      ? valueCards.al
-      : locale === "mk"
-        ? valueCards.default
-        : locale === "de"
-          ? valueCards.default
-          : locale === "tr"
-            ? valueCards.default
-            : valueCards.default;
 
   return (
     <div className="relative overflow-hidden">
@@ -247,13 +283,13 @@ const aboutHeadingClass = "font-semibold";
           </p>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {values.map((value) => (
+            {values.map((value, index) => (
               <Card key={value.title} className="border-sky-100 bg-white/80">
                 <CardContent className="flex gap-3 p-3">
                   <div className="rounded-lg bg-blue-50 p-2">
-                    {value.title === values[0].title ? (
+                    {index === 0 ? (
                       <Search className="h-5 w-5 text-blue-600" />
-                    ) : value.title === values[1].title ? (
+                    ) : index === 1 ? (
                       <Building2 className="h-5 w-5 text-blue-600" />
                     ) : (
                       <Shield className="h-5 w-5 text-blue-600" />
@@ -285,7 +321,7 @@ const aboutHeadingClass = "font-semibold";
           </p>
           <div className="mb-4 grid gap-3 md:grid-cols-3">
             {coreCopy.processSteps.map((step) => (
-            <Card key={step.title} className="border-slate-100">
+              <Card key={step.title} className="border-slate-100">
                 <CardHeader className="pb-1">
                   <CardTitle className={`text-base ${aboutHeadingClass}`}>{step.title}</CardTitle>
                 </CardHeader>
@@ -308,7 +344,7 @@ const aboutHeadingClass = "font-semibold";
             </ul>
           </div>
           <Button asChild size="sm">
-            <Link href={`/${locale}/properties`} className="inline-flex items-center">
+            <Link href={`/${locale}`} className="inline-flex items-center">
               {coreCopy.ctaButton}
               <Search className="ml-2 h-4 w-4" />
             </Link>

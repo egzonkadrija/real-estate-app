@@ -55,11 +55,24 @@ export function getLocalizedField<T extends object>(
   locale: string
 ): string {
   const record = obj as Record<string, unknown> | null | undefined;
-  const localized = record?.[`${field}_${locale}`];
-  if (typeof localized === "string") return localized;
+  const localeFallbackOrder: Record<string, string[]> = {
+    mk: ["mk", "al", "en", "de", "tr"],
+    al: ["al", "en", "de", "mk", "tr"],
+    en: ["en", "al", "de", "mk", "tr"],
+    de: ["de", "en", "al", "mk", "tr"],
+    tr: ["tr", "en", "al", "de", "mk"],
+  };
 
-  const fallback = record?.[`${field}_en`];
-  return typeof fallback === "string" ? fallback : "";
+  const order = localeFallbackOrder[locale] ?? [locale, "en", "al", "de", "tr", "mk"];
+
+  for (const candidateLocale of order) {
+    const candidate = record?.[`${field}_${candidateLocale}`];
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      return candidate;
+    }
+  }
+
+  return "";
 }
 
 export function calculateMortgage(

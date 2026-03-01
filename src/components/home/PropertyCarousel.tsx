@@ -36,6 +36,9 @@ type PropertyFilterKey = "sale" | "rent" | "exclusive";
 type CategoryKey = (typeof CATEGORIES)[number]["key"];
 type QuickSortKey = "price" | "area" | "location";
 type QuickSortOrder = "asc" | "desc";
+const QUICK_FILTER_POPOVER_MAX_WIDTH = 360;
+const QUICK_FILTER_POPOVER_MARGIN = 16;
+const QUICK_FILTER_POPOVER_GAP = 12;
 
 interface PropertyCarouselProps {
   properties: (Property & { images?: PropertyImage[]; location?: Location })[];
@@ -66,6 +69,11 @@ export function PropertyCarousel({
 }: PropertyCarouselProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const quickFilterPopoverRef = React.useRef<HTMLDivElement>(null);
+  const quickFilterButtonRefs = React.useRef<Record<QuickSortKey, HTMLButtonElement | null>>({
+    price: null,
+    area: null,
+    location: null,
+  });
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -261,6 +269,11 @@ export function PropertyCarousel({
   );
 
   const [openQuickFilter, setOpenQuickFilter] = React.useState<QuickSortKey | null>(null);
+  const [quickFilterPopoverPosition, setQuickFilterPopoverPosition] = React.useState({
+    left: QUICK_FILTER_POPOVER_MARGIN,
+    top: 0,
+    width: QUICK_FILTER_POPOVER_MAX_WIDTH,
+  });
   const [priceMinInput, setPriceMinInput] = React.useState(activeMinPrice);
   const [priceMaxInput, setPriceMaxInput] = React.useState(activeMaxPrice);
   const [priceSortOrder, setPriceSortOrder] = React.useState<QuickSortOrder>(
@@ -337,6 +350,55 @@ export function PropertyCarousel({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openQuickFilter]);
+
+  const updateQuickFilterPopoverPosition = React.useCallback(
+    (filter: QuickSortKey) => {
+      const button = quickFilterButtonRefs.current[filter];
+      if (!button) return;
+
+      const rect = button.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const width = Math.min(
+        QUICK_FILTER_POPOVER_MAX_WIDTH,
+        Math.max(0, viewportWidth - QUICK_FILTER_POPOVER_MARGIN * 2)
+      );
+      const maxLeft = Math.max(
+        QUICK_FILTER_POPOVER_MARGIN,
+        viewportWidth - width - QUICK_FILTER_POPOVER_MARGIN
+      );
+      const left = Math.min(Math.max(rect.left, QUICK_FILTER_POPOVER_MARGIN), maxLeft);
+      const top = rect.bottom + QUICK_FILTER_POPOVER_GAP;
+
+      setQuickFilterPopoverPosition({ left, top, width });
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (!openQuickFilter) return;
+
+    const syncPosition = () => updateQuickFilterPopoverPosition(openQuickFilter);
+    syncPosition();
+    window.addEventListener("resize", syncPosition);
+    window.addEventListener("scroll", syncPosition, true);
+    return () => {
+      window.removeEventListener("resize", syncPosition);
+      window.removeEventListener("scroll", syncPosition, true);
+    };
+  }, [openQuickFilter, updateQuickFilterPopoverPosition]);
+
+  const toggleQuickFilter = React.useCallback(
+    (filter: QuickSortKey) => {
+      setOpenQuickFilter((current) => {
+        const next = current === filter ? null : filter;
+        if (next) {
+          updateQuickFilterPopoverPosition(next);
+        }
+        return next;
+      });
+    },
+    [updateQuickFilterPopoverPosition]
+  );
 
   const applyPriceFilters = React.useCallback(() => {
     router.push(
@@ -780,30 +842,28 @@ export function PropertyCarousel({
         syncPauseState();
       }}
     >
-      <div className="mb-4 w-full overflow-x-auto scrollbar-hide">
-        <div className="flex min-w-full items-center justify-between gap-8">
-          <div className="flex items-center gap-2">
-            <Link
-              href={getFilterHref("sale")}
-              className={getFilterButtonClass("sale")}
-            >
-              {t("property.forSale")}
-            </Link>
-            <Link
-              href={getFilterHref("rent")}
-              className={getFilterButtonClass("rent")}
-            >
-              {t("property.forRent")}
-            </Link>
-            <Link
-              href={getFilterHref("exclusive")}
-              className={getFilterButtonClass("exclusive")}
-            >
-              {t("common.exclusive")}
-            </Link>
-          </div>
+      <div className="mb-4 w-full">
+        <div className="flex w-full flex-wrap items-center gap-3">
+          <Link
+            href={getFilterHref("sale")}
+            className={getFilterButtonClass("sale")}
+          >
+            {t("property.forSale")}
+          </Link>
+          <Link
+            href={getFilterHref("rent")}
+            className={getFilterButtonClass("rent")}
+          >
+            {t("property.forRent")}
+          </Link>
+          <Link
+            href={getFilterHref("exclusive")}
+            className={getFilterButtonClass("exclusive")}
+          >
+            {t("common.exclusive")}
+          </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {CATEGORIES.map(({ key, icon: Icon }) => (
               <Link
                 key={key}
@@ -821,181 +881,188 @@ export function PropertyCarousel({
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex flex-wrap items-center gap-2">
             <button
+              ref={(node) => {
+                quickFilterButtonRefs.current.price = node;
+              }}
               type="button"
-              onClick={() =>
-                setOpenQuickFilter((current) =>
-                  current === "price" ? null : "price"
-                )
-              }
+              onClick={() => toggleQuickFilter("price")}
+              aria-label={t("property.price")}
+              title={t("property.price")}
               className={getQuickSortButtonClass("price")}
             >
               <CircleDollarSign className="h-4 w-4" />
-              {t("property.price")}
             </button>
             <button
+              ref={(node) => {
+                quickFilterButtonRefs.current.area = node;
+              }}
               type="button"
-              onClick={() =>
-                setOpenQuickFilter((current) =>
-                  current === "area" ? null : "area"
-                )
-              }
+              onClick={() => toggleQuickFilter("area")}
+              aria-label={t("property.area")}
+              title={t("property.area")}
               className={getQuickSortButtonClass("area")}
             >
               <Maximize2 className="h-4 w-4" />
-              {t("property.area")}
             </button>
             <button
+              ref={(node) => {
+                quickFilterButtonRefs.current.location = node;
+              }}
               type="button"
-              onClick={() =>
-                setOpenQuickFilter((current) =>
-                  current === "location" ? null : "location"
-                )
-              }
+              onClick={() => toggleQuickFilter("location")}
+              aria-label={t("property.location")}
+              title={t("property.location")}
               className={getQuickSortButtonClass("location")}
             >
               <MapPin className="h-4 w-4" />
-              {t("property.location")}
             </button>
+
+            {openQuickFilter && (
+              <div
+                className="fixed z-40"
+                style={{
+                  left: `${quickFilterPopoverPosition.left}px`,
+                  top: `${quickFilterPopoverPosition.top}px`,
+                  width: `${quickFilterPopoverPosition.width}px`,
+                }}
+              >
+                <div
+                  ref={quickFilterPopoverRef}
+                  className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+                >
+                  {openQuickFilter === "price" && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">{t("property.price")}</h3>
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                        <input
+                          type="number"
+                          value={priceMinInput}
+                          onChange={(e) => setPriceMinInput(e.target.value)}
+                          placeholder={t("filters.minPrice")}
+                          className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                        />
+                        <span className="text-gray-400">-</span>
+                        <input
+                          type="number"
+                          value={priceMaxInput}
+                          onChange={(e) => setPriceMaxInput(e.target.value)}
+                          placeholder={t("filters.maxPrice")}
+                          className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Sort by</p>
+                        <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                          <span>Low to High</span>
+                          <input
+                            type="radio"
+                            name="price-sort-order"
+                            checked={priceSortOrder === "asc"}
+                            onChange={() => setPriceSortOrder("asc")}
+                          />
+                        </label>
+                        <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                          <span>High to Low</span>
+                          <input
+                            type="radio"
+                            name="price-sort-order"
+                            checked={priceSortOrder === "desc"}
+                            onChange={() => setPriceSortOrder("desc")}
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyPriceFilters}
+                        className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+
+                  {openQuickFilter === "area" && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">{t("property.area")}</h3>
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                        <input
+                          type="number"
+                          value={areaMinInput}
+                          onChange={(e) => setAreaMinInput(e.target.value)}
+                          placeholder={t("filters.minArea")}
+                          className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                        />
+                        <span className="text-gray-400">-</span>
+                        <input
+                          type="number"
+                          value={areaMaxInput}
+                          onChange={(e) => setAreaMaxInput(e.target.value)}
+                          placeholder={t("filters.maxArea")}
+                          className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Sort by</p>
+                        <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                          <span>Low to High</span>
+                          <input
+                            type="radio"
+                            name="area-sort-order"
+                            checked={areaSortOrder === "asc"}
+                            onChange={() => setAreaSortOrder("asc")}
+                          />
+                        </label>
+                        <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                          <span>High to Low</span>
+                          <input
+                            type="radio"
+                            name="area-sort-order"
+                            checked={areaSortOrder === "desc"}
+                            onChange={() => setAreaSortOrder("desc")}
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyAreaFilters}
+                        className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+
+                  {openQuickFilter === "location" && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">{t("property.location")}</h3>
+                      <select
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                      >
+                        <option value="">{t("common.all")}</option>
+                        {locationOptions.map((location) => (
+                          <option key={location.id} value={String(location.id)}>
+                            {getLocalizedField(location, "name", locale)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={applyLocationFilters}
+                        className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {openQuickFilter && (
-          <div className="relative mt-3">
-            <div
-              ref={quickFilterPopoverRef}
-              className="w-full max-w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
-            >
-              {openQuickFilter === "price" && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{t("property.price")}</h3>
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    <input
-                      type="number"
-                      value={priceMinInput}
-                      onChange={(e) => setPriceMinInput(e.target.value)}
-                      placeholder={t("filters.minPrice")}
-                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
-                    />
-                    <span className="text-gray-400">-</span>
-                    <input
-                      type="number"
-                      value={priceMaxInput}
-                      onChange={(e) => setPriceMaxInput(e.target.value)}
-                      placeholder={t("filters.maxPrice")}
-                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Sort by</p>
-                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
-                      <span>Low to High</span>
-                      <input
-                        type="radio"
-                        name="price-sort-order"
-                        checked={priceSortOrder === "asc"}
-                        onChange={() => setPriceSortOrder("asc")}
-                      />
-                    </label>
-                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
-                      <span>High to Low</span>
-                      <input
-                        type="radio"
-                        name="price-sort-order"
-                        checked={priceSortOrder === "desc"}
-                        onChange={() => setPriceSortOrder("desc")}
-                      />
-                    </label>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={applyPriceFilters}
-                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-                  >
-                    Apply
-                  </button>
-                </div>
-              )}
-
-              {openQuickFilter === "area" && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{t("property.area")}</h3>
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    <input
-                      type="number"
-                      value={areaMinInput}
-                      onChange={(e) => setAreaMinInput(e.target.value)}
-                      placeholder={t("filters.minArea")}
-                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
-                    />
-                    <span className="text-gray-400">-</span>
-                    <input
-                      type="number"
-                      value={areaMaxInput}
-                      onChange={(e) => setAreaMaxInput(e.target.value)}
-                      placeholder={t("filters.maxArea")}
-                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Sort by</p>
-                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
-                      <span>Low to High</span>
-                      <input
-                        type="radio"
-                        name="area-sort-order"
-                        checked={areaSortOrder === "asc"}
-                        onChange={() => setAreaSortOrder("asc")}
-                      />
-                    </label>
-                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
-                      <span>High to Low</span>
-                      <input
-                        type="radio"
-                        name="area-sort-order"
-                        checked={areaSortOrder === "desc"}
-                        onChange={() => setAreaSortOrder("desc")}
-                      />
-                    </label>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={applyAreaFilters}
-                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-                  >
-                    Apply
-                  </button>
-                </div>
-              )}
-
-              {openQuickFilter === "location" && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{t("property.location")}</h3>
-                  <select
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
-                  >
-                    <option value="">{t("common.all")}</option>
-                    {locationOptions.map((location) => (
-                      <option key={location.id} value={String(location.id)}>
-                        {getLocalizedField(location, "name", locale)}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={applyLocationFilters}
-                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-                  >
-                    Apply
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="mb-4 w-full">
