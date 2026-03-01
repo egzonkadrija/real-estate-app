@@ -25,6 +25,8 @@ type AgentPropertyItem = {
     | "rented";
   type: "sale" | "rent";
   price: number | null;
+  rentMonthsAccrued: number;
+  revenueContribution: number;
 };
 
 type AgentListItem = {
@@ -42,6 +44,37 @@ type AgentListItem = {
   properties: AgentPropertyItem[];
 };
 
+function normalizePropertyStatus(
+  status: AgentPropertyItem["status"],
+  type: AgentPropertyItem["type"]
+): AgentPropertyItem["status"] {
+  if (type === "rent" && status === "sold") return "rented";
+  if (type === "sale" && status === "rented") return "sold";
+  return status;
+}
+
+function getAccruedRentMonths(rentedSince: Date, now: Date): number {
+  const rentedYear = rentedSince.getUTCFullYear();
+  const rentedMonth = rentedSince.getUTCMonth();
+  let firstPaymentYear = rentedYear;
+  let firstPaymentMonth = rentedMonth + 1;
+  if (firstPaymentMonth > 11) {
+    firstPaymentMonth = 0;
+    firstPaymentYear += 1;
+  }
+
+  const currentPaymentYear = now.getUTCFullYear();
+  const currentPaymentMonth = now.getUTCMonth();
+  const firstPaymentIndex = firstPaymentYear * 12 + firstPaymentMonth;
+  const currentPaymentIndex = currentPaymentYear * 12 + currentPaymentMonth;
+
+  if (firstPaymentIndex > currentPaymentIndex) {
+    return 0;
+  }
+
+  return currentPaymentIndex - firstPaymentIndex + 1;
+}
+
 export async function GET() {
   try {
     const agentsWithStats = await db
@@ -56,14 +89,9 @@ export async function GET() {
         bio_de: agents.bio_de,
         totalProperties: count(properties.id).as("totalProperties"),
         soldProperties: count(
-          sql`CASE WHEN ${properties.status} = 'sold' THEN 1 END`
+          sql`CASE WHEN ${properties.status} = 'sold' AND ${properties.type} = 'sale' THEN 1 END`
         ).as("soldProperties"),
-        soldRevenue: sql<number | null>`
-          COALESCE(
-            SUM(CASE WHEN ${properties.status} = 'sold' THEN ${properties.price} ELSE 0 END),
-            0
-          )
-        `.as("soldRevenue"),
+        soldRevenue: sql<number | null>`0`.as("soldRevenue"),
       })
       .from(agents)
       .leftJoin(properties, eq(properties.agent_id, agents.id))
@@ -78,25 +106,58 @@ export async function GET() {
         status: properties.status,
         type: properties.type,
         price: properties.price,
+        created_at: properties.created_at,
+        updated_at: properties.updated_at,
       })
       .from(properties)
       .orderBy(desc(properties.created_at));
 
     const propertiesByAgent = new Map<number, AgentPropertyItem[]>();
+    const revenueByAgent = new Map<number, number>();
+    const now = new Date();
+
     for (const property of propertiesRows) {
       if (!property.agent_id) {
         continue;
       }
 
       const list = propertiesByAgent.get(property.agent_id) ?? [];
+      const normalizedStatus = normalizePropertyStatus(property.status, property.type);
+      let rentMonthsAccrued = 0;
+      if (normalizedStatus === "rented") {
+        const monthsFromUpdated = getAccruedRentMonths(property.updated_at, now);
+        if (monthsFromUpdated > 0) {
+          rentMonthsAccrued = monthsFromUpdated;
+        } else {
+          // Fallback for legacy records where updated_at was bumped by edits after renting.
+          const monthsFromCreated = getAccruedRentMonths(property.created_at, now);
+          if (monthsFromCreated > 0) {
+            rentMonthsAccrued = 1;
+          }
+        }
+      }
+      const basePrice = property.price ?? 0;
+      const revenueContribution =
+        normalizedStatus === "sold" && property.type === "sale"
+          ? basePrice
+          : normalizedStatus === "rented" && property.type === "rent"
+            ? basePrice * rentMonthsAccrued
+            : 0;
+
       list.push({
         id: property.id,
         title: property.title_en,
-        status: property.status,
+        status: normalizedStatus,
         type: property.type,
         price: property.price,
+        rentMonthsAccrued,
+        revenueContribution,
       });
       propertiesByAgent.set(property.agent_id, list);
+      revenueByAgent.set(
+        property.agent_id,
+        (revenueByAgent.get(property.agent_id) ?? 0) + revenueContribution
+      );
     }
 
     const data: AgentListItem[] = agentsWithStats.map((agent) => {
@@ -105,7 +166,7 @@ export async function GET() {
         ...agent,
         totalProperties: Number(agent.totalProperties),
         soldProperties: Number(agent.soldProperties),
-        soldRevenue: Number(agent.soldRevenue),
+        soldRevenue: revenueByAgent.get(agent.id) ?? 0,
         properties,
       };
     });

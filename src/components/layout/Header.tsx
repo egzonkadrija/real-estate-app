@@ -29,7 +29,7 @@ export function Header() {
   const [langOpen, setLangOpen] = React.useState(false);
 
   const navLinks = [
-    { href: "/properties" as const, label: t("properties"), icon: Building2 },
+    { href: "/" as const, label: t("properties"), icon: Building2 },
     { href: "/about" as const, label: t("about"), icon: Info },
     { href: "/contact" as const, label: t("contact"), icon: Phone },
     { href: "/submit-property" as const, label: t("submitProperty"), icon: Send },

@@ -21,7 +21,7 @@ import {
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { Property, PropertyImage, Location } from "@/types";
-import { getLocalizedField } from "@/lib/utils";
+import { cn, getLocalizedField } from "@/lib/utils";
 
 const CATEGORIES = [
   { key: "house", icon: Home },
@@ -32,25 +32,46 @@ const CATEGORIES = [
   { key: "warehouse", icon: Warehouse },
   { key: "object", icon: Building },
 ] as const;
+type PropertyFilterKey = "sale" | "rent" | "exclusive";
+type CategoryKey = (typeof CATEGORIES)[number]["key"];
+type QuickSortKey = "price" | "area" | "location";
+type QuickSortOrder = "asc" | "desc";
 
 interface PropertyCarouselProps {
   properties: (Property & { images?: PropertyImage[]; location?: Location })[];
   title?: string;
-  activePropertyFilters?: Array<"sale" | "rent" | "exclusive">;
+  activePropertyFilters?: PropertyFilterKey[];
+  activeCategory?: CategoryKey | null;
+  activeQuickSort?: QuickSortKey | null;
+  activeSortOrder?: QuickSortOrder | null;
+  activeMinPrice?: string;
+  activeMaxPrice?: string;
+  activeMinArea?: string;
+  activeMaxArea?: string;
+  activeLocationId?: string | null;
 }
 
 export function PropertyCarousel({
   properties,
   title,
   activePropertyFilters = [],
+  activeCategory = null,
+  activeQuickSort = null,
+  activeSortOrder = null,
+  activeMinPrice = "",
+  activeMaxPrice = "",
+  activeMinArea = "",
+  activeMaxArea = "",
+  activeLocationId = null,
 }: PropertyCarouselProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const quickFilterPopoverRef = React.useRef<HTMLDivElement>(null);
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const normalizedPropertyFilters = React.useMemo(() => {
-    const orderedFilters: Array<"sale" | "rent" | "exclusive"> = [];
+    const orderedFilters: PropertyFilterKey[] = [];
     for (const filter of ["sale", "rent", "exclusive"] as const) {
       if (activePropertyFilters.includes(filter)) {
         orderedFilters.push(filter);
@@ -60,12 +81,58 @@ export function PropertyCarousel({
   }, [activePropertyFilters]);
 
   const isFilterActive = React.useCallback(
-    (filter: "sale" | "rent" | "exclusive") => normalizedPropertyFilters.includes(filter),
+    (filter: PropertyFilterKey) => normalizedPropertyFilters.includes(filter),
     [normalizedPropertyFilters]
   );
 
+  const buildHomeHref = React.useCallback(
+    (
+      filters: PropertyFilterKey[],
+      category: CategoryKey | null,
+      quickSort: QuickSortKey | null,
+      sortOrder: QuickSortOrder | null,
+      minPrice: string,
+      maxPrice: string,
+      minArea: string,
+      maxArea: string,
+      locationId: string
+    ) => {
+      const params = new URLSearchParams();
+      for (const value of filters) {
+        params.append("propertyFilter", value);
+      }
+      if (category) {
+        params.set("category", category);
+      }
+      if (quickSort) {
+        params.set("sortBy", quickSort);
+      }
+      if (sortOrder && (quickSort === "price" || quickSort === "area" || quickSort === "location")) {
+        params.set("sortOrder", sortOrder);
+      }
+      if (minPrice) {
+        params.set("minPrice", minPrice);
+      }
+      if (maxPrice) {
+        params.set("maxPrice", maxPrice);
+      }
+      if (minArea) {
+        params.set("minArea", minArea);
+      }
+      if (maxArea) {
+        params.set("maxArea", maxArea);
+      }
+      if (locationId) {
+        params.set("locationId", locationId);
+      }
+      const query = params.toString();
+      return query ? `?${query}` : "?";
+    },
+    []
+  );
+
   const getFilterHref = React.useCallback(
-    (filter: "sale" | "rent" | "exclusive") => {
+    (filter: PropertyFilterKey) => {
       const nextFilters = isFilterActive(filter)
         ? normalizedPropertyFilters.filter((value) => value !== filter)
         : [...normalizedPropertyFilters, filter];
@@ -76,21 +143,78 @@ export function PropertyCarousel({
 
       // Empty selection means "show all" with no active highlight.
       if (orderedNextFilters.length === 0) {
-        return "?";
+        return buildHomeHref(
+          [],
+          activeCategory,
+          activeQuickSort,
+          activeSortOrder,
+          activeMinPrice,
+          activeMaxPrice,
+          activeMinArea,
+          activeMaxArea,
+          activeLocationId ?? ""
+        );
       }
 
-      const params = new URLSearchParams();
-      for (const value of orderedNextFilters) {
-        params.append("propertyFilter", value);
-      }
-      return `?${params.toString()}`;
+      return buildHomeHref(
+        [...orderedNextFilters],
+        activeCategory,
+        activeQuickSort,
+        activeSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        activeMinArea,
+        activeMaxArea,
+        activeLocationId ?? ""
+      );
     },
-    [isFilterActive, normalizedPropertyFilters]
+    [
+      activeCategory,
+      activeLocationId,
+      activeMaxArea,
+      activeMaxPrice,
+      activeMinArea,
+      activeMinPrice,
+      activeQuickSort,
+      activeSortOrder,
+      buildHomeHref,
+      isFilterActive,
+      normalizedPropertyFilters,
+    ]
+  );
+
+  const getCategoryHref = React.useCallback(
+    (category: CategoryKey) => {
+      const nextCategory = activeCategory === category ? null : category;
+      return buildHomeHref(
+        normalizedPropertyFilters,
+        nextCategory,
+        activeQuickSort,
+        activeSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        activeMinArea,
+        activeMaxArea,
+        activeLocationId ?? ""
+      );
+    },
+    [
+      activeCategory,
+      activeLocationId,
+      activeMaxArea,
+      activeMaxPrice,
+      activeMinArea,
+      activeMinPrice,
+      activeQuickSort,
+      activeSortOrder,
+      buildHomeHref,
+      normalizedPropertyFilters,
+    ]
   );
 
   const getFilterButtonClass = React.useCallback(
-    (filter: "sale" | "rent" | "exclusive") => {
-      const colorClassByFilter: Record<"sale" | "rent" | "exclusive", string> = {
+    (filter: PropertyFilterKey) => {
+      const colorClassByFilter: Record<PropertyFilterKey, string> = {
         sale: "bg-[var(--brand-600)] hover:bg-[var(--brand-700)]",
         rent: "bg-gray-700 hover:bg-gray-800",
         exclusive: "bg-teal-700 hover:bg-teal-800",
@@ -104,6 +228,200 @@ export function PropertyCarousel({
     },
     [isFilterActive]
   );
+
+  const isQuickFilterActive = React.useCallback(
+    (quickSort: QuickSortKey) => {
+      if (quickSort === "price") {
+        return activeQuickSort === "price" || Boolean(activeMinPrice || activeMaxPrice);
+      }
+      if (quickSort === "area") {
+        return activeQuickSort === "area" || Boolean(activeMinArea || activeMaxArea);
+      }
+      return activeQuickSort === "location" || Boolean(activeLocationId);
+    },
+    [
+      activeLocationId,
+      activeMaxArea,
+      activeMaxPrice,
+      activeMinArea,
+      activeMinPrice,
+      activeQuickSort,
+    ]
+  );
+
+  const getQuickSortButtonClass = React.useCallback(
+    (quickSort: QuickSortKey) =>
+      cn(
+        "flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm transition-colors",
+        isQuickFilterActive(quickSort)
+          ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
+          : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+      ),
+    [isQuickFilterActive]
+  );
+
+  const [openQuickFilter, setOpenQuickFilter] = React.useState<QuickSortKey | null>(null);
+  const [priceMinInput, setPriceMinInput] = React.useState(activeMinPrice);
+  const [priceMaxInput, setPriceMaxInput] = React.useState(activeMaxPrice);
+  const [priceSortOrder, setPriceSortOrder] = React.useState<QuickSortOrder>(
+    activeQuickSort === "price" && activeSortOrder ? activeSortOrder : "desc"
+  );
+  const [areaMinInput, setAreaMinInput] = React.useState(activeMinArea);
+  const [areaMaxInput, setAreaMaxInput] = React.useState(activeMaxArea);
+  const [areaSortOrder, setAreaSortOrder] = React.useState<QuickSortOrder>(
+    activeQuickSort === "area" && activeSortOrder ? activeSortOrder : "desc"
+  );
+  const [locationInput, setLocationInput] = React.useState(activeLocationId ?? "");
+  const [locationOptions, setLocationOptions] = React.useState<Location[]>([]);
+
+  React.useEffect(() => {
+    setPriceMinInput(activeMinPrice);
+    setPriceMaxInput(activeMaxPrice);
+    setPriceSortOrder(activeQuickSort === "price" && activeSortOrder ? activeSortOrder : "desc");
+    setAreaMinInput(activeMinArea);
+    setAreaMaxInput(activeMaxArea);
+    setAreaSortOrder(activeQuickSort === "area" && activeSortOrder ? activeSortOrder : "desc");
+    setLocationInput(activeLocationId ?? "");
+  }, [
+    activeLocationId,
+    activeMaxArea,
+    activeMaxPrice,
+    activeMinArea,
+    activeMinPrice,
+    activeQuickSort,
+    activeSortOrder,
+  ]);
+
+  React.useEffect(() => {
+    let ignore = false;
+
+    async function loadLocations() {
+      try {
+        const res = await fetch("/api/locations?type=city");
+        if (!res.ok) return;
+        const payload = await res.json();
+        if (!ignore && Array.isArray(payload)) {
+          setLocationOptions(payload);
+        }
+      } catch {
+        // Intentionally silent; filters still work without preloaded location options.
+      }
+    }
+
+    void loadLocations();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!openQuickFilter) return;
+
+    function handleOutsideClick(event: MouseEvent) {
+      if (!quickFilterPopoverRef.current) return;
+      if (quickFilterPopoverRef.current.contains(event.target as Node)) return;
+      setOpenQuickFilter(null);
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpenQuickFilter(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [openQuickFilter]);
+
+  const applyPriceFilters = React.useCallback(() => {
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        "price",
+        priceSortOrder,
+        priceMinInput.trim(),
+        priceMaxInput.trim(),
+        activeMinArea,
+        activeMaxArea,
+        activeLocationId ?? ""
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeLocationId,
+    activeMaxArea,
+    activeMinArea,
+    buildHomeHref,
+    normalizedPropertyFilters,
+    priceMaxInput,
+    priceMinInput,
+    priceSortOrder,
+    router,
+  ]);
+
+  const applyAreaFilters = React.useCallback(() => {
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        "area",
+        areaSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        areaMinInput.trim(),
+        areaMaxInput.trim(),
+        activeLocationId ?? ""
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeLocationId,
+    activeMaxPrice,
+    activeMinPrice,
+    areaMaxInput,
+    areaMinInput,
+    areaSortOrder,
+    buildHomeHref,
+    normalizedPropertyFilters,
+    router,
+  ]);
+
+  const applyLocationFilters = React.useCallback(() => {
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        activeQuickSort,
+        activeSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        activeMinArea,
+        activeMaxArea,
+        locationInput
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeMaxArea,
+    activeMaxPrice,
+    activeMinArea,
+    activeMinPrice,
+    activeQuickSort,
+    activeSortOrder,
+    buildHomeHref,
+    locationInput,
+    normalizedPropertyFilters,
+    router,
+  ]);
 
   const [search, setSearch] = React.useState("");
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
@@ -489,8 +807,13 @@ export function PropertyCarousel({
             {CATEGORIES.map(({ key, icon: Icon }) => (
               <Link
                 key={key}
-                href={`/properties?category=${key}`}
-                className="flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3.5 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                href={getCategoryHref(key)}
+                className={cn(
+                  "flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm transition-colors",
+                  activeCategory === key
+                    ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
+                    : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                )}
               >
                 <Icon className="h-4 w-4" />
                 {t(`property.${key}`)}
@@ -499,29 +822,180 @@ export function PropertyCarousel({
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/properties"
-              className="flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3.5 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+            <button
+              type="button"
+              onClick={() =>
+                setOpenQuickFilter((current) =>
+                  current === "price" ? null : "price"
+                )
+              }
+              className={getQuickSortButtonClass("price")}
             >
               <CircleDollarSign className="h-4 w-4" />
               {t("property.price")}
-            </Link>
-            <Link
-              href="/properties"
-              className="flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3.5 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setOpenQuickFilter((current) =>
+                  current === "area" ? null : "area"
+                )
+              }
+              className={getQuickSortButtonClass("area")}
             >
               <Maximize2 className="h-4 w-4" />
               {t("property.area")}
-            </Link>
-            <Link
-              href="/properties"
-              className="flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--border)] px-3.5 py-1.5 text-sm text-gray-700 transition-colors hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setOpenQuickFilter((current) =>
+                  current === "location" ? null : "location"
+                )
+              }
+              className={getQuickSortButtonClass("location")}
             >
               <MapPin className="h-4 w-4" />
               {t("property.location")}
-            </Link>
+            </button>
           </div>
         </div>
+
+        {openQuickFilter && (
+          <div className="relative mt-3">
+            <div
+              ref={quickFilterPopoverRef}
+              className="w-full max-w-[360px] rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+            >
+              {openQuickFilter === "price" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">{t("property.price")}</h3>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                    <input
+                      type="number"
+                      value={priceMinInput}
+                      onChange={(e) => setPriceMinInput(e.target.value)}
+                      placeholder={t("filters.minPrice")}
+                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <input
+                      type="number"
+                      value={priceMaxInput}
+                      onChange={(e) => setPriceMaxInput(e.target.value)}
+                      placeholder={t("filters.maxPrice")}
+                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Sort by</p>
+                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                      <span>Low to High</span>
+                      <input
+                        type="radio"
+                        name="price-sort-order"
+                        checked={priceSortOrder === "asc"}
+                        onChange={() => setPriceSortOrder("asc")}
+                      />
+                    </label>
+                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                      <span>High to Low</span>
+                      <input
+                        type="radio"
+                        name="price-sort-order"
+                        checked={priceSortOrder === "desc"}
+                        onChange={() => setPriceSortOrder("desc")}
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={applyPriceFilters}
+                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+
+              {openQuickFilter === "area" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">{t("property.area")}</h3>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                    <input
+                      type="number"
+                      value={areaMinInput}
+                      onChange={(e) => setAreaMinInput(e.target.value)}
+                      placeholder={t("filters.minArea")}
+                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <input
+                      type="number"
+                      value={areaMaxInput}
+                      onChange={(e) => setAreaMaxInput(e.target.value)}
+                      placeholder={t("filters.maxArea")}
+                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Sort by</p>
+                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                      <span>Low to High</span>
+                      <input
+                        type="radio"
+                        name="area-sort-order"
+                        checked={areaSortOrder === "asc"}
+                        onChange={() => setAreaSortOrder("asc")}
+                      />
+                    </label>
+                    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1 py-1 text-sm text-gray-700">
+                      <span>High to Low</span>
+                      <input
+                        type="radio"
+                        name="area-sort-order"
+                        checked={areaSortOrder === "desc"}
+                        onChange={() => setAreaSortOrder("desc")}
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={applyAreaFilters}
+                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+
+              {openQuickFilter === "location" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">{t("property.location")}</h3>
+                  <select
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                  >
+                    <option value="">{t("common.all")}</option>
+                    {locationOptions.map((location) => (
+                      <option key={location.id} value={String(location.id)}>
+                        {getLocalizedField(location, "name", locale)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={applyLocationFilters}
+                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-4 w-full">

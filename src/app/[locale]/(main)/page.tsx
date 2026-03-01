@@ -8,6 +8,19 @@ import { PropertyCarousel } from "@/components/home/PropertyCarousel";
 import { HeroCTAActions } from "@/components/home/HeroCTAActions";
 import { HomePropertiesFeed } from "./HomePropertiesFeed";
 
+const HOME_CATEGORY_FILTERS = [
+  "house",
+  "apartment",
+  "office",
+  "land",
+  "store",
+  "warehouse",
+  "object",
+] as const;
+type HomeCategoryFilter = (typeof HOME_CATEGORY_FILTERS)[number];
+type HomeQuickSort = "price" | "area" | "location";
+type HomeSortOrder = "asc" | "desc";
+
 export default async function HomePage({
   params,
   searchParams,
@@ -26,6 +39,43 @@ export default async function HomePage({
   const activePropertyFilters = (["sale", "rent", "exclusive"] as const).filter((filter) =>
     rawPropertyFilters.includes(filter)
   );
+  const rawCategory = Array.isArray(resolvedSearchParams.category)
+    ? resolvedSearchParams.category[0]
+    : resolvedSearchParams.category;
+  const activeCategory =
+    typeof rawCategory === "string" &&
+    (HOME_CATEGORY_FILTERS as readonly string[]).includes(rawCategory)
+      ? (rawCategory as HomeCategoryFilter)
+      : null;
+  const rawSortBy = Array.isArray(resolvedSearchParams.sortBy)
+    ? resolvedSearchParams.sortBy[0]
+    : resolvedSearchParams.sortBy;
+  const activeQuickSort =
+    rawSortBy === "price" || rawSortBy === "area" || rawSortBy === "location"
+      ? (rawSortBy as HomeQuickSort)
+      : null;
+  const rawSortOrder = Array.isArray(resolvedSearchParams.sortOrder)
+    ? resolvedSearchParams.sortOrder[0]
+    : resolvedSearchParams.sortOrder;
+  const activeSortOrder =
+    rawSortOrder === "asc" || rawSortOrder === "desc"
+      ? (rawSortOrder as HomeSortOrder)
+      : null;
+  const activeMinPrice = Array.isArray(resolvedSearchParams.minPrice)
+    ? resolvedSearchParams.minPrice[0] ?? ""
+    : resolvedSearchParams.minPrice ?? "";
+  const activeMaxPrice = Array.isArray(resolvedSearchParams.maxPrice)
+    ? resolvedSearchParams.maxPrice[0] ?? ""
+    : resolvedSearchParams.maxPrice ?? "";
+  const activeMinArea = Array.isArray(resolvedSearchParams.minArea)
+    ? resolvedSearchParams.minArea[0] ?? ""
+    : resolvedSearchParams.minArea ?? "";
+  const activeMaxArea = Array.isArray(resolvedSearchParams.maxArea)
+    ? resolvedSearchParams.maxArea[0] ?? ""
+    : resolvedSearchParams.maxArea ?? "";
+  const activeLocationId = Array.isArray(resolvedSearchParams.locationId)
+    ? resolvedSearchParams.locationId[0] ?? null
+    : resolvedSearchParams.locationId ?? null;
 
   let featuredProperties: Awaited<ReturnType<typeof db.query.properties.findMany>> = [];
 
@@ -55,6 +105,14 @@ export default async function HomePage({
             properties={JSON.parse(JSON.stringify(featuredProperties))}
             title={t("property.featured")}
             activePropertyFilters={[...activePropertyFilters]}
+            activeCategory={activeCategory}
+            activeQuickSort={activeQuickSort}
+            activeSortOrder={activeSortOrder}
+            activeMinPrice={activeMinPrice}
+            activeMaxPrice={activeMaxPrice}
+            activeMinArea={activeMinArea}
+            activeMaxArea={activeMaxArea}
+            activeLocationId={activeLocationId}
           />
         </section>
       )}
@@ -68,6 +126,14 @@ export default async function HomePage({
         </div>
         <HomePropertiesFeed
           filterModes={[...activePropertyFilters]}
+          activeCategory={activeCategory}
+          quickSort={activeQuickSort}
+          sortOrder={activeSortOrder}
+          minPrice={activeMinPrice}
+          maxPrice={activeMaxPrice}
+          minArea={activeMinArea}
+          maxArea={activeMaxArea}
+          locationId={activeLocationId}
           noResultsText={t("common.noResults")}
           loadingText="Loading properties..."
           endOfListText="No more properties."

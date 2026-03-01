@@ -38,6 +38,7 @@ export default function AdminPropertiesPage() {
   const locale = useLocale() as Locale;
 
   const [properties, setProperties] = React.useState<PropertyItem[]>([]);
+  const [typeFilter, setTypeFilter] = React.useState<"all" | "sale" | "rent">("all");
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
@@ -45,9 +46,17 @@ export default function AdminPropertiesPage() {
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
+  const [relistingId, setRelistingId] = React.useState<number | null>(null);
 
   const hasMore = properties.length < total;
   const hasData = properties.length > 0;
+
+  const handleTypeFilterChange = React.useCallback((nextType: "all" | "sale" | "rent") => {
+    setTypeFilter(nextType);
+    setPage(1);
+    setProperties([]);
+    setTotal(0);
+  }, []);
 
   
 
@@ -59,6 +68,9 @@ export default function AdminPropertiesPage() {
           page: String(targetPage),
           limit: "10",
         });
+        if (typeFilter !== "all") {
+          params.set("type", typeFilter);
+        }
 
         const res = await fetch(`/api/properties?${params.toString()}`);
         const data = await res.json();
@@ -79,7 +91,7 @@ export default function AdminPropertiesPage() {
         setLoading(false);
       }
     },
-    []
+    [typeFilter]
   );
 
   React.useEffect(() => {
@@ -132,28 +144,63 @@ export default function AdminPropertiesPage() {
     }
   }
 
-  async function handleMarkSold(id: number) {
-    if (!confirm("Mark this property as sold and remove it from this list?")) return;
-    setMarkingAsSoldId(id);
+  function getCompletionStatus(property: PropertyItem): "sold" | "rented" {
+    return property.type === "rent" ? "rented" : "sold";
+  }
+
+  function getCompletionLabel(property: PropertyItem): "Sold" | "Rented" {
+    return property.type === "rent" ? "Rented" : "Sold";
+  }
+
+  async function handleMarkCompleted(property: PropertyItem) {
+    const nextStatus = getCompletionStatus(property);
+    const nextLabel = getCompletionLabel(property);
+    if (!confirm(`Mark this property as ${nextLabel.toLowerCase()}?`)) return;
+    setMarkingAsSoldId(property.id);
     try {
-      const res = await fetch(`/api/properties/${id}`, {
+      const res = await fetch(`/api/properties/${property.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "sold" }),
+        body: JSON.stringify({ status: nextStatus }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Failed to mark property as sold");
+        throw new Error(data?.error || `Failed to mark property as ${nextLabel.toLowerCase()}`);
       }
-      setProperties((previous) => {
-        const next = previous.filter((property) => property.id !== id);
-        return next;
-      });
-      setTotal((previous) => Math.max(0, previous - 1));
+      setProperties((previous) =>
+        previous.map((item) =>
+          item.id === property.id ? { ...item, status: nextStatus } : item
+        )
+      );
     } catch (e) {
       console.error(e);
     } finally {
       setMarkingAsSoldId(null);
+    }
+  }
+
+  async function handleRelist(property: PropertyItem) {
+    if (!confirm("Mark this property as active again so it appears on homepage listings?")) return;
+    setRelistingId(property.id);
+    try {
+      const res = await fetch(`/api/properties/${property.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to relist property");
+      }
+      setProperties((previous) =>
+        previous.map((item) =>
+          item.id === property.id ? { ...item, status: "active" } : item
+        )
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRelistingId(null);
     }
   }
 
@@ -169,16 +216,56 @@ export default function AdminPropertiesPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           {t("admin.properties")}
         </h1>
-        <button
-          onClick={() => {
-            setEditingId(null);
-            setShowForm(true);
-          }}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          {t("admin.addProperty")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <button
+              type="button"
+              onClick={() => handleTypeFilterChange("all")}
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors",
+                typeFilter === "all"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              {t("common.all")}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeFilterChange("sale")}
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors",
+                typeFilter === "sale"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              {t("property.forSale")}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeFilterChange("rent")}
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors",
+                typeFilter === "rent"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              {t("property.forRent")}
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setEditingId(null);
+              setShowForm(true);
+            }}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            {t("admin.addProperty")}
+          </button>
+        </div>
       </div>
       {/* Properties Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -300,22 +387,38 @@ export default function AdminPropertiesPage() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                          {prop.status !== "sold" ? (
+                          {prop.status !== getCompletionStatus(prop) ? (
                             <button
-                              onClick={() => handleMarkSold(prop.id)}
+                              onClick={() => handleMarkCompleted(prop)}
                               disabled={markingAsSoldId === prop.id}
                               className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
                             >
                               {markingAsSoldId === prop.id ? (
                                 <span className="inline-flex items-center gap-2">
                                   <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                  Sold
+                                  {getCompletionLabel(prop)}
                                 </span>
                               ) : (
                                 <>
                                   <CheckCircle2 className="h-4 w-4" />
-                                  <span>Sold</span>
+                                  <span>{getCompletionLabel(prop)}</span>
                                 </>
+                              )}
+                            </button>
+                          ) : null}
+                          {prop.status === "rented" || prop.status === "sold" ? (
+                            <button
+                              onClick={() => handleRelist(prop)}
+                              disabled={relistingId === prop.id}
+                              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-60"
+                            >
+                              {relistingId === prop.id ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                  Relisting...
+                                </span>
+                              ) : (
+                                <span>Relist</span>
                               )}
                             </button>
                           ) : null}

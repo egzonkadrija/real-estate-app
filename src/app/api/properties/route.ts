@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { properties, propertyImages, locations, agents } from "@/db/schema";
 import {
   eq,
+  asc,
   desc,
   and,
   or,
@@ -58,6 +59,8 @@ export async function GET(request: NextRequest) {
     );
     const featured = searchParams.get("featured");
     const homeFilter = searchParams.get("homeFilter");
+    const sortBy = searchParams.get("sortBy");
+    const sortOrder = searchParams.get("sortOrder");
     const status = searchParams.get("status");
     const agentId = searchParams.get("agentId");
     const fromDate = searchParams.get("fromDate");
@@ -196,6 +199,25 @@ export async function GET(request: NextRequest) {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     const offset = (page - 1) * limit;
+    const orderByClause: SQL<unknown>[] = [desc(properties.created_at)];
+
+    if (sortBy === "price") {
+      const isAscendingSort = sortOrder === "asc";
+      orderByClause[0] = isAscendingSort ? asc(properties.price) : desc(properties.price);
+      orderByClause.push(desc(properties.created_at));
+    } else if (sortBy === "area") {
+      const isAscendingSort = sortOrder === "asc";
+      orderByClause[0] = isAscendingSort
+        ? asc(properties.surface_area)
+        : desc(properties.surface_area);
+      orderByClause.push(desc(properties.created_at));
+    } else if (sortBy === "location") {
+      const isAscendingSort = sortOrder !== "desc";
+      orderByClause[0] = isAscendingSort
+        ? asc(locations.name_en)
+        : desc(locations.name_en);
+      orderByClause.push(desc(properties.created_at));
+    }
 
     const [totalResult] = await db
       .select({ total: count() })
@@ -210,7 +232,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(locations, eq(properties.location_id, locations.id))
       .leftJoin(agents, eq(properties.agent_id, agents.id))
       .where(whereClause)
-      .orderBy(desc(properties.created_at))
+      .orderBy(...orderByClause)
       .limit(limit)
       .offset(offset);
 

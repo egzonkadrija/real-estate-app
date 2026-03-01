@@ -6,6 +6,22 @@ import type { Property, PropertyImage, Location } from "@/types";
 
 interface HomePropertiesFeedProps {
   filterModes: Array<"sale" | "rent" | "exclusive">;
+  activeCategory:
+    | "house"
+    | "apartment"
+    | "office"
+    | "land"
+    | "store"
+    | "warehouse"
+    | "object"
+    | null;
+  quickSort: "price" | "area" | "location" | null;
+  sortOrder: "asc" | "desc" | null;
+  minPrice: string;
+  maxPrice: string;
+  minArea: string;
+  maxArea: string;
+  locationId: string | null;
   noResultsText: string;
   loadingText: string;
   endOfListText: string;
@@ -13,6 +29,14 @@ interface HomePropertiesFeedProps {
 
 export function HomePropertiesFeed({
   filterModes,
+  activeCategory,
+  quickSort,
+  sortOrder,
+  minPrice,
+  maxPrice,
+  minArea,
+  maxArea,
+  locationId,
   noResultsText,
   loadingText,
   endOfListText,
@@ -35,6 +59,10 @@ export function HomePropertiesFeed({
     [filterModes]
   );
   const filterKey = normalizedFilterModes.join(",");
+  const categoryKey = activeCategory ?? "";
+  const sortKey = quickSort ?? "";
+  const rangeKey = `${minPrice}-${maxPrice}-${minArea}-${maxArea}`;
+  const locationKey = locationId ?? "";
 
   const limit = 12;
   const skeletonRows = 3;
@@ -59,6 +87,30 @@ export function HomePropertiesFeed({
           normalizedFilterModes.length < 3
         ) {
           params.set("homeFilter", normalizedFilterModes.join(","));
+        }
+        if (activeCategory) {
+          params.set("category", activeCategory);
+        }
+        if (quickSort) {
+          params.set("sortBy", quickSort);
+        }
+        if (sortOrder) {
+          params.set("sortOrder", sortOrder);
+        }
+        if (minPrice) {
+          params.set("minPrice", minPrice);
+        }
+        if (maxPrice) {
+          params.set("maxPrice", maxPrice);
+        }
+        if (minArea) {
+          params.set("minArea", minArea);
+        }
+        if (maxArea) {
+          params.set("maxArea", maxArea);
+        }
+        if (locationId) {
+          params.set("locationId", locationId);
         }
 
         const res = await fetch(
@@ -93,7 +145,18 @@ export function HomePropertiesFeed({
         loadingRef.current = false;
       }
     },
-    [filterKey, normalizedFilterModes]
+    [
+      activeCategory,
+      filterKey,
+      locationId,
+      maxArea,
+      maxPrice,
+      minArea,
+      minPrice,
+      normalizedFilterModes,
+      quickSort,
+      sortOrder,
+    ]
   );
 
   React.useEffect(() => {
@@ -132,7 +195,7 @@ export function HomePropertiesFeed({
 
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, filterKey]);
+  }, [categoryKey, hasMore, loading, filterKey, locationKey, rangeKey, sortKey]);
 
   return (
     <div>

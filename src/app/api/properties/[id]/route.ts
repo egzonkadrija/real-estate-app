@@ -79,10 +79,37 @@ export async function PUT(
 
     const body = await request.json();
     const { images: imageData, ...validated } = updatePropertySchema.parse(body);
+    const [existingProperty] = await db
+      .select({
+        type: properties.type,
+        status: properties.status,
+        updated_at: properties.updated_at,
+      })
+      .from(properties)
+      .where(eq(properties.id, propertyId))
+      .limit(1);
+
+    if (!existingProperty) {
+      return NextResponse.json(
+        { error: "Property not found" },
+        { status: 404 }
+      );
+    }
+
+    const resolvedType = validated.type ?? existingProperty.type;
+    const normalizedStatus =
+      validated.status === "sold" && resolvedType === "rent"
+        ? "rented"
+        : validated.status;
+    const resolvedStatus = normalizedStatus ?? existingProperty.status;
+    const nextUpdatedAt =
+      existingProperty.status === "rented" && resolvedStatus === "rented"
+        ? existingProperty.updated_at
+        : new Date();
 
     const [updated] = await db
       .update(properties)
-      .set({ ...validated, updated_at: new Date() })
+      .set({ ...validated, status: normalizedStatus, updated_at: nextUpdatedAt })
       .where(eq(properties.id, propertyId))
       .returning();
 

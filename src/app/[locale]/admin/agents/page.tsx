@@ -34,7 +34,11 @@ interface AgentProperty {
   status: "active" | "pending" | "sold" | "rented";
   type: "sale" | "rent";
   price: number | null;
+  rentMonthsAccrued?: number;
+  revenueContribution?: number;
 }
+
+type AgentMetric = "total" | "sold" | "rented" | "revenue";
 
 function formatPrice(value: number | null): string {
   if (value === null) return "—";
@@ -52,12 +56,49 @@ function getStatusCount(
   return properties?.filter((property) => property.status === status).length ?? 0;
 }
 
+function getMetricProperties(agent: Agent, metric: AgentMetric): AgentProperty[] {
+  const list = agent.properties ?? [];
+
+  if (metric === "sold") {
+    return list.filter((property) => property.status === "sold");
+  }
+  if (metric === "revenue") {
+    return list.filter(
+      (property) =>
+        property.status === "sold" || property.status === "rented"
+    );
+  }
+  if (metric === "rented") {
+    return list.filter((property) => property.status === "rented");
+  }
+
+  return list;
+}
+
+function metricHeading(metric: AgentMetric): string {
+  if (metric === "sold") return "Sold Properties";
+  if (metric === "rented") return "Rented Properties";
+  if (metric === "revenue") return "Revenue Breakdown";
+  return "All Properties";
+}
+
+function statusBadgeClass(status: AgentProperty["status"]): string {
+  if (status === "sold") return "bg-emerald-100 text-emerald-700";
+  if (status === "rented") return "bg-amber-100 text-amber-700";
+  if (status === "pending") return "bg-slate-100 text-slate-700";
+  return "bg-blue-100 text-blue-700";
+}
+
 export default function AdminAgentsPage() {
   const t = useTranslations("admin");
   const [agents, setAgents] = React.useState<Agent[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [showForm, setShowForm] = React.useState(false);
   const [editingAgent, setEditingAgent] = React.useState<Agent | null>(null);
+  const [selectedMetricDetails, setSelectedMetricDetails] = React.useState<{
+    agent: Agent;
+    metric: AgentMetric;
+  } | null>(null);
 
   
 
@@ -161,24 +202,48 @@ export default function AdminAgentsPage() {
                   </div>
 
                   <div className="mb-4 grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMetricDetails({ agent, metric: "total" })
+                      }
+                      className="rounded-lg bg-blue-50 px-3 py-2 text-left text-sm transition-colors hover:bg-blue-100"
+                    >
                       <p className="text-xs text-blue-700">Total</p>
                       <p className="font-semibold text-blue-900">{totalProperties}</p>
-                    </div>
-                    <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm">
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMetricDetails({ agent, metric: "sold" })
+                      }
+                      className="rounded-lg bg-emerald-50 px-3 py-2 text-left text-sm transition-colors hover:bg-emerald-100"
+                    >
                       <p className="text-xs text-emerald-700">Sold</p>
                       <p className="font-semibold text-emerald-900">{soldCount}</p>
-                    </div>
-                    <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm">
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMetricDetails({ agent, metric: "rented" })
+                      }
+                      className="rounded-lg bg-amber-50 px-3 py-2 text-left text-sm transition-colors hover:bg-amber-100"
+                    >
                       <p className="text-xs text-amber-700">Rented</p>
                       <p className="font-semibold text-amber-900">{rentedCount}</p>
-                    </div>
-                    <div className="rounded-lg bg-violet-50 px-3 py-2 text-sm">
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedMetricDetails({ agent, metric: "revenue" })
+                      }
+                      className="rounded-lg bg-violet-50 px-3 py-2 text-left text-sm transition-colors hover:bg-violet-100"
+                    >
                       <p className="text-xs text-violet-700">Revenue</p>
                       <p className="font-semibold text-violet-900">
                         {formatPrice(agent.soldRevenue ?? 0)}
                       </p>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="flex justify-center gap-2">
@@ -219,6 +284,98 @@ export default function AdminAgentsPage() {
           }}
         />
       )}
+
+      {selectedMetricDetails && (
+        <AgentMetricDetailsModal
+          agent={selectedMetricDetails.agent}
+          metric={selectedMetricDetails.metric}
+          onClose={() => setSelectedMetricDetails(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AgentMetricDetailsModal({
+  agent,
+  metric,
+  onClose,
+}: {
+  agent: Agent;
+  metric: AgentMetric;
+  onClose: () => void;
+}) {
+  const rows = getMetricProperties(agent, metric);
+  const title = metricHeading(metric);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <p className="text-xs text-gray-500">{agent.name}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-gray-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {metric === "revenue" && (
+            <div className="mb-4 rounded-lg bg-violet-50 px-4 py-3">
+              <p className="text-xs text-violet-700">Total Revenue</p>
+              <p className="text-base font-semibold text-violet-900">
+                {formatPrice(agent.soldRevenue ?? 0)}
+              </p>
+            </div>
+          )}
+
+          {rows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">
+              No matching properties found.
+            </p>
+          ) : (
+            <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+              {rows.map((property) => (
+                <div
+                  key={property.id}
+                  className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {property.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      #{property.id} - {property.type === "sale" ? "Sale" : "Rent"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(property.status)}`}
+                    >
+                      {property.status}
+                    </span>
+                    <p className="mt-1 text-sm font-semibold text-gray-900">
+                      {metric === "revenue"
+                        ? formatPrice(property.revenueContribution ?? 0)
+                        : formatPrice(property.price)}
+                    </p>
+                    {metric === "revenue" &&
+                      property.status === "rented" &&
+                      (property.rentMonthsAccrued ?? 0) > 0 && (
+                        <p className="text-xs text-gray-500">
+                          {property.rentMonthsAccrued} month
+                          {(property.rentMonthsAccrued ?? 0) === 1 ? "" : "s"}
+                        </p>
+                      )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
