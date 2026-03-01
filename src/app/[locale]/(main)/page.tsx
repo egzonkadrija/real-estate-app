@@ -142,8 +142,8 @@ export default async function HomePage({
 
       {/* CTA Section */}
       <section className="mx-auto max-w-[1440px] px-4 py-16">
-          <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-left text-white sm:p-12">
-            <div className="mb-4 flex items-center gap-3">
+          <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-white sm:p-12">
+            <div className="mb-4 flex items-center justify-center gap-3">
               <Send className="h-10 w-10 text-amber-400" />
               <HeroCTAActions
                 submitLabel={t("common.submitProperty")}
@@ -152,7 +152,7 @@ export default async function HomePage({
                 compact
               />
             </div>
-            <h2 className="mb-3 text-2xl font-bold sm:text-3xl">
+            <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">
               {t("form.submitProperty")}
             </h2>
             <p className="mx-auto mb-6 max-w-2xl text-gray-300">

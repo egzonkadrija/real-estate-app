@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { getLocalizedField } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
 import type { Location } from "@/types";
 
 const TOTAL_STEPS = 3;
+const MAX_PROPERTY_IMAGES = 5;
 
 export default function SubmitPropertyPage() {
   const t = useTranslations();
@@ -89,6 +91,9 @@ export default function SubmitPropertyPage() {
   const [area, setArea] = useState("");
   const [rooms, setRooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageError, setImageError] = useState("");
 
   // Step 2: Location details
   const [locationId, setLocationId] = useState("");
@@ -117,9 +122,79 @@ export default function SubmitPropertyPage() {
 
   const cities = locations.filter((l) => l.type === "city");
 
+  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const fileList = event.target.files;
+    if (!fileList) return;
+
+    setImageError("");
+
+    const files = Array.from(fileList);
+    const remainingSlots = MAX_PROPERTY_IMAGES - uploadedImages.length;
+
+    if (remainingSlots <= 0) {
+      setImageError(`Maximum ${MAX_PROPERTY_IMAGES} images are allowed.`);
+      event.target.value = "";
+      return;
+    }
+
+    const filesToUpload = files.slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      setImageError(`Only ${remainingSlots} more image${remainingSlots === 1 ? "" : "s"} can be uploaded.`);
+    }
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+    let uploadFailureMessage = "";
+
+    for (const file of filesToUpload) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/property-request-images", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || typeof data?.url !== "string") {
+          throw new Error(data?.error || "Failed to upload image.");
+        }
+
+        uploadedUrls.push(data.url);
+      } catch (error) {
+        if (!uploadFailureMessage) {
+          uploadFailureMessage = error instanceof Error
+            ? error.message
+            : "Failed to upload image.";
+        }
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setUploadedImages((prev) => {
+        const merged = [...prev, ...uploadedUrls];
+        return Array.from(new Set(merged)).slice(0, MAX_PROPERTY_IMAGES);
+      });
+    }
+
+    if (uploadFailureMessage) {
+      setImageError(uploadFailureMessage);
+    }
+
+    setUploadingImages(false);
+    event.target.value = "";
+  }
+
   async function handleSubmit() {
     setStatus("loading");
     setErrorMessage("");
+
+    if (uploadingImages) {
+      setErrorMessage("Please wait for image upload to finish.");
+      setStatus("error");
+      return;
+    }
 
     const parsedPrice = price ? Number(price) : null;
     const parsedArea = area ? Number(area) : null;
@@ -155,6 +230,7 @@ export default function SubmitPropertyPage() {
           category,
           price: parsedPrice,
           area: parsedArea,
+          images: uploadedImages.slice(0, MAX_PROPERTY_IMAGES),
           rooms: rooms ? Number(rooms) : null,
           bathrooms: bathrooms ? Number(bathrooms) : null,
           location_id: locationId ? Number(locationId) : null,
@@ -358,6 +434,67 @@ export default function SubmitPropertyPage() {
                   />
                 </div>
               </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {t("form.propertyImages")}
+                  </label>
+                  <span className="text-xs font-medium text-gray-500">
+                    {uploadedImages.length}/{MAX_PROPERTY_IMAGES}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  {uploadedImages.map((url, index) => (
+                    <div key={`${url}-${index}`} className="relative h-20 w-24 overflow-hidden rounded-lg border border-gray-200">
+                      <Image
+                        src={url}
+                        alt={`Property upload ${index + 1}`}
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setUploadedImages((prev) => prev.filter((_, i) => i !== index))
+                        }
+                        className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white hover:bg-black/85"
+                        aria-label="Remove image"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {uploadedImages.length < MAX_PROPERTY_IMAGES && (
+                    <label className="flex h-20 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-500 transition-colors hover:border-blue-500 hover:text-blue-600">
+                      <Upload className="h-5 w-5" />
+                      <span className="mt-1 text-[11px]">
+                        {uploadingImages ? t("common.loading") : "Add"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImages}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  Maximum {MAX_PROPERTY_IMAGES} images.
+                </p>
+                {imageError ? (
+                  <p className="mt-2 text-xs font-medium text-red-600">
+                    {imageError}
+                  </p>
+                ) : null}
+              </div>
             </div>
           )}
 
@@ -486,7 +623,11 @@ export default function SubmitPropertyPage() {
             )}
 
             {step < TOTAL_STEPS ? (
-              <Button type="button" onClick={() => setStep(step + 1)}>
+              <Button
+                type="button"
+                onClick={() => setStep(step + 1)}
+                disabled={uploadingImages}
+              >
                 {t("common.next")}
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
@@ -494,9 +635,13 @@ export default function SubmitPropertyPage() {
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={status === "loading"}
+                disabled={status === "loading" || uploadingImages}
               >
-                {status === "loading" ? t("common.loading") : t("common.send")}
+                {status === "loading"
+                  ? t("common.loading")
+                  : uploadingImages
+                  ? "Uploading images..."
+                  : t("common.send")}
               </Button>
             )}
           </div>

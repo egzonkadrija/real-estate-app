@@ -378,7 +378,6 @@ export function PropertyCard({
           href={propertyHref}
           title={title}
           className="mb-2 block truncate text-base font-semibold leading-tight text-gray-900 hover:underline"
-          style={{ fontFamily: "var(--font-title)" }}
         >
           {title}
         </Link>

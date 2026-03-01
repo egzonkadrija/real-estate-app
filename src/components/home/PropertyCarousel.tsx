@@ -252,7 +252,7 @@ export function PropertyCarousel({
   const getQuickSortButtonClass = React.useCallback(
     (quickSort: QuickSortKey) =>
       cn(
-        "flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm transition-colors",
+        "flex flex-shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm leading-none transition-colors",
         isQuickFilterActive(quickSort)
           ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
           : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
@@ -865,7 +865,7 @@ export function PropertyCarousel({
           <div className="relative mt-3">
             <div
               ref={quickFilterPopoverRef}
-              className="w-full max-w-[360px] rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+              className="w-full max-w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
             >
               {openQuickFilter === "price" && (
                 <div className="space-y-4">
@@ -876,7 +876,7 @@ export function PropertyCarousel({
                       value={priceMinInput}
                       onChange={(e) => setPriceMinInput(e.target.value)}
                       placeholder={t("filters.minPrice")}
-                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
                     />
                     <span className="text-gray-400">-</span>
                     <input
@@ -884,7 +884,7 @@ export function PropertyCarousel({
                       value={priceMaxInput}
                       onChange={(e) => setPriceMaxInput(e.target.value)}
                       placeholder={t("filters.maxPrice")}
-                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -911,7 +911,7 @@ export function PropertyCarousel({
                   <button
                     type="button"
                     onClick={applyPriceFilters}
-                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
                   >
                     Apply
                   </button>
@@ -927,7 +927,7 @@ export function PropertyCarousel({
                       value={areaMinInput}
                       onChange={(e) => setAreaMinInput(e.target.value)}
                       placeholder={t("filters.minArea")}
-                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
                     />
                     <span className="text-gray-400">-</span>
                     <input
@@ -935,7 +935,7 @@ export function PropertyCarousel({
                       value={areaMaxInput}
                       onChange={(e) => setAreaMaxInput(e.target.value)}
                       placeholder={t("filters.maxArea")}
-                      className="rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
+                      className="w-full min-w-0 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-600)]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -962,7 +962,7 @@ export function PropertyCarousel({
                   <button
                     type="button"
                     onClick={applyAreaFilters}
-                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
                   >
                     Apply
                   </button>
@@ -987,7 +987,7 @@ export function PropertyCarousel({
                   <button
                     type="button"
                     onClick={applyLocationFilters}
-                    className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                    className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
                   >
                     Apply
                   </button>

@@ -207,7 +207,7 @@ export default async function AboutPage({
                 ],
               };
 
-  const aboutHeadingClass = "font-[var(--font-title)]";
+const aboutHeadingClass = "font-semibold";
   const aboutParagraphClass =
     "leading-relaxed antialiased text-[14px] text-[rgba(75,85,99,0.95)] sm:text-sm";
 

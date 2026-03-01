@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { agents, locations, properties, propertyRequests } from "@/db/schema";
+import { agents, locations, properties, propertyImages, propertyRequests } from "@/db/schema";
 import { notifyPropertyRequestStatus } from "@/lib/propertyRequestNotifications";
 import { parseNumericId, requireAuth } from "@/lib/apiRouteUtils";
 import {
@@ -9,6 +9,7 @@ import {
   getReviewStatus,
   parseReviewPayload,
 } from "@/lib/propertyRequestReview";
+import { normalizeImageUrl } from "@/lib/utils";
 import {
   propertyCategorySchema,
   type PropertyCategoryValue,
@@ -43,6 +44,18 @@ function normalizeType(
 ): PropertyTypeValue {
   if (payloadType === "sale" || payloadType === "rent") return payloadType;
   return requestType === "rent" ? "rent" : "sale";
+}
+
+function normalizeSubmittedImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  const urls = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => normalizeImageUrl(item));
+
+  return Array.from(new Set(urls)).slice(0, 5);
 }
 
 export async function POST(
@@ -176,6 +189,19 @@ export async function POST(
         amenities: [],
       })
       .returning({ id: properties.id });
+
+    const submittedImages = normalizeSubmittedImages(payloadProperty?.images);
+    if (submittedImages.length > 0) {
+      await db.insert(propertyImages).values(
+        submittedImages.map((url, index) => ({
+          property_id: createdProperty.id,
+          url,
+          alt: null,
+          sort_order: index,
+          is_primary: index === 0,
+        }))
+      );
+    }
 
     const updatedPayload: ReviewPayload = {
       ...(parsedPayload || {}),

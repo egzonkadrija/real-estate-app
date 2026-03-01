@@ -30,7 +30,7 @@
     --brand-600: #475569;
     --brand-700: #334155;
     --ring: #64748b;
-    --font-title: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-title: "Rubik", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     --radius-sm: 10px;
     --radius-md: 14px;
     --radius-lg: 18px;
@@ -46,7 +46,7 @@
     max-width: 100vw;
     background: var(--background);
     color: var(--foreground);
-    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: inherit;
   }
 
   h1,
@@ -55,7 +55,7 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-title);
+    font-family: inherit;
   }
 }
 

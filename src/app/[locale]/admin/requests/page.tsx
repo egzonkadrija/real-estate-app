@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Locale, useRouter } from "@/i18n/routing";
@@ -11,7 +12,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, normalizeImageUrl } from "@/lib/utils";
 import {
   type ReviewPayload,
   getReviewStatus,
@@ -43,6 +44,7 @@ interface SubmitReviewPayload {
     category?: string | null;
     price?: number | null;
     area?: number | null;
+    images?: string[] | null;
     rooms?: number | null;
     bathrooms?: number | null;
     location_id?: number | null;
@@ -65,31 +67,6 @@ function getSubmitRequestSource(
     return "submit_property";
   }
   return "request_property";
-}
-
-function parseReviewStatus(
-  value: unknown
-): "submitted" | "pending" | "approved" | "declined" {
-  if (
-    value === "submitted" ||
-    value === "approved" ||
-    value === "declined" ||
-    value === "pending"
-  ) {
-    return value;
-  }
-  return "pending";
-}
-
-function parseReviewPayload(raw: string | null): SubmitReviewPayload | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as SubmitReviewPayload;
-  } catch {
-    return null;
-  }
 }
 
 function getRequestLifecycleStatus(
@@ -338,6 +315,13 @@ export default function AdminRequestsPage() {
     ? formatStatusBadge(selectedStatus)
     : null;
   const approvedPropertyId = selectedPayload?.approved_property_id ?? null;
+  const selectedImages = React.useMemo(() => {
+    const raw = selectedPayload?.property?.images;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((url): url is string => typeof url === "string" && url.trim().length > 0)
+      .slice(0, 5);
+  }, [selectedPayload]);
 
   async function handleApprove() {
     if (!selected) return;
@@ -609,6 +593,33 @@ export default function AdminRequestsPage() {
                 <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
                   {selectedPayload.note}
                 </p>
+              </div>
+            ) : null}
+
+            {selectedImages.length > 0 ? (
+              <div className="mt-3 rounded-lg border border-gray-200 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Submitted images ({selectedImages.length})
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {selectedImages.map((url, index) => (
+                    <a
+                      key={`${url}-${index}`}
+                      href={normalizeImageUrl(url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group relative h-24 overflow-hidden rounded-lg border border-gray-200"
+                    >
+                      <Image
+                        src={normalizeImageUrl(url)}
+                        alt={`Submitted property image ${index + 1}`}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 180px"
+                        className="object-cover transition-transform duration-150 group-hover:scale-105"
+                      />
+                    </a>
+                  ))}
+                </div>
               </div>
             ) : null}
 

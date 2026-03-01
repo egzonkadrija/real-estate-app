@@ -6,6 +6,7 @@ export type ReviewPayloadProperty = {
   category?: string | null;
   price?: number | null;
   area?: number | null;
+  images?: string[] | null;
   rooms?: number | null;
   bathrooms?: number | null;
   location_id?: number | null;
@@ -47,8 +48,50 @@ export function parseReviewPayload(raw: string | null): ReviewPayload | null {
 
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as ReviewPayload;
+    const firstPass =
+      typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+    if (!firstPass || typeof firstPass !== "object") return null;
+
+    const payload = firstPass as ReviewPayload;
+    if (typeof payload.note !== "string") {
+      return payload;
+    }
+
+    const trimmedNote = payload.note.trim();
+    if (!(trimmedNote.startsWith("{") || trimmedNote.startsWith("["))) {
+      return payload;
+    }
+
+    try {
+      const nestedParsed = JSON.parse(trimmedNote);
+      const nestedFirstPass =
+        typeof nestedParsed === "string"
+          ? JSON.parse(nestedParsed)
+          : nestedParsed;
+      if (!nestedFirstPass || typeof nestedFirstPass !== "object") {
+        return payload;
+      }
+
+      const nestedPayload = nestedFirstPass as ReviewPayload;
+      if (
+        !nestedPayload.source &&
+        !nestedPayload.property &&
+        !nestedPayload.review_status &&
+        !nestedPayload.note
+      ) {
+        return payload;
+      }
+
+      return {
+        ...nestedPayload,
+        ...payload,
+        source: payload.source ?? nestedPayload.source,
+        property: payload.property ?? nestedPayload.property,
+        note: nestedPayload.note ?? payload.note,
+      };
+    } catch {
+      return payload;
+    }
   } catch {
     return null;
   }
