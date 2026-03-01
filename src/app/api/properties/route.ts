@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
+import { normalizeImageUrl } from "@/lib/utils";
 import {
   createPropertySchema,
   parsePropertyStatuses,
@@ -198,7 +199,12 @@ export async function GET(request: NextRequest) {
             name: row.agents.name,
           }
         : null,
-      images: images.filter((img) => img.property_id === row.properties.id),
+      images: images
+        .filter((img) => img.property_id === row.properties.id)
+        .map((img) => ({
+          ...img,
+          url: normalizeImageUrl(img.url),
+        })),
     }));
 
     return NextResponse.json({
@@ -231,7 +237,7 @@ export async function POST(request: NextRequest) {
       await db.insert(propertyImages).values(
         imageData.map((img) => ({
           property_id: created.id,
-          url: img.url,
+          url: normalizeImageUrl(img.url),
           alt: img.alt || null,
           sort_order: img.sort_order,
           is_primary: img.is_primary,

@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 import {
   type ReviewPayload,
   getReviewStatus,
@@ -185,9 +184,7 @@ export default function AdminRequestsPage() {
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
 
-  function getAuthHeaders(extraHeaders?: HeadersInit) {
-    return getBrowserAdminAuthHeaders(extraHeaders);
-  }
+  
 
   const buildServerFilterQuery = React.useCallback(() => {
     const params = new URLSearchParams();
@@ -229,7 +226,6 @@ export default function AdminRequestsPage() {
       const query = buildServerFilterQuery();
       const endpoint = `/api/property-requests${query.toString() ? `?${query.toString()}` : ""}`;
       const res = await fetch(endpoint, {
-        headers: getAuthHeaders(),
       });
 
       const data = await res.json();
@@ -353,7 +349,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}/approve`, {
         method: "POST",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
       });
 
       const data = await res.json().catch(() => null);
@@ -387,7 +383,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "PATCH",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "pending" }),
       });
 
@@ -419,7 +415,7 @@ export default function AdminRequestsPage() {
     try {
       const res = await fetch(`/api/property-requests/${selected.id}`, {
         method: "DELETE",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
       });
       const data = await res.json().catch(() => null);
 

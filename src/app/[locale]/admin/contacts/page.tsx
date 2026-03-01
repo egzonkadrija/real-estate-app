@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Mail, MailOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 
 interface Contact {
   id: number;
@@ -33,9 +32,7 @@ export default function AdminContactsPage() {
   const [filter, setFilter] = React.useState<"all" | "unread" | "read">("all");
   const [selectedContact, setSelectedContact] = React.useState<Contact | null>(null);
 
-  function getAuthHeaders(extraHeaders?: HeadersInit) {
-    return getBrowserAdminAuthHeaders(extraHeaders);
-  }
+  
 
   const fetchContacts = React.useCallback(async () => {
     setLoading(true);
@@ -43,7 +40,7 @@ export default function AdminContactsPage() {
       let url = "/api/contacts";
       if (filter === "unread") url += "?is_read=false";
       if (filter === "read") url += "?is_read=true";
-      const res = await fetch(url, { headers: getAuthHeaders() });
+      const res = await fetch(url);
       const data = await res.json();
       setContacts(Array.isArray(data) ? data : data.data || []);
     } catch (e) {
@@ -61,7 +58,7 @@ export default function AdminContactsPage() {
     try {
       await fetch(`/api/contacts/${id}`, {
         method: "PUT",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
       });
       fetchContacts();
     } catch (e) {

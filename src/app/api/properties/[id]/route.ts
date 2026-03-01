@@ -14,6 +14,7 @@ import {
   validationErrorResponse,
 } from "@/lib/apiRouteUtils";
 import { updatePropertySchema } from "@/lib/propertyValidation";
+import { normalizeImageUrl } from "@/lib/utils";
 
 export async function GET(
   _request: NextRequest,
@@ -48,7 +49,10 @@ export async function GET(
       ...result.properties,
       location: result.locations,
       agent: result.agents,
-      images,
+      images: images.map((img) => ({
+        ...img,
+        url: normalizeImageUrl(img.url),
+      })),
     };
 
     return NextResponse.json(property);
@@ -95,7 +99,7 @@ export async function PUT(
         await db.insert(propertyImages).values(
           imageData.map((img) => ({
             property_id: propertyId,
-            url: img.url,
+            url: normalizeImageUrl(img.url),
             alt: img.alt || null,
             sort_order: img.sort_order,
             is_primary: img.is_primary,

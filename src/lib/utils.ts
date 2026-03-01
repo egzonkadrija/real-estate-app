@@ -1,8 +1,31 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+const LEGACY_PROPERTY_IMAGE_PATTERN = /^\/uploads\/property-(\d+)-(\d+)\.(jpg|jpeg|png|webp|avif|gif|bmp|svg|jfif)$/i;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function normalizeImageUrl(
+  url: string | null | undefined,
+  fallback: string = "/uploads/placeholder.jpg"
+): string {
+  if (typeof url !== "string") return fallback;
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+
+  const legacyMatch = trimmed.match(LEGACY_PROPERTY_IMAGE_PATTERN);
+  if (!legacyMatch) return trimmed;
+
+  const slot = Number(legacyMatch[2]);
+  const extension = legacyMatch[3];
+
+  if (!Number.isInteger(slot) || slot < 1 || slot > 3) {
+    return fallback;
+  }
+
+  return `/uploads/property-${slot}.${extension}`;
 }
 
 export function formatPrice(price: number, currency: string = "EUR"): string {

@@ -1,14 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
 import { Building2, Lock, Mail } from "lucide-react";
-import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/adminAuth";
 
 export default function AdminLoginPage() {
   const t = useTranslations("admin");
-  const router = useRouter();
+  const locale = useLocale();
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
@@ -25,6 +23,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -35,8 +34,14 @@ export default function AdminLoginPage() {
         return;
       }
 
-      localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
-      router.push("/admin/dashboard");
+      if (!data.token) {
+        setError("Login response was incomplete");
+        return;
+      }
+
+      const targetLocale =
+        typeof locale === "string" && locale.length > 0 ? locale : "en";
+      window.location.href = `/${targetLocale}/admin/dashboard`;
     } catch {
       setError("Something went wrong");
     } finally {

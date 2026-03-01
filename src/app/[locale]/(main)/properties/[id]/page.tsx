@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { MortgageCalculator } from "./MortgageCalculator";
 import type { Metadata } from "next";
+import { normalizeImageUrl } from "@/lib/utils";
 
 interface PropertyDetailPageProps {
   params: Promise<{ id: string; locale: Locale }>;
@@ -217,7 +218,10 @@ const infoRows: Array<{ label: string; value: string }> = [];
         <div className="md:col-span-2">
           {/* Gallery */}
           <PropertyGallery
-            images={property.images || []}
+            images={(property.images || []).map((image) => ({
+              ...image,
+              url: normalizeImageUrl(image.url),
+            }))}
             category={property.category}
             title={title}
           />
@@ -413,7 +417,7 @@ const infoRows: Array<{ label: string; value: string }> = [];
                   <div className="flex items-center gap-4">
                     {property.agent.avatar ? (
                       <Image
-                        src={property.agent.avatar}
+                        src={normalizeImageUrl(property.agent.avatar)}
                         alt={property.agent.name}
                         width={56}
                         height={56}

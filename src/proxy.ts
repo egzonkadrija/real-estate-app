@@ -3,43 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 import { ADMIN_TOKEN_COOKIE } from "@/lib/adminAuth";
 import { isSupportedLocale } from "@/lib/locales";
+import { verifyToken } from "@/lib/auth";
 
 const intlMiddleware = createMiddleware(routing);
 
 function isAdminJwtToken(token: string): boolean {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      return false;
-    }
-
-    const payloadPart = parts[1];
-    const padded = payloadPart
-      .replace(/-/g, "+")
-      .replace(/_/g, "/")
-      .padEnd(
-        payloadPart.length + ((4 - (payloadPart.length % 4)) % 4),
-        "="
-      );
-
-    const decoded = atob(padded);
-    const payload = JSON.parse(decoded) as {
-      role?: string;
-      exp?: number;
-    };
-
-    if (payload.role !== "admin") {
-      return false;
-    }
-
-    if (typeof payload.exp !== "number") {
-      return true;
-    }
-
-    return payload.exp > Math.floor(Date.now() / 1000);
-  } catch {
-    return false;
-  }
+  const payload = verifyToken(token);
+  return payload?.role === "admin";
 }
 
 function getAdminContext(pathname: string) {
@@ -69,7 +39,7 @@ function getAdminContext(pathname: string) {
   };
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const adminContext = getAdminContext(pathname);

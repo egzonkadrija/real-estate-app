@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField } from "@/lib/utils";
+import { normalizeImageUrl } from "@/lib/utils";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
-import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 
 interface PropertyItem {
   id: number;
@@ -49,9 +49,7 @@ export default function AdminPropertiesPage() {
   const hasMore = properties.length < total;
   const hasData = properties.length > 0;
 
-  function getAuthHeaders(extraHeaders?: HeadersInit) {
-    return getBrowserAdminAuthHeaders(extraHeaders);
-  }
+  
 
   const fetchProperties = React.useCallback(
     async (targetPage = 1, reset = false) => {
@@ -122,7 +120,7 @@ export default function AdminPropertiesPage() {
     try {
       await fetch(`/api/properties/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
       });
       setProperties((previous) => {
         const next = previous.filter((property) => property.id !== id);
@@ -140,7 +138,7 @@ export default function AdminPropertiesPage() {
     try {
       const res = await fetch(`/api/properties/${id}`, {
         method: "PUT",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "sold" }),
       });
       if (!res.ok) {
@@ -232,7 +230,7 @@ export default function AdminPropertiesPage() {
                           <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
                             {prop.images?.[0] && (
                               <Image
-                                src={prop.images[0].url}
+                                src={normalizeImageUrl(prop.images[0].url)}
                                 alt=""
                                 width={56}
                                 height={40}
@@ -411,9 +409,7 @@ function PropertyFormModal({
   });
   const [uploadedImages, setUploadedImages] = React.useState<string[]>([]);
 
-  function getAuthHeaders(extraHeaders?: HeadersInit) {
-    return getBrowserAdminAuthHeaders(extraHeaders);
-  }
+  
 
   React.useEffect(() => {
     fetch("/api/locations").then((r) => r.json()).then(setLocations).catch(() => {});
@@ -465,7 +461,6 @@ function PropertyFormModal({
       try {
         const res = await fetch("/api/upload", {
           method: "POST",
-          headers: getAuthHeaders(),
           body: fd,
         });
         const data = await res.json();
@@ -506,7 +501,7 @@ function PropertyFormModal({
       const method = editingId ? "PUT" : "POST";
       await fetch(url, {
         method,
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       onSaved();
@@ -642,7 +637,13 @@ function PropertyFormModal({
               <div className="flex flex-wrap gap-3">
                 {uploadedImages.map((url, i) => (
                   <div key={i} className="relative h-20 w-24 overflow-hidden rounded-lg border">
-                    <Image src={url} alt="" fill className="object-cover" sizes="96px" />
+                    <Image
+                      src={normalizeImageUrl(url)}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
                     <button
                       type="button"
                       onClick={() => setUploadedImages((prev) => prev.filter((_, idx) => idx !== i))}

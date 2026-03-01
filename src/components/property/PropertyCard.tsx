@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatPrice, getLocalizedField } from "@/lib/utils";
+import { formatPrice, getLocalizedField, normalizeImageUrl } from "@/lib/utils";
 import type { Property, PropertyImage } from "@/types";
 import { Button } from "@/components/ui/button";
 
@@ -273,7 +273,7 @@ export function PropertyCard({
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 touch-pan-y">
         <Link href={propertyHref} aria-label={title} className="block h-full w-full">
           <Image
-            src={images[currentImage]?.url || "/uploads/property-1.jpg"}
+            src={normalizeImageUrl(images[currentImage]?.url, mainImage)}
             alt={images[currentImage]?.alt || title}
             fill
             draggable={false}

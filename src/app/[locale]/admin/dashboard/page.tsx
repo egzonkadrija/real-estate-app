@@ -11,7 +11,6 @@ import {
   ListChecks,
   MailOpen,
 } from "lucide-react";
-import { getBrowserAdminAuthHeaders } from "@/lib/adminAuth";
 import { parseReviewStatus } from "@/lib/propertyRequestReview";
 
 interface PropertyRequest {
@@ -93,9 +92,7 @@ export default function AdminDashboard() {
     monthlyRentedRevenue: [],
   });
 
-  function getAuthHeaders(extraHeaders?: HeadersInit) {
-    return getBrowserAdminAuthHeaders(extraHeaders);
-  }
+  
 
   React.useEffect(() => {
     let isMounted = true;
@@ -113,14 +110,13 @@ export default function AdminDashboard() {
           revenueRes,
         ] = await Promise.all([
           fetch("/api/property-requests", {
-            headers: getAuthHeaders(),
           }),
           fetch("/api/properties?status=pending&limit=1"),
           fetch("/api/properties?status=active&limit=1"),
           fetch("/api/properties?status=sold&limit=1"),
           fetch("/api/properties?status=rented&limit=1"),
           fetch("/api/contacts?is_read=false"),
-          fetch("/api/dashboard/revenue", { headers: getAuthHeaders() }),
+          fetch("/api/dashboard/revenue"),
         ]);
 
         const requestsJson = await requestsRes.json();

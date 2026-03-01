@@ -16,7 +16,6 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/adminAuth";
 
 export default function AdminLayout({
   children,
@@ -61,7 +60,6 @@ export default function AdminLayout({
   }, [globalSearch, locale, nativePathname, router, searchParams]);
 
   async function handleLogout() {
-    localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {

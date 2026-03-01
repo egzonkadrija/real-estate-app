@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getTokenFromHeader, verifyToken } from "@/lib/auth";
+import { ADMIN_TOKEN_COOKIE } from "@/lib/adminAuth";
 
 export function errorResponse(error: string, status: number): NextResponse {
   return NextResponse.json({ error }, { status });
@@ -17,7 +18,9 @@ export function validationErrorResponse(
 }
 
 export function requireAuth(request: NextRequest): NextResponse | null {
-  const token = getTokenFromHeader(request.headers.get("authorization"));
+  const headerToken = getTokenFromHeader(request.headers.get("authorization"));
+  const cookieToken = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  const token = headerToken || cookieToken;
   if (!token || !verifyToken(token)) {
     return errorResponse("Unauthorized", 401);
   }

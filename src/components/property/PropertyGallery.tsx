@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useLocale } from "next-intl";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, normalizeImageUrl } from "@/lib/utils";
 import type { PropertyImage } from "@/types";
 
 interface PropertyGalleryProps {
@@ -86,16 +86,7 @@ export function PropertyGallery({ images, category, title }: PropertyGalleryProp
     const fallbackUrl = fallbackImages[idx % fallbackImages.length]?.url || mainImage;
     if (failedIndexes[idx]) return fallbackUrl;
 
-    // Backward compatibility for older seeded URLs like /uploads/property-12-1.jpg.
-    const legacySeedMatch = imageUrl.match(/^\/uploads\/property-\d+-(\d+)\.jpg$/i);
-    if (legacySeedMatch) {
-      const legacySlot = Number(legacySeedMatch[1]);
-      if (legacySlot >= 1 && legacySlot <= 3) {
-        return `/uploads/property-${legacySlot}.jpg`;
-      }
-    }
-
-    return imageUrl;
+    return normalizeImageUrl(imageUrl, fallbackUrl);
   }, [failedIndexes, fallbackImages, mainImage]);
 
   const markFailed = React.useCallback((idx: number) => {
