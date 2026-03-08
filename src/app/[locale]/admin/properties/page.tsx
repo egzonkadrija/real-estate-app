@@ -33,6 +33,29 @@ interface PropertyItem {
   location?: { name_al: string; name_en: string; name_de: string };
 }
 
+interface PropertyDetail extends PropertyItem {
+  description_al?: string;
+  description_en?: string;
+  description_de?: string;
+  surface_area?: number | null;
+  rooms?: number | null;
+  bathrooms?: number | null;
+  floor?: number | null;
+  year_built?: number | null;
+  amenities?: string[];
+  latitude?: number | null;
+  longitude?: number | null;
+  agent?: { id: number; name: string } | null;
+  images?: { url: string }[];
+  location?: {
+    name_al?: string;
+    name_en?: string;
+    name_de?: string;
+    name_mk?: string;
+    name_tr?: string;
+  } | null;
+}
+
 export default function AdminPropertiesPage() {
   const t = useTranslations();
   const locale = useLocale() as Locale;
@@ -43,10 +66,14 @@ export default function AdminPropertiesPage() {
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
   const loadMoreSentinelRef = React.useRef<HTMLDivElement | null>(null);
+  const previewRequestRef = React.useRef(0);
   const [showForm, setShowForm] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = React.useState<number | null>(null);
   const [relistingId, setRelistingId] = React.useState<number | null>(null);
+  const [previewProperty, setPreviewProperty] = React.useState<PropertyDetail | null>(null);
+  const [previewLoading, setPreviewLoading] = React.useState(false);
+  const [previewImageIndex, setPreviewImageIndex] = React.useState(0);
 
   const hasMore = properties.length < total;
   const hasData = properties.length > 0;
@@ -210,6 +237,209 @@ export default function AdminPropertiesPage() {
     }
   }, [properties.length, total]);
 
+  const closePreview = React.useCallback(() => {
+    previewRequestRef.current += 1;
+    setPreviewProperty(null);
+    setPreviewLoading(false);
+    setPreviewImageIndex(0);
+  }, []);
+
+  React.useEffect(() => {
+    if (!previewProperty) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closePreview();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closePreview, previewProperty]);
+
+  const saleProperties = React.useMemo(
+    () => properties.filter((property) => property.type === "sale"),
+    [properties]
+  );
+  const rentProperties = React.useMemo(
+    () => properties.filter((property) => property.type === "rent"),
+    [properties]
+  );
+
+  async function openPreview(propertyId: number) {
+    const requestId = previewRequestRef.current + 1;
+    previewRequestRef.current = requestId;
+    setPreviewLoading(true);
+    setPreviewImageIndex(0);
+    try {
+      const res = await fetch(`/api/properties/${propertyId}`);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load property preview");
+      }
+      if (previewRequestRef.current !== requestId) return;
+      setPreviewProperty(data as PropertyDetail);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      if (previewRequestRef.current !== requestId) return;
+      setPreviewLoading(false);
+    }
+  }
+
+  function renderPropertyRow(prop: PropertyItem) {
+    return (
+      <tr
+        key={prop.id}
+        className="cursor-pointer hover:bg-gray-50"
+        onClick={() => void openPreview(prop.id)}
+      >
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
+              {prop.images?.[0] && (
+                <Image
+                  src={normalizeImageUrl(prop.images[0].url)}
+                  alt=""
+                  width={56}
+                  height={40}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {getLocalizedField(prop, "title", locale)}
+              </p>
+              {prop.location && (
+                <p className="text-xs text-gray-500">
+                  {getLocalizedField(prop.location, "name", locale)}
+                </p>
+              )}
+            </div>
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-xs font-medium",
+              prop.type === "sale"
+                ? "bg-blue-50 text-blue-700"
+                : "bg-emerald-50 text-emerald-700"
+            )}
+          >
+            {prop.type}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+          {formatPrice(prop.price, prop.currency)}
+        </td>
+        <td className="px-4 py-3">
+          <span
+            className={cn("rounded-full px-2 py-0.5 text-xs font-medium", {
+              "bg-green-50 text-green-700": prop.status === "active",
+              "bg-yellow-50 text-yellow-700": prop.status === "pending",
+              "bg-gray-100 text-gray-700":
+                prop.status === "sold" || prop.status === "rented",
+            })}
+          >
+            {prop.status}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-xs text-gray-500">
+          {new Date(prop.created_at).toLocaleDateString()}
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex justify-end gap-1">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setEditingId(prop.id);
+                setShowForm(true);
+              }}
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleDelete(prop.id);
+              }}
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            {prop.status !== getCompletionStatus(prop) ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleMarkCompleted(prop);
+                }}
+                disabled={markingAsSoldId === prop.id}
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
+              >
+                {markingAsSoldId === prop.id ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {getCompletionLabel(prop)}
+                  </span>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>{getCompletionLabel(prop)}</span>
+                  </>
+                )}
+              </button>
+            ) : null}
+            {prop.status === "rented" || prop.status === "sold" ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleRelist(prop);
+                }}
+                disabled={relistingId === prop.id}
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-60"
+              >
+                {relistingId === prop.id ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Relisting...
+                  </span>
+                ) : (
+                  <span>Relist</span>
+                )}
+              </button>
+            ) : null}
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  function renderTypeDivider(label: string) {
+    return (
+      <tr key={`divider-${label}`} className="bg-red-50">
+        <td
+          colSpan={6}
+          className="border-y-2 border-red-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-red-700"
+        >
+          {label}
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -310,122 +540,21 @@ export default function AdminPropertiesPage() {
                 </tr>
               ) : (
                 <>
-                  {properties.map((prop) => (
-                    <tr key={prop.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-14 overflow-hidden rounded bg-gray-100">
-                            {prop.images?.[0] && (
-                              <Image
-                                src={normalizeImageUrl(prop.images[0].url)}
-                                alt=""
-                                width={56}
-                                height={40}
-                                className="h-full w-full object-cover"
-                              />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {getLocalizedField(prop, "title", locale)}
-                            </p>
-                            {prop.location && (
-                              <p className="text-xs text-gray-500">
-                                {getLocalizedField(prop.location, "name", locale)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs font-medium",
-                            prop.type === "sale"
-                              ? "bg-blue-50 text-blue-700"
-                              : "bg-emerald-50 text-emerald-700"
-                          )}
-                        >
-                          {prop.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatPrice(prop.price, prop.currency)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs font-medium",
-                            {
-                              "bg-green-50 text-green-700": prop.status === "active",
-                              "bg-yellow-50 text-yellow-700": prop.status === "pending",
-                              "bg-gray-100 text-gray-700":
-                                prop.status === "sold" || prop.status === "rented",
-                            }
-                          )}
-                        >
-                          {prop.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
-                        {new Date(prop.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1">
-                          <button
-                            onClick={() => {
-                              setEditingId(prop.id);
-                              setShowForm(true);
-                            }}
-                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(prop.id)}
-                            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                          {prop.status !== getCompletionStatus(prop) ? (
-                            <button
-                              onClick={() => handleMarkCompleted(prop)}
-                              disabled={markingAsSoldId === prop.id}
-                              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
-                            >
-                              {markingAsSoldId === prop.id ? (
-                                <span className="inline-flex items-center gap-2">
-                                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                  {getCompletionLabel(prop)}
-                                </span>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  <span>{getCompletionLabel(prop)}</span>
-                                </>
-                              )}
-                            </button>
-                          ) : null}
-                          {prop.status === "rented" || prop.status === "sold" ? (
-                            <button
-                              onClick={() => handleRelist(prop)}
-                              disabled={relistingId === prop.id}
-                              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-60"
-                            >
-                              {relistingId === prop.id ? (
-                                <span className="inline-flex items-center gap-2">
-                                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                  Relisting...
-                                </span>
-                              ) : (
-                                <span>Relist</span>
-                              )}
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {typeFilter === "all" ? (
+                    <>
+                      {saleProperties.length > 0 ? renderTypeDivider("For Sale") : null}
+                      {saleProperties.map((prop) => renderPropertyRow(prop))}
+                      {saleProperties.length > 0 && rentProperties.length > 0
+                        ? renderTypeDivider("For Rent")
+                        : null}
+                      {saleProperties.length === 0 && rentProperties.length > 0
+                        ? renderTypeDivider("For Rent")
+                        : null}
+                      {rentProperties.map((prop) => renderPropertyRow(prop))}
+                    </>
+                  ) : (
+                    properties.map((prop) => renderPropertyRow(prop))
+                  )}
                   {loading && properties.length > 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-4">
@@ -454,6 +583,17 @@ export default function AdminPropertiesPage() {
         ) : null}
       </div>
 
+      {(previewProperty || previewLoading) && (
+        <PropertyPreviewModal
+          locale={locale}
+          property={previewProperty}
+          loading={previewLoading}
+          imageIndex={previewImageIndex}
+          onImageChange={setPreviewImageIndex}
+          onClose={closePreview}
+        />
+      )}
+
       {/* Add/Edit Property Modal */}
       {showForm && (
         <PropertyFormModal
@@ -469,6 +609,209 @@ export default function AdminPropertiesPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function PropertyPreviewModal({
+  locale,
+  property,
+  loading,
+  imageIndex,
+  onImageChange,
+  onClose,
+}: {
+  locale: Locale;
+  property: PropertyDetail | null;
+  loading: boolean;
+  imageIndex: number;
+  onImageChange: (index: number) => void;
+  onClose: () => void;
+}) {
+  const description = getLocalizedField(property, "description", locale);
+  const title = property ? getLocalizedField(property, "title", locale) : "";
+  const location = property?.location
+    ? getLocalizedField(property.location, "name", locale)
+    : "";
+  const selectedImage = property?.images?.[imageIndex];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {loading ? "Loading property..." : title}
+            </h2>
+            {!loading && location ? (
+              <p className="mt-1 text-sm text-gray-500">{location}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="h-80 animate-pulse rounded-2xl bg-gray-100" />
+            <div className="space-y-3">
+              <div className="h-8 animate-pulse rounded bg-gray-100" />
+              <div className="h-24 animate-pulse rounded bg-gray-100" />
+              <div className="h-24 animate-pulse rounded bg-gray-100" />
+            </div>
+          </div>
+        ) : property ? (
+          <div className="grid max-h-[78vh] gap-6 overflow-y-auto p-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <div className="relative h-80 overflow-hidden rounded-2xl bg-gray-100">
+                {selectedImage ? (
+                  <Image
+                    src={normalizeImageUrl(selectedImage.url)}
+                    alt={title}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                    No images available
+                  </div>
+                )}
+              </div>
+
+              {property.images && property.images.length > 1 ? (
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  {property.images.map((image, index) => (
+                    <button
+                      key={`${image.url}-${index}`}
+                      type="button"
+                      onClick={() => onImageChange(index)}
+                      className={cn(
+                        "relative h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl border-2 bg-gray-100",
+                        imageIndex === index ? "border-blue-500" : "border-transparent"
+                      )}
+                    >
+                      <Image
+                        src={normalizeImageUrl(image.url)}
+                        alt=""
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-gray-200 p-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatPrice(property.price, property.currency)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-xs font-semibold",
+                      property.type === "sale"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-emerald-50 text-emerald-700"
+                    )}
+                  >
+                    {property.type}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-xs font-semibold capitalize",
+                      {
+                        "bg-green-50 text-green-700": property.status === "active",
+                        "bg-yellow-50 text-yellow-700": property.status === "pending",
+                        "bg-gray-100 text-gray-700":
+                          property.status === "sold" || property.status === "rented",
+                      }
+                    )}
+                  >
+                    {property.status}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                    {property.category}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  Details
+                </h3>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-gray-700">
+                  <div>
+                    <p className="text-xs text-gray-500">Area</p>
+                    <p>{property.surface_area ?? "-"} m2</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Rooms</p>
+                    <p>{property.rooms ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Bathrooms</p>
+                    <p>{property.bathrooms ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Floor</p>
+                    <p>{property.floor ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Year built</p>
+                    <p>{property.year_built ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Agent</p>
+                    <p>{property.agent?.name ?? "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  Description
+                </h3>
+                <p className="mt-3 whitespace-pre-wrap text-sm text-gray-700">
+                  {description || "No description provided."}
+                </p>
+              </div>
+
+              {property.amenities && property.amenities.length > 0 ? (
+                <div className="rounded-2xl border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                    Amenities
+                  </h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {property.amenities.map((amenity) => (
+                      <span
+                        key={amenity}
+                        className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
+                      >
+                        {amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
