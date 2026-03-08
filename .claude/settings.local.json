@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/c/Users/egzon/Desktop/REAL ESTATE\" && npx create-next-app@latest real-estate --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --no-react-compiler 2>&1)",
+      "Bash(tail:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}
