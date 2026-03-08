@@ -83,16 +83,21 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar - Desktop */}
       <aside className="hidden w-64 flex-shrink-0 border-r border-gray-200 bg-white lg:block">
-        <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
-          <Building2 className="h-7 w-7 text-blue-600" />
-          <span className="inline-flex flex-col leading-none">
-            <span className="text-lg font-extrabold tracking-wide text-gray-900">
-              NOVA
+        <div className="flex h-16 items-center border-b border-gray-200 px-6">
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <Building2 className="h-7 w-7 text-blue-600" />
+            <span className="inline-flex flex-col leading-none">
+              <span className="text-lg font-extrabold tracking-wide text-gray-900">
+                NOVA
+              </span>
+              <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+                STATE
+              </span>
             </span>
-            <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
-              STATE
-            </span>
-          </span>
+          </Link>
         </div>
         <nav className="flex flex-col gap-1 p-4">
           {navItems.map((item) => (
@@ -114,7 +119,7 @@ export default function AdminLayout({
         <div className="mt-auto border-t border-gray-200 p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -131,15 +136,22 @@ export default function AdminLayout({
           />
           <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-              <span className="inline-flex flex-col leading-none">
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setSidebarOpen(false)}
+                className="inline-flex flex-col rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
                 <span className="text-lg font-extrabold tracking-wide text-gray-900">
                   NOVA
                 </span>
                 <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
                   STATE
                 </span>
-              </span>
-              <button onClick={() => setSidebarOpen(false)}>
+              </Link>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="cursor-pointer rounded-md p-1"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -156,7 +168,7 @@ export default function AdminLayout({
                   <button
                     type="button"
                     onClick={() => setGlobalSearch("")}
-                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                    className="cursor-pointer rounded-full p-1 text-gray-500 hover:bg-gray-100"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -182,7 +194,7 @@ export default function AdminLayout({
               ))}
               <button
                 onClick={handleLogout}
-                className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
               >
                 <LogOut className="h-5 w-5" />
                 Logout
@@ -196,17 +208,23 @@ export default function AdminLayout({
       <div className="flex flex-1 flex-col">
         {/* Mobile header */}
         <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 lg:hidden">
-          <button onClick={() => setSidebarOpen(true)}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="cursor-pointer rounded-md p-1"
+          >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="inline-flex flex-col leading-none">
+          <Link
+            href="/admin/dashboard"
+            className="inline-flex flex-col rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
             <span className="text-lg font-extrabold tracking-wide text-gray-900">
               NOVA
             </span>
             <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
               STATE
             </span>
-          </span>
+          </Link>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">
           <div className="mb-4 hidden items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm lg:flex">
@@ -221,7 +239,7 @@ export default function AdminLayout({
               <button
                 type="button"
                 onClick={() => setGlobalSearch("")}
-                className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                className="cursor-pointer rounded-full p-1 text-gray-500 hover:bg-gray-100"
               >
                 <X className="h-4 w-4" />
               </button>

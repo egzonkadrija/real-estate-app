@@ -1,30 +1,67 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, Locale } from "@/i18n/routing";
 import {
   Building2,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock3,
   DollarSign,
+  ExternalLink,
   ListChecks,
   MailOpen,
+  X,
 } from "lucide-react";
-import { parseReviewStatus } from "@/lib/propertyRequestReview";
+import { cn, getLocalizedField } from "@/lib/utils";
+import {
+  parseReviewPayload,
+  parseReviewStatus,
+} from "@/lib/propertyRequestReview";
 
 interface PropertyRequest {
   id: number;
-  review_status: "pending" | "approved" | "declined";
+  type: "buy" | "rent";
+  category: string;
+  location: string | null;
+  name: string;
+  email: string;
   description: string | null;
+  review_status: "pending" | "approved" | "declined";
+  created_at: string;
 }
 
 interface ContactRecord {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
   is_read: boolean;
+  created_at: string;
+}
+
+interface PropertyPreview {
+  id: number;
+  title_al: string;
+  title_en: string;
+  title_de: string;
+  status: string;
+  type: string;
+  category: string;
+  created_at: string;
+  location?: {
+    name_al?: string;
+    name_en?: string;
+    name_de?: string;
+    name_mk?: string;
+    name_tr?: string;
+  } | null;
 }
 
 interface PropertyListResponse {
-  data: unknown[];
+  data: PropertyPreview[];
   total: number;
 }
 
@@ -59,13 +96,15 @@ interface RevenueSnapshot {
   monthlyRentedRevenue: MonthlyRevenue[];
 }
 
-function parseRequestReviewStatus(
-  request: PropertyRequest,
-  fallback: "pending" | "approved" | "declined" = "pending"
-): "pending" | "approved" | "declined" {
-  if (!request.review_status) return fallback;
-  return parseReviewStatus(request.review_status);
-}
+type DashboardCardId =
+  | "pendingRequests"
+  | "pendingProperties"
+  | "activeListings"
+  | "soldProperties"
+  | "rentedProperties"
+  | "supportRequests";
+
+type PropertyBucket = "pending" | "active" | "sold" | "rented";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -75,8 +114,44 @@ function formatCurrency(value: number): string {
   }).format(value || 0);
 }
 
+function isSubmittedPropertyRequest(request: PropertyRequest) {
+  const payload = parseReviewPayload(request.description);
+  return payload?.source === "submit_property";
+}
+
+function getRequestTitle(request: PropertyRequest) {
+  const payload = parseReviewPayload(request.description);
+  return payload?.property?.title?.trim() || `${request.category} request`;
+}
+
+function getRequestMeta(request: PropertyRequest) {
+  const payload = parseReviewPayload(request.description);
+  const details = [
+    request.location,
+    payload?.property?.location_name,
+    payload?.property?.price ? `${payload.property.price} EUR` : null,
+  ].filter(Boolean);
+
+  return details.join(" • ");
+}
+
+function getPropertyStatusTone(status: string) {
+  if (status === "active") return "bg-emerald-50 text-emerald-700";
+  if (status === "pending") return "bg-amber-50 text-amber-700";
+  if (status === "sold") return "bg-blue-50 text-blue-700";
+  if (status === "rented") return "bg-violet-50 text-violet-700";
+  return "bg-gray-100 text-gray-700";
+}
+
+function shortenMessage(message: string) {
+  const normalized = message.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 110) return normalized;
+  return `${normalized.slice(0, 107)}...`;
+}
+
 export default function AdminDashboard() {
   const t = useTranslations("admin");
+  const locale = useLocale() as Locale;
   const [stats, setStats] = React.useState<AdminHQStats>({
     pendingRequests: 0,
     pendingProperties: 0,
@@ -86,13 +161,22 @@ export default function AdminDashboard() {
     supportRequests: 0,
   });
   const [loading, setLoading] = React.useState(true);
+  const [activeCardId, setActiveCardId] = React.useState<DashboardCardId | null>(null);
+  const [pendingRequests, setPendingRequests] = React.useState<PropertyRequest[]>([]);
+  const [propertyBuckets, setPropertyBuckets] = React.useState<
+    Record<PropertyBucket, PropertyPreview[]>
+  >({
+    pending: [],
+    active: [],
+    sold: [],
+    rented: [],
+  });
+  const [supportRequests, setSupportRequests] = React.useState<ContactRecord[]>([]);
   const [revenue, setRevenue] = React.useState<RevenueSnapshot>({
     soldRevenue: 0,
     soldProperties: [],
     monthlyRentedRevenue: [],
   });
-
-  
 
   React.useEffect(() => {
     let isMounted = true;
@@ -109,17 +193,16 @@ export default function AdminDashboard() {
           contactsRes,
           revenueRes,
         ] = await Promise.all([
-          fetch("/api/property-requests", {
-          }),
-          fetch("/api/properties?status=pending&limit=1"),
-          fetch("/api/properties?status=active&limit=1"),
-          fetch("/api/properties?status=sold&limit=1"),
-          fetch("/api/properties?status=rented&limit=1"),
+          fetch("/api/property-requests"),
+          fetch("/api/properties?status=pending&limit=5"),
+          fetch("/api/properties?status=active&limit=5"),
+          fetch("/api/properties?status=sold&limit=5"),
+          fetch("/api/properties?status=rented&limit=5"),
           fetch("/api/contacts?is_read=false"),
           fetch("/api/dashboard/revenue"),
         ]);
 
-        const requestsJson = await requestsRes.json();
+        const requestsJson = await requestsRes.json().catch(() => []);
         const pendingPropertiesJson: PropertyListResponse =
           await pendingPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
         const activePropertiesJson: PropertyListResponse =
@@ -135,34 +218,24 @@ export default function AdminDashboard() {
           monthlyRentedRevenue: [],
         }));
 
-        const requests = Array.isArray(requestsJson) ? requestsJson : requestsJson?.data || [];
-        const contacts = Array.isArray(contactsJson)
-          ? contactsJson
-          : contactsJson?.data || [];
-
-        const parsedRequests = Array.isArray(requests)
-          ? (requests as PropertyRequest[])
+        const requestItems = Array.isArray(requestsJson)
+          ? (requestsJson as PropertyRequest[])
           : [];
+        const pendingSubmittedRequests = requestItems.filter((request) => {
+          if (parseReviewStatus(request.review_status) !== "pending") {
+            return false;
+          }
+          return isSubmittedPropertyRequest(request);
+        });
 
-        const pendingRequests = parsedRequests.filter((request) => {
-          const status = parseRequestReviewStatus(request);
-          return status === "pending";
-        }).length;
-
-        const supportRequests = (contacts as ContactRecord[]).filter(
-          (contact) => !contact.is_read
-        ).length;
-
-        const soldProperties = Array.isArray(revenueJson?.soldProperties)
-          ? revenueJson.soldProperties
-          : [];
-        const monthlyRentedRevenue = Array.isArray(revenueJson?.monthlyRentedRevenue)
-          ? revenueJson.monthlyRentedRevenue
+        const unreadContacts = Array.isArray(contactsJson)
+          ? (contactsJson as ContactRecord[]).filter((contact) => !contact.is_read)
           : [];
 
         if (!isMounted) return;
+
         setStats({
-          pendingRequests,
+          pendingRequests: pendingSubmittedRequests.length,
           pendingProperties:
             typeof pendingPropertiesJson.total === "number"
               ? pendingPropertiesJson.total
@@ -179,21 +252,31 @@ export default function AdminDashboard() {
             typeof rentedPropertiesJson.total === "number"
               ? rentedPropertiesJson.total
               : rentedPropertiesJson.data.length,
-          supportRequests,
+          supportRequests: unreadContacts.length,
         });
+        setPendingRequests(pendingSubmittedRequests.slice(0, 5));
+        setPropertyBuckets({
+          pending: Array.isArray(pendingPropertiesJson.data)
+            ? pendingPropertiesJson.data
+            : [],
+          active: Array.isArray(activePropertiesJson.data)
+            ? activePropertiesJson.data
+            : [],
+          sold: Array.isArray(soldPropertiesJson.data) ? soldPropertiesJson.data : [],
+          rented: Array.isArray(rentedPropertiesJson.data)
+            ? rentedPropertiesJson.data
+            : [],
+        });
+        setSupportRequests(unreadContacts.slice(0, 5));
         setRevenue({
           soldRevenue:
             typeof revenueJson.soldRevenue === "number" ? revenueJson.soldRevenue : 0,
-          soldProperties: Array.isArray(soldProperties)
-            ? soldProperties.map((property) => ({
-                id: property.id,
-                title: property.title,
-                category: property.category,
-                type: property.type,
-                price: typeof property.price === "number" ? property.price : 0,
-              }))
+          soldProperties: Array.isArray(revenueJson.soldProperties)
+            ? revenueJson.soldProperties
             : [],
-          monthlyRentedRevenue,
+          monthlyRentedRevenue: Array.isArray(revenueJson.monthlyRentedRevenue)
+            ? revenueJson.monthlyRentedRevenue
+            : [],
         });
       } catch (error) {
         console.error("Failed to fetch admin HQ data:", error);
@@ -204,68 +287,259 @@ export default function AdminDashboard() {
       }
     }
 
-    fetchData();
+    void fetchData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
+  React.useEffect(() => {
+    if (!activeCardId) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveCardId(null);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeCardId]);
+
   const cardItems = [
     {
+      id: "pendingRequests" as const,
       label: "Pending Requests",
       value: loading ? "..." : stats.pendingRequests,
       icon: Clock3,
-      href: "/admin/requests?requestStage=pending",
       tone: "bg-amber-50 text-amber-700",
-      hint: "Unreviewed customer requests",
+      hint: "Unreviewed submitted properties",
+      panelTitle: "Pending submitted properties",
+      panelDescription: "Only requests still waiting for admin review.",
+      fullPageHref: "/admin/requests?requestStage=pending" as const,
     },
     {
+      id: "pendingProperties" as const,
       label: "Pending Properties",
       value: loading ? "..." : stats.pendingProperties,
       icon: ListChecks,
-      href: "/admin/properties?propertyStatus=pending",
       tone: "bg-yellow-50 text-yellow-700",
       hint: "Listings waiting for status action",
+      panelTitle: "Pending properties",
+      panelDescription: "Properties not yet approved for public visibility.",
+      fullPageHref: "/admin/properties?propertyStatus=pending" as const,
     },
     {
+      id: "activeListings" as const,
       label: "Active Listings",
       value: loading ? "..." : stats.activeListings,
       icon: CheckCircle2,
-      href: "/admin/properties?propertyStatus=active",
       tone: "bg-emerald-50 text-emerald-700",
       hint: "Live properties for public view",
+      panelTitle: "Active listings",
+      panelDescription: "Properties currently visible on the site.",
+      fullPageHref: "/admin/properties?propertyStatus=active" as const,
     },
     {
+      id: "soldProperties" as const,
       label: "Sold",
       value: loading ? "..." : stats.soldProperties,
       icon: Building2,
-      href: "/admin/properties?propertyStatus=sold",
       tone: "bg-blue-50 text-blue-700",
       hint: "Completed property sales",
+      panelTitle: "Sold properties",
+      panelDescription: "Properties marked as sold.",
+      fullPageHref: "/admin/properties?propertyStatus=sold" as const,
     },
     {
+      id: "rentedProperties" as const,
       label: "Rented",
       value: loading ? "..." : stats.rentedProperties,
       icon: DollarSign,
-      href: "/admin/properties?propertyStatus=rented",
       tone: "bg-violet-50 text-violet-700",
       hint: "Current and past rental deals",
+      panelTitle: "Rented properties",
+      panelDescription: "Properties closed as rentals.",
+      fullPageHref: "/admin/properties?propertyStatus=rented" as const,
     },
     {
+      id: "supportRequests" as const,
       label: "Support Requests",
       value: loading ? "..." : stats.supportRequests,
       icon: MailOpen,
-      href: "/admin/contacts?status=unread",
       tone: "bg-cyan-50 text-cyan-700",
       hint: "Unread messages from clients",
+      panelTitle: "Unread support requests",
+      panelDescription: "Recent unread contact messages from clients.",
+      fullPageHref: "/admin/contacts" as const,
     },
   ];
 
+  const activeCard = cardItems.find((card) => card.id === activeCardId) ?? null;
   const totalMonthlyRentalRevenue = revenue.monthlyRentedRevenue.reduce(
     (sum, row) => sum + row.total,
     0
   );
+
+  function toggleCard(cardId: DashboardCardId) {
+    setActiveCardId((current) => (current === cardId ? null : cardId));
+  }
+
+  function renderPropertyList(bucket: PropertyBucket) {
+    const items = propertyBuckets[bucket];
+
+    if (loading) {
+      return Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={`${bucket}-skeleton-${index}`}
+          className="h-16 animate-pulse rounded-xl bg-gray-100"
+        />
+      ));
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+          No matching properties right now.
+        </div>
+      );
+    }
+
+    return items.map((property) => {
+      const title = getLocalizedField(property, "title", locale) || "Untitled property";
+      const location = getLocalizedField(property.location, "name", locale) || "No location";
+
+      return (
+        <div
+          key={`${bucket}-${property.id}`}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">{title}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {location} • {property.category} • {property.type}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize",
+                getPropertyStatusTone(property.status)
+              )}
+            >
+              {property.status}
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-gray-400">
+            Added {new Date(property.created_at).toLocaleDateString()}
+          </p>
+        </div>
+      );
+    });
+  }
+
+  function renderPendingRequests() {
+    if (loading) {
+      return Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={`request-skeleton-${index}`}
+          className="h-16 animate-pulse rounded-xl bg-gray-100"
+        />
+      ));
+    }
+
+    if (pendingRequests.length === 0) {
+      return (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+          No pending submitted properties right now.
+        </div>
+      );
+    }
+
+    return pendingRequests.map((request) => (
+      <div
+        key={request.id}
+        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">
+              {getRequestTitle(request)}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {request.name} • {request.email}
+            </p>
+            {getRequestMeta(request) ? (
+              <p className="mt-2 text-xs text-gray-500">{getRequestMeta(request)}</p>
+            ) : null}
+          </div>
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+            Pending
+          </span>
+        </div>
+        <p className="mt-3 text-xs text-gray-400">
+          Sent {new Date(request.created_at).toLocaleDateString()}
+        </p>
+      </div>
+    ));
+  }
+
+  function renderSupportRequests() {
+    if (loading) {
+      return Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={`contact-skeleton-${index}`}
+          className="h-16 animate-pulse rounded-xl bg-gray-100"
+        />
+      ));
+    }
+
+    if (supportRequests.length === 0) {
+      return (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+          No unread support requests right now.
+        </div>
+      );
+    }
+
+    return supportRequests.map((contact) => (
+      <div
+        key={contact.id}
+        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">{contact.name}</p>
+            <p className="mt-1 text-xs text-gray-500">{contact.email}</p>
+          </div>
+          <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
+            Unread
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-gray-600">{shortenMessage(contact.message)}</p>
+        <p className="mt-3 text-xs text-gray-400">
+          Received {new Date(contact.created_at).toLocaleDateString()}
+        </p>
+      </div>
+    ));
+  }
+
+  function renderActivePanel() {
+    if (!activeCardId) return null;
+    if (activeCardId === "pendingRequests") return renderPendingRequests();
+    if (activeCardId === "pendingProperties") return renderPropertyList("pending");
+    if (activeCardId === "activeListings") return renderPropertyList("active");
+    if (activeCardId === "soldProperties") return renderPropertyList("sold");
+    if (activeCardId === "rentedProperties") return renderPropertyList("rented");
+    return renderSupportRequests();
+  }
 
   return (
     <div>
@@ -325,25 +599,92 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-        {cardItems.map((card) => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">{card.label}</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
+        {cardItems.map((card) => {
+          const isActive = activeCardId === card.id;
+
+          return (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => toggleCard(card.id)}
+              className={cn(
+                "cursor-pointer rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:shadow-md",
+                isActive && "border-blue-300 ring-2 ring-blue-100"
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-gray-500">{card.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
+                </div>
+                <span className={`rounded-lg p-2 ${card.tone}`}>
+                  <card.icon className="h-5 w-5" />
+                </span>
               </div>
-              <span className={`rounded-lg p-2 ${card.tone}`}>
-                <card.icon className="h-5 w-5" />
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-gray-500">{card.hint}</p>
-          </Link>
-        ))}
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-gray-500">{card.hint}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600">
+                  {isActive ? "Hide" : "Show"}
+                  {isActive ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
+
+      {activeCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4"
+          onClick={() => setActiveCardId(null)}
+        >
+          <section
+            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+                  Dashboard Focus
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-gray-900">
+                  {activeCard.panelTitle}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {activeCard.panelDescription}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={activeCard.fullPageHref}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-gray-200 transition hover:bg-gray-100"
+                >
+                  Open full page
+                  <ExternalLink className="h-4 w-4" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setActiveCardId(null)}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-gray-200 transition hover:bg-gray-100"
+                >
+                  Close
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[75vh] overflow-y-auto p-5">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {renderActivePanel()}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
