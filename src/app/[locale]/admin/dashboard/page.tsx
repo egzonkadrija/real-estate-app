@@ -33,15 +33,6 @@ interface PropertyRequest {
   created_at: string;
 }
 
-interface ContactRecord {
-  id: number;
-  name: string;
-  email: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-}
-
 interface PropertyPreview {
   id: number;
   title_al: string;
@@ -71,7 +62,7 @@ interface AdminHQStats {
   activeListings: number;
   soldProperties: number;
   rentedProperties: number;
-  supportRequests: number;
+  requestedProperties: number;
 }
 
 interface MonthlyRevenue {
@@ -102,7 +93,7 @@ type DashboardCardId =
   | "activeListings"
   | "soldProperties"
   | "rentedProperties"
-  | "supportRequests";
+  | "requestedProperties";
 
 type PropertyBucket = "pending" | "active" | "sold" | "rented";
 
@@ -117,6 +108,11 @@ function formatCurrency(value: number): string {
 function isSubmittedPropertyRequest(request: PropertyRequest) {
   const payload = parseReviewPayload(request.description);
   return payload?.source === "submit_property";
+}
+
+function isRequestedPropertyRequest(request: PropertyRequest) {
+  const payload = parseReviewPayload(request.description);
+  return payload?.source === "request_property";
 }
 
 function getRequestTitle(request: PropertyRequest) {
@@ -143,12 +139,6 @@ function getPropertyStatusTone(status: string) {
   return "bg-gray-100 text-gray-700";
 }
 
-function shortenMessage(message: string) {
-  const normalized = message.replace(/\s+/g, " ").trim();
-  if (normalized.length <= 110) return normalized;
-  return `${normalized.slice(0, 107)}...`;
-}
-
 export default function AdminDashboard() {
   const t = useTranslations("admin");
   const locale = useLocale() as Locale;
@@ -158,7 +148,7 @@ export default function AdminDashboard() {
     activeListings: 0,
     soldProperties: 0,
     rentedProperties: 0,
-    supportRequests: 0,
+    requestedProperties: 0,
   });
   const [loading, setLoading] = React.useState(true);
   const [activeCardId, setActiveCardId] = React.useState<DashboardCardId | null>(null);
@@ -171,7 +161,9 @@ export default function AdminDashboard() {
     sold: [],
     rented: [],
   });
-  const [supportRequests, setSupportRequests] = React.useState<ContactRecord[]>([]);
+  const [requestedProperties, setRequestedProperties] = React.useState<PropertyRequest[]>(
+    []
+  );
   const [revenue, setRevenue] = React.useState<RevenueSnapshot>({
     soldRevenue: 0,
     soldProperties: [],
@@ -190,7 +182,6 @@ export default function AdminDashboard() {
           activePropertiesRes,
           soldPropertiesRes,
           rentedPropertiesRes,
-          contactsRes,
           revenueRes,
         ] = await Promise.all([
           fetch("/api/property-requests"),
@@ -198,7 +189,6 @@ export default function AdminDashboard() {
           fetch("/api/properties?status=active&limit=5"),
           fetch("/api/properties?status=sold&limit=5"),
           fetch("/api/properties?status=rented&limit=5"),
-          fetch("/api/contacts?is_read=false"),
           fetch("/api/dashboard/revenue"),
         ]);
 
@@ -211,7 +201,6 @@ export default function AdminDashboard() {
           await soldPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
         const rentedPropertiesJson: PropertyListResponse =
           await rentedPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
-        const contactsJson = await contactsRes.json().catch(() => []);
         const revenueJson = await revenueRes.json().catch(() => ({
           soldRevenue: 0,
           soldProperties: [],
@@ -227,10 +216,7 @@ export default function AdminDashboard() {
           }
           return isSubmittedPropertyRequest(request);
         });
-
-        const unreadContacts = Array.isArray(contactsJson)
-          ? (contactsJson as ContactRecord[]).filter((contact) => !contact.is_read)
-          : [];
+        const requestPropertyItems = requestItems.filter(isRequestedPropertyRequest);
 
         if (!isMounted) return;
 
@@ -252,7 +238,7 @@ export default function AdminDashboard() {
             typeof rentedPropertiesJson.total === "number"
               ? rentedPropertiesJson.total
               : rentedPropertiesJson.data.length,
-          supportRequests: unreadContacts.length,
+          requestedProperties: requestPropertyItems.length,
         });
         setPendingRequests(pendingSubmittedRequests.slice(0, 5));
         setPropertyBuckets({
@@ -267,7 +253,7 @@ export default function AdminDashboard() {
             ? rentedPropertiesJson.data
             : [],
         });
-        setSupportRequests(unreadContacts.slice(0, 5));
+        setRequestedProperties(requestPropertyItems.slice(0, 5));
         setRevenue({
           soldRevenue:
             typeof revenueJson.soldRevenue === "number" ? revenueJson.soldRevenue : 0,
@@ -370,14 +356,14 @@ export default function AdminDashboard() {
       fullPageHref: "/admin/properties?propertyStatus=rented" as const,
     },
     {
-      id: "supportRequests" as const,
-      label: "Support Requests",
-      value: loading ? "..." : stats.supportRequests,
+      id: "requestedProperties" as const,
+      label: "Requested Properties",
+      value: loading ? "..." : stats.requestedProperties,
       icon: MailOpen,
       tone: "bg-cyan-50 text-cyan-700",
-      hint: "Unread messages from clients",
-      panelTitle: "Unread support requests",
-      panelDescription: "Recent unread contact messages from clients.",
+      hint: "Clients looking for a matching property",
+      panelTitle: "Requested properties",
+      panelDescription: "Recent client property requests from the public form.",
       fullPageHref: "/admin/contacts" as const,
     },
   ];
@@ -491,41 +477,43 @@ export default function AdminDashboard() {
     ));
   }
 
-  function renderSupportRequests() {
+  function renderRequestedProperties() {
     if (loading) {
       return Array.from({ length: 3 }).map((_, index) => (
         <div
-          key={`contact-skeleton-${index}`}
+          key={`requested-property-skeleton-${index}`}
           className="h-16 animate-pulse rounded-xl bg-gray-100"
         />
       ));
     }
 
-    if (supportRequests.length === 0) {
+    if (requestedProperties.length === 0) {
       return (
         <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
-          No unread support requests right now.
+          No requested properties right now.
         </div>
       );
     }
 
-    return supportRequests.map((contact) => (
+    return requestedProperties.map((request) => (
       <div
-        key={contact.id}
+        key={request.id}
         className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900">{contact.name}</p>
-            <p className="mt-1 text-xs text-gray-500">{contact.email}</p>
+            <p className="truncate text-sm font-semibold text-gray-900">{request.name}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {request.category} • {request.type} • {request.location || "No location"}
+            </p>
           </div>
           <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
-            Unread
+            Request
           </span>
         </div>
-        <p className="mt-3 text-sm text-gray-600">{shortenMessage(contact.message)}</p>
+        <p className="mt-3 text-sm text-gray-600">{request.email}</p>
         <p className="mt-3 text-xs text-gray-400">
-          Received {new Date(contact.created_at).toLocaleDateString()}
+          Received {new Date(request.created_at).toLocaleDateString()}
         </p>
       </div>
     ));
@@ -538,7 +526,7 @@ export default function AdminDashboard() {
     if (activeCardId === "activeListings") return renderPropertyList("active");
     if (activeCardId === "soldProperties") return renderPropertyList("sold");
     if (activeCardId === "rentedProperties") return renderPropertyList("rented");
-    return renderSupportRequests();
+    return renderRequestedProperties();
   }
 
   return (

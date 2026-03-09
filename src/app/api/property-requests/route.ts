@@ -4,6 +4,7 @@ import { contacts, propertyRequests } from "@/db/schema";
 import { type SQLWrapper, and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
+import { parseReviewPayload } from "@/lib/propertyRequestReview";
 
 const createPropertyRequestSchema = z.object({
   type: z.enum(["buy", "rent", "sale"]),
@@ -24,17 +25,9 @@ function getDisplayNote(raw: string | null | undefined) {
 
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
-      const parsed = JSON.parse(trimmed);
-      const payload =
-        typeof parsed === "string" ? JSON.parse(parsed) : parsed;
-
-      if (
-        payload &&
-        typeof payload === "object" &&
-        "source" in payload &&
-        payload.source === "submit_property"
-      ) {
-        return null;
+      const payload = parseReviewPayload(trimmed);
+      if (payload) {
+        return payload.note?.trim() || null;
       }
     } catch {
       // Keep non-JSON notes as-is.
@@ -42,6 +35,14 @@ function getDisplayNote(raw: string | null | undefined) {
   }
 
   return trimmed;
+}
+
+function getImageCount(raw: string | null | undefined) {
+  const payload = parseReviewPayload(raw ?? null);
+  const images = payload?.property?.images;
+  if (!Array.isArray(images)) return 0;
+  return images.filter((image) => typeof image === "string" && image.trim().length > 0)
+    .length;
 }
 
 function buildContactMessage(
@@ -77,6 +78,11 @@ function buildContactMessage(
 
   lines.push(`Name: ${request.name}`);
   lines.push(`Email: ${request.email}`);
+
+  const imageCount = getImageCount(request.description);
+  if (imageCount > 0) {
+    lines.push(`Images: ${imageCount} uploaded`);
+  }
 
   const displayNote = getDisplayNote(request.description);
   if (displayNote) {
@@ -184,16 +190,19 @@ export async function POST(request: NextRequest) {
       .values(validated)
       .returning();
 
-    try {
-      await db.insert(contacts).values({
-        name: created.name,
-        email: created.email,
-        phone: created.phone,
-        message: buildContactMessage(created),
-        property_id: null,
-      });
-    } catch (contactError) {
-      console.error("Failed to create contact notification for property request:", contactError);
+    const source = parseReviewPayload(created.description)?.source;
+    if (!source) {
+      try {
+        await db.insert(contacts).values({
+          name: created.name,
+          email: created.email,
+          phone: created.phone,
+          message: buildContactMessage(created),
+          property_id: null,
+        });
+      } catch (contactError) {
+        console.error("Failed to create contact notification for property request:", contactError);
+      }
     }
 
     return NextResponse.json(created, { status: 201 });
