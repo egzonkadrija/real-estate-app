@@ -1,4 +1,5 @@
 export type ReviewStatus = "pending" | "approved" | "declined";
+export type ReviewSource = "submit_property" | "request_property";
 
 export type ReviewPayloadProperty = {
   title?: string | null;
@@ -108,4 +109,12 @@ export function getReviewStatus(payload: ReviewPayload | null): ReviewStatus {
     return "declined";
   }
   return "pending";
+}
+
+export function getReviewSource(raw: string | null): ReviewSource | null {
+  const payload = parseReviewPayload(raw);
+  if (payload?.source === "submit_property" || payload?.source === "request_property") {
+    return payload.source;
+  }
+  return null;
 }

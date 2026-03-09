@@ -4,7 +4,7 @@ import { contacts, propertyRequests } from "@/db/schema";
 import { type SQLWrapper, and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
-import { parseReviewPayload } from "@/lib/propertyRequestReview";
+import { getReviewSource, parseReviewPayload } from "@/lib/propertyRequestReview";
 
 const createPropertyRequestSchema = z.object({
   type: z.enum(["buy", "rent", "sale"]),
@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
     const requestStage = searchParams.get("requestStage") || "all";
     const requestType = searchParams.get("requestType") || "";
     const requestLocation = searchParams.get("requestLocation") || "";
+    const sourceFilter = searchParams.get("source");
     const fromDate = searchParams.get("requestFrom") || "";
     const toDate = searchParams.get("requestTo") || "";
 
@@ -165,7 +166,12 @@ export async function GET(request: NextRequest) {
       .where(whereClause)
       .orderBy(desc(propertyRequests.created_at));
 
-    return NextResponse.json(data);
+    const filteredData =
+      sourceFilter === "submit_property" || sourceFilter === "request_property"
+        ? data.filter((item) => getReviewSource(item.description) === sourceFilter)
+        : data;
+
+    return NextResponse.json(filteredData);
   } catch (error) {
     console.error("Error fetching property requests:", error);
     return NextResponse.json(

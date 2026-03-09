@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn, getLocalizedField } from "@/lib/utils";
 import {
+  getReviewSource,
   parseReviewPayload,
   parseReviewStatus,
 } from "@/lib/propertyRequestReview";
@@ -105,16 +106,6 @@ function formatCurrency(value: number): string {
   }).format(value || 0);
 }
 
-function isSubmittedPropertyRequest(request: PropertyRequest) {
-  const payload = parseReviewPayload(request.description);
-  return payload?.source === "submit_property";
-}
-
-function isRequestedPropertyRequest(request: PropertyRequest) {
-  const payload = parseReviewPayload(request.description);
-  return payload?.source === "request_property";
-}
-
 function getRequestTitle(request: PropertyRequest) {
   const payload = parseReviewPayload(request.description);
   return payload?.property?.title?.trim() || `${request.category} request`;
@@ -177,14 +168,16 @@ export default function AdminDashboard() {
       setLoading(true);
       try {
         const [
-          requestsRes,
+          submittedRequestsRes,
+          requestedPropertiesRes,
           pendingPropertiesRes,
           activePropertiesRes,
           soldPropertiesRes,
           rentedPropertiesRes,
           revenueRes,
         ] = await Promise.all([
-          fetch("/api/property-requests"),
+          fetch("/api/property-requests?source=submit_property"),
+          fetch("/api/property-requests?source=request_property"),
           fetch("/api/properties?status=pending&limit=5"),
           fetch("/api/properties?status=active&limit=5"),
           fetch("/api/properties?status=sold&limit=5"),
@@ -192,7 +185,8 @@ export default function AdminDashboard() {
           fetch("/api/dashboard/revenue"),
         ]);
 
-        const requestsJson = await requestsRes.json().catch(() => []);
+        const submittedRequestsJson = await submittedRequestsRes.json().catch(() => []);
+        const requestedPropertiesJson = await requestedPropertiesRes.json().catch(() => []);
         const pendingPropertiesJson: PropertyListResponse =
           await pendingPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
         const activePropertiesJson: PropertyListResponse =
@@ -207,16 +201,18 @@ export default function AdminDashboard() {
           monthlyRentedRevenue: [],
         }));
 
-        const requestItems = Array.isArray(requestsJson)
-          ? (requestsJson as PropertyRequest[])
+        const requestItems = Array.isArray(submittedRequestsJson)
+          ? (submittedRequestsJson as PropertyRequest[])
+          : [];
+        const requestPropertyItems = Array.isArray(requestedPropertiesJson)
+          ? (requestedPropertiesJson as PropertyRequest[])
           : [];
         const pendingSubmittedRequests = requestItems.filter((request) => {
           if (parseReviewStatus(request.review_status) !== "pending") {
             return false;
           }
-          return isSubmittedPropertyRequest(request);
+          return getReviewSource(request.description) === "submit_property";
         });
-        const requestPropertyItems = requestItems.filter(isRequestedPropertyRequest);
 
         if (!isMounted) return;
 

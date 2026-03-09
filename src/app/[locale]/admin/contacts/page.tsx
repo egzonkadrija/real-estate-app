@@ -3,7 +3,21 @@
 import * as React from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { cn, normalizeImageUrl } from "@/lib/utils";
-import { parseReviewPayload, parseReviewStatus } from "@/lib/propertyRequestReview";
+import {
+  getReviewSource,
+  parseReviewPayload,
+  parseReviewStatus,
+} from "@/lib/propertyRequestReview";
+
+interface ContactRecord {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
 
 interface PropertyRequestRecord {
   id: number;
@@ -21,9 +35,44 @@ interface PropertyRequestRecord {
 }
 
 type RequestFilter = "all" | "pending" | "approved" | "declined";
+type AdminRequestedItem =
+  | {
+      source: "request_property";
+      key: string;
+      id: number;
+      type: "buy" | "rent";
+      category: string;
+      location: string | null;
+      name: string;
+      email: string;
+      phone: string | null;
+      note: string;
+      images: string[];
+      status: "pending" | "approved" | "declined";
+      min_price: number | null;
+      max_price: number | null;
+      created_at: string;
+    }
+  | {
+      source: "legacy_contact";
+      key: string;
+      id: number;
+      type: "buy" | "rent";
+      category: string;
+      location: string | null;
+      name: string;
+      email: string;
+      phone: string | null;
+      note: string;
+      images: string[];
+      status: "pending";
+      min_price: number | null;
+      max_price: number | null;
+      created_at: string;
+    };
 
 function isRequestPropertyRecord(request: PropertyRequestRecord) {
-  return parseReviewPayload(request.description)?.source === "request_property";
+  return getReviewSource(request.description) === "request_property";
 }
 
 function getStatusBadge(status: RequestFilter | "pending" | "approved" | "declined") {
@@ -36,64 +85,113 @@ function getStatusBadge(status: RequestFilter | "pending" | "approved" | "declin
   return "bg-amber-100 text-amber-700";
 }
 
-function getDisplayNote(request: PropertyRequestRecord) {
-  return parseReviewPayload(request.description)?.note?.trim() || "";
-}
-
-function getRequestImages(request: PropertyRequestRecord) {
-  const images = parseReviewPayload(request.description)?.property?.images;
-  if (!Array.isArray(images)) return [];
-  return images.filter(
-    (image): image is string => typeof image === "string" && image.trim().length > 0
-  );
-}
-
-function formatBudget(request: PropertyRequestRecord) {
-  if (request.min_price && request.max_price) {
-    return `${request.min_price} - ${request.max_price} EUR`;
+function formatBudget(item: AdminRequestedItem) {
+  if (item.min_price && item.max_price) {
+    return `${item.min_price} - ${item.max_price} EUR`;
   }
-  if (request.min_price) {
-    return `From ${request.min_price} EUR`;
+  if (item.min_price) {
+    return `From ${item.min_price} EUR`;
   }
-  if (request.max_price) {
-    return `Up to ${request.max_price} EUR`;
+  if (item.max_price) {
+    return `Up to ${item.max_price} EUR`;
   }
   return "Not specified";
 }
 
-function buildReplyMailto(request: PropertyRequestRecord) {
-  const subject = `Re: ${request.name} - Property request`;
-  const body = `Hi ${request.name},\n\nThank you for your property request.\n\n`;
-  return `mailto:${request.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+function buildReplyMailtoForItem(item: AdminRequestedItem) {
+  const subject = `Re: ${item.name} - Property request`;
+  const body = `Hi ${item.name},\n\nThank you for your property request.\n\n`;
+  return `mailto:${item.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function normalizeComparisonValue(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function normalizePhone(value: string | null | undefined) {
+  return (value ?? "").replace(/\s+/g, "").trim();
+}
+
+function isLegacyPropertyRequestMessage(message: string) {
+  return message.toLowerCase().startsWith("property request from customer");
+}
+
+function parseLegacyField(message: string, prefix: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(prefix.toLowerCase()));
+  if (!line) return null;
+  return line.slice(prefix.length).trim() || null;
+}
+
+function parseLegacyType(message: string): "buy" | "rent" {
+  const raw = parseLegacyField(message, "Type:");
+  return raw?.toLowerCase() === "rent" ? "rent" : "buy";
+}
+
+function parseLegacyNote(message: string) {
+  return parseLegacyField(message, "Note:") || "";
+}
+
+function parseLegacyCategory(message: string) {
+  return parseLegacyField(message, "Category:") || "unspecified";
+}
+
+function parseLegacyLocation(message: string) {
+  return parseLegacyField(message, "Location:");
+}
+
+function isDuplicateSubmitPropertyContact(
+  contact: ContactRecord,
+  submitRequest: PropertyRequestRecord
+) {
+  if (normalizeComparisonValue(contact.name) !== normalizeComparisonValue(submitRequest.name)) {
+    return false;
+  }
+  if (normalizeComparisonValue(contact.email) !== normalizeComparisonValue(submitRequest.email)) {
+    return false;
+  }
+  if (normalizePhone(contact.phone) !== normalizePhone(submitRequest.phone)) {
+    return false;
+  }
+
+  const contactTime = new Date(contact.created_at).getTime();
+  const requestTime = new Date(submitRequest.created_at).getTime();
+  return Math.abs(contactTime - requestTime) <= 5 * 60 * 1000;
 }
 
 export default function AdminContactsPage() {
   const [requests, setRequests] = React.useState<PropertyRequestRecord[]>([]);
+  const [submittedRequests, setSubmittedRequests] = React.useState<PropertyRequestRecord[]>([]);
+  const [contacts, setContacts] = React.useState<ContactRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState<RequestFilter>("all");
-  const [selectedRequest, setSelectedRequest] = React.useState<PropertyRequestRecord | null>(
-    null
-  );
+  const [selectedRequest, setSelectedRequest] = React.useState<AdminRequestedItem | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = React.useState(0);
 
   const fetchRequests = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/property-requests");
-      const data = await res.json();
+      const [requestsRes, submittedRequestsRes, contactsRes] = await Promise.all([
+        fetch("/api/property-requests?source=request_property"),
+        fetch("/api/property-requests?source=submit_property"),
+        fetch("/api/contacts"),
+      ]);
+      const data = await requestsRes.json();
+      const submittedData = await submittedRequestsRes.json().catch(() => []);
+      const contactsData = await contactsRes.json().catch(() => []);
       const allRequests = Array.isArray(data) ? (data as PropertyRequestRecord[]) : [];
-      const requestPropertyRows = allRequests.filter(isRequestPropertyRecord);
-      setRequests(requestPropertyRows);
-      setSelectedRequest((current) => {
-        if (current) {
-          return requestPropertyRows.find((request) => request.id === current.id) ?? null;
-        }
-        return requestPropertyRows[0] ?? null;
-      });
+      const allSubmittedRequests = Array.isArray(submittedData)
+        ? (submittedData as PropertyRequestRecord[])
+        : [];
+      setRequests(allRequests);
+      setSubmittedRequests(allSubmittedRequests);
+      setContacts(Array.isArray(contactsData) ? (contactsData as ContactRecord[]) : []);
     } catch (error) {
       console.error(error);
       setRequests([]);
-      setSelectedRequest(null);
+      setSubmittedRequests([]);
+      setContacts([]);
     } finally {
       setLoading(false);
     }
@@ -103,41 +201,98 @@ export default function AdminContactsPage() {
     void fetchRequests();
   }, [fetchRequests]);
 
-  const filteredRequests = React.useMemo(() => {
-    if (filter === "all") return requests;
-    return requests.filter(
-      (request) => parseReviewStatus(request.review_status) === filter
+  const items = React.useMemo<AdminRequestedItem[]>(() => {
+    const requestPropertyItems = requests
+      .filter((request) => isRequestPropertyRecord(request))
+      .map((request) => {
+        const payload = parseReviewPayload(request.description);
+        const images = Array.isArray(payload?.property?.images)
+          ? payload.property.images.filter(
+              (image): image is string => typeof image === "string" && image.trim().length > 0
+            )
+          : [];
+
+        return {
+          source: "request_property" as const,
+          key: `request-${request.id}`,
+          id: request.id,
+          type: request.type,
+          category: request.category,
+          location: request.location,
+          name: request.name,
+          email: request.email,
+          phone: request.phone,
+          note: payload?.note?.trim() || "",
+          images,
+          status: parseReviewStatus(request.review_status),
+          min_price: request.min_price,
+          max_price: request.max_price,
+          created_at: request.created_at,
+        };
+      });
+
+    const legacyContactItems = contacts
+      .filter((contact) => isLegacyPropertyRequestMessage(contact.message))
+      .filter(
+        (contact) =>
+          !submittedRequests.some((submitRequest) =>
+            isDuplicateSubmitPropertyContact(contact, submitRequest)
+          )
+      )
+      .map((contact) => ({
+        source: "legacy_contact" as const,
+        key: `contact-${contact.id}`,
+        id: contact.id,
+        type: parseLegacyType(contact.message),
+        category: parseLegacyCategory(contact.message),
+        location: parseLegacyLocation(contact.message),
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        note: parseLegacyNote(contact.message),
+        images: [],
+        status: "pending" as const,
+        min_price: null,
+        max_price: null,
+        created_at: contact.created_at,
+      }));
+
+    return [...requestPropertyItems, ...legacyContactItems].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [filter, requests]);
+  }, [contacts, requests, submittedRequests]);
+
+  const filteredRequests = React.useMemo(() => {
+    if (filter === "all") return items;
+    return items.filter((request) => request.status === filter);
+  }, [filter, items]);
 
   React.useEffect(() => {
-    if (selectedRequest && !filteredRequests.some((request) => request.id === selectedRequest.id)) {
-      setSelectedRequest(filteredRequests[0] ?? null);
-    }
-  }, [filteredRequests, selectedRequest]);
+    setSelectedRequest((current) => {
+      if (current) {
+        return filteredRequests.find((request) => request.key === current.key) ?? filteredRequests[0] ?? null;
+      }
+      return filteredRequests[0] ?? null;
+    });
+  }, [filteredRequests]);
 
   React.useEffect(() => {
     setSelectedImageIndex(0);
   }, [selectedRequest?.id]);
 
   const selectedImages = React.useMemo(
-    () => (selectedRequest ? getRequestImages(selectedRequest) : []),
+    () => (selectedRequest ? selectedRequest.images : []),
     [selectedRequest]
   );
 
   const filterCounts = React.useMemo(
     () => ({
-      all: requests.length,
-      pending: requests.filter((request) => parseReviewStatus(request.review_status) === "pending")
-        .length,
-      approved: requests.filter(
-        (request) => parseReviewStatus(request.review_status) === "approved"
-      ).length,
-      declined: requests.filter(
-        (request) => parseReviewStatus(request.review_status) === "declined"
-      ).length,
+      all: items.length,
+      pending: items.filter((request) => request.status === "pending").length,
+      approved: items.filter((request) => request.status === "approved").length,
+      declined: items.filter((request) => request.status === "declined").length,
     }),
-    [requests]
+    [items]
   );
 
   return (
@@ -181,18 +336,14 @@ export default function AdminContactsPage() {
                 No requested properties found.
               </div>
             ) : (
-              filteredRequests.map((request) => {
-                const status = parseReviewStatus(request.review_status);
-                const images = getRequestImages(request);
-
-                return (
+              filteredRequests.map((request) => (
                   <button
-                    key={request.id}
+                    key={request.key}
                     type="button"
                     onClick={() => setSelectedRequest(request)}
                     className={cn(
                       "flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-gray-50",
-                      selectedRequest?.id === request.id && "bg-blue-50"
+                      selectedRequest?.key === request.key && "bg-blue-50"
                     )}
                   >
                     <div className="min-w-0 flex-1">
@@ -203,10 +354,10 @@ export default function AdminContactsPage() {
                         <span
                           className={cn(
                             "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                            getStatusBadge(status)
+                            getStatusBadge(request.status)
                           )}
                         >
-                          {status}
+                          {request.status}
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
@@ -214,12 +365,13 @@ export default function AdminContactsPage() {
                       </p>
                       <p className="mt-1 text-xs text-gray-500">
                         {request.email}
-                        {images.length > 0 ? ` • ${images.length} image${images.length === 1 ? "" : "s"}` : ""}
+                        {request.images.length > 0
+                          ? ` • ${request.images.length} image${request.images.length === 1 ? "" : "s"}`
+                          : ""}
                       </p>
                     </div>
                   </button>
-                );
-              })
+                ))
             )}
           </div>
         </div>
@@ -298,13 +450,13 @@ export default function AdminContactsPage() {
                 </p>
               </div>
 
-              {getDisplayNote(selectedRequest) ? (
+              {selectedRequest.note ? (
                 <div className="mb-4 rounded-lg border border-gray-200 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Notes
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
-                    {getDisplayNote(selectedRequest)}
+                    {selectedRequest.note}
                   </p>
                 </div>
               ) : null}
@@ -327,7 +479,7 @@ export default function AdminContactsPage() {
               </p>
 
               <a
-                href={buildReplyMailto(selectedRequest)}
+                href={buildReplyMailtoForItem(selectedRequest)}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 <Mail className="mr-2 h-4 w-4" />

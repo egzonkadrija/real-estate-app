@@ -14,6 +14,7 @@ import {
 import { cn, normalizeImageUrl } from "@/lib/utils";
 import {
   type ReviewPayload,
+  getReviewSource,
   getReviewStatus,
   parseReviewPayload,
 } from "@/lib/propertyRequestReview";
@@ -34,39 +35,6 @@ interface PropertyRequest {
 }
 
 type LifecycleStage = "all" | "submitted" | "pending" | "approved" | "declined";
-
-interface SubmitReviewPayload {
-  source?: string;
-  property?: {
-    title?: string | null;
-    type?: string | null;
-    category?: string | null;
-    price?: number | null;
-    area?: number | null;
-    images?: string[] | null;
-    rooms?: number | null;
-    bathrooms?: number | null;
-    location_id?: number | null;
-    location_name?: string | null;
-    floor?: number | null;
-    year_built?: number | null;
-  };
-  note?: string | null;
-  approved_property_id?: number;
-  approved_at?: string;
-  declined_at?: string;
-  pending_at?: string | null;
-  review_status?: "submitted" | "pending" | "approved" | "declined";
-}
-
-function getSubmitRequestSource(
-  payload: SubmitReviewPayload | null
-): "submit_property" | "request_property" {
-  if (payload?.source === "submit_property") {
-    return "submit_property";
-  }
-  return "request_property";
-}
 
 function getRequestLifecycleStatus(
   request: PropertyRequest,
@@ -165,6 +133,7 @@ export default function AdminRequestsPage() {
 
   const buildServerFilterQuery = React.useCallback(() => {
     const params = new URLSearchParams();
+    params.set("source", "submit_property");
 
     if (lifecycleFilter !== "all") {
       params.set("requestStage", lifecycleFilter);
@@ -237,7 +206,7 @@ export default function AdminRequestsPage() {
     const list = requests.filter((request) => {
       const payload = parseReviewPayload(request.description);
       const status = getRequestLifecycleStatus(request, payload);
-      const source = getSubmitRequestSource(payload);
+      const source = getReviewSource(request.description);
 
       if (source !== "submit_property") {
         return false;
@@ -271,7 +240,7 @@ export default function AdminRequestsPage() {
 
     for (const request of requests) {
       const payload = parseReviewPayload(request.description);
-      const source = getSubmitRequestSource(payload);
+      const source = getReviewSource(request.description);
       if (source !== "submit_property") {
         continue;
       }
