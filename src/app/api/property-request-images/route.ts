@@ -5,9 +5,14 @@ import path from "path";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_TYPES = [
   "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
   "image/png",
   "image/webp",
   "image/gif",
+  "image/avif",
+  "image/bmp",
+  "image/svg+xml",
 ];
 
 function inferExtension(file: File): string {
@@ -17,6 +22,9 @@ function inferExtension(file: File): string {
   if (file.type === "image/png") return "png";
   if (file.type === "image/webp") return "webp";
   if (file.type === "image/gif") return "gif";
+  if (file.type === "image/avif") return "avif";
+  if (file.type === "image/bmp") return "bmp";
+  if (file.type === "image/svg+xml") return "svg";
   return "jpg";
 }
 
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Only JPG, PNG, WEBP and GIF are allowed." },
+        { error: "Invalid file type. Only JPG, PNG, WEBP, GIF, AVIF and BMP are allowed." },
         { status: 400 }
       );
     }
@@ -81,9 +89,21 @@ export async function POST(request: NextRequest) {
       !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
       !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const url = useSupabase
-      ? await uploadToSupabase(file, uniqueName)
-      : await uploadToLocal(file, uniqueName);
+    let url: string;
+
+    if (useSupabase) {
+      try {
+        url = await uploadToSupabase(file, uniqueName);
+      } catch (supabaseError) {
+        console.warn(
+          "Property request image upload to Supabase failed, falling back to local storage:",
+          supabaseError
+        );
+        url = await uploadToLocal(file, uniqueName);
+      }
+    } else {
+      url = await uploadToLocal(file, uniqueName);
+    }
 
     return NextResponse.json({ url }, { status: 201 });
   } catch (error) {

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Locale, useRouter } from "@/i18n/routing";
@@ -160,6 +159,7 @@ export default function AdminRequestsPage() {
   const [decliningId, setDecliningId] = React.useState<number | null>(null);
   const [actionMessage, setActionMessage] = React.useState("");
   const [actionError, setActionError] = React.useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = React.useState(0);
 
   
 
@@ -322,6 +322,10 @@ export default function AdminRequestsPage() {
       .filter((url): url is string => typeof url === "string" && url.trim().length > 0)
       .slice(0, 5);
   }, [selectedPayload]);
+
+  React.useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [selected?.id]);
 
   async function handleApprove() {
     if (!selected) return;
@@ -526,7 +530,7 @@ export default function AdminRequestsPage() {
         </div>
 
         {showDrawer && selected ? (
-          <aside className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <aside className="max-h-[80vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 Request #{selected.id}
@@ -555,6 +559,60 @@ export default function AdminRequestsPage() {
                   {selected.phone}
                 </p>
               ) : null}
+            </div>
+
+            <div className="mt-4 rounded-lg border border-gray-200 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Submitted images
+              </p>
+              {selectedImages.length > 0 ? (
+                <>
+                  <a
+                    href={normalizeImageUrl(selectedImages[selectedImageIndex])}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 block overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={normalizeImageUrl(selectedImages[selectedImageIndex])}
+                      alt={`Submitted property image ${selectedImageIndex + 1}`}
+                      className="h-52 w-full object-cover"
+                      loading="lazy"
+                    />
+                  </a>
+
+                  {selectedImages.length > 1 ? (
+                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                      {selectedImages.map((url, index) => (
+                        <button
+                          key={`${url}-${index}`}
+                          type="button"
+                          onClick={() => setSelectedImageIndex(index)}
+                          className={cn(
+                            "overflow-hidden rounded-lg border-2",
+                            selectedImageIndex === index
+                              ? "border-blue-500"
+                              : "border-transparent"
+                          )}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={normalizeImageUrl(url)}
+                            alt={`Submitted property thumbnail ${index + 1}`}
+                            className="h-16 w-20 object-cover"
+                            loading="lazy"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-gray-500">
+                  No images were submitted with this request.
+                </p>
+              )}
             </div>
 
             <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
@@ -593,33 +651,6 @@ export default function AdminRequestsPage() {
                 <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
                   {selectedPayload.note}
                 </p>
-              </div>
-            ) : null}
-
-            {selectedImages.length > 0 ? (
-              <div className="mt-3 rounded-lg border border-gray-200 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Submitted images ({selectedImages.length})
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {selectedImages.map((url, index) => (
-                    <a
-                      key={`${url}-${index}`}
-                      href={normalizeImageUrl(url)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group relative h-24 overflow-hidden rounded-lg border border-gray-200"
-                    >
-                      <Image
-                        src={normalizeImageUrl(url)}
-                        alt={`Submitted property image ${index + 1}`}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 180px"
-                        className="object-cover transition-transform duration-150 group-hover:scale-105"
-                      />
-                    </a>
-                  ))}
-                </div>
               </div>
             ) : null}
 

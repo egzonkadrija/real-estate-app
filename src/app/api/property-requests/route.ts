@@ -17,6 +17,33 @@ const createPropertyRequestSchema = z.object({
   description: z.string().nullable().optional(),
 });
 
+function getDisplayNote(raw: string | null | undefined) {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const payload =
+        typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+
+      if (
+        payload &&
+        typeof payload === "object" &&
+        "source" in payload &&
+        payload.source === "submit_property"
+      ) {
+        return null;
+      }
+    } catch {
+      // Keep non-JSON notes as-is.
+    }
+  }
+
+  return trimmed;
+}
+
 function buildContactMessage(
   request: typeof propertyRequests.$inferInsert
 ) {
@@ -51,8 +78,9 @@ function buildContactMessage(
   lines.push(`Name: ${request.name}`);
   lines.push(`Email: ${request.email}`);
 
-  if (request.description) {
-    lines.push(`Note: ${request.description}`);
+  const displayNote = getDisplayNote(request.description);
+  if (displayNote) {
+    lines.push(`Note: ${displayNote}`);
   }
 
   return lines.join("\n");

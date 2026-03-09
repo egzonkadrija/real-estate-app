@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { getLocalizedField } from "@/lib/utils";
+import { getLocalizedField, normalizeImageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -448,12 +447,12 @@ export default function SubmitPropertyPage() {
                 <div className="flex flex-wrap gap-3">
                   {uploadedImages.map((url, index) => (
                     <div key={`${url}-${index}`} className="relative h-20 w-24 overflow-hidden rounded-lg border border-gray-200">
-                      <Image
-                        src={url}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={normalizeImageUrl(url)}
                         alt={`Property upload ${index + 1}`}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
+                        className="h-full w-full object-cover"
+                        loading="lazy"
                       />
                       <button
                         type="button"
@@ -476,7 +475,7 @@ export default function SubmitPropertyPage() {
                       </span>
                       <input
                         type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,image/gif,image/avif,image/bmp,image/svg+xml"
                         multiple
                         onChange={handleImageUpload}
                         className="hidden"

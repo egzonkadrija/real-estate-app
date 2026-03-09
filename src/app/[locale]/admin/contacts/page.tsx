@@ -19,6 +19,38 @@ function isPropertyRequestMessage(message: string) {
   return message.toLowerCase().startsWith("property request from customer");
 }
 
+function sanitizePropertyRequestMessage(message: string) {
+  if (!isPropertyRequestMessage(message)) return message;
+
+  return message
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("Note:")) return true;
+
+      const noteValue = trimmed.slice(5).trim();
+      if (!(noteValue.startsWith("{") || noteValue.startsWith("["))) {
+        return true;
+      }
+
+      try {
+        const parsed = JSON.parse(noteValue);
+        const payload =
+          typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+
+        return !(
+          payload &&
+          typeof payload === "object" &&
+          "source" in payload &&
+          payload.source === "submit_property"
+        );
+      } catch {
+        return true;
+      }
+    })
+    .join("\n");
+}
+
 function buildReplyMailto(contact: Contact) {
   const subject = `Re: ${contact.name} - Inquiry`;
   const body = `Hi ${contact.name},\n\nThank you for reaching out.\n\n`;
@@ -140,7 +172,7 @@ export default function AdminContactsPage() {
                       </div>
                       <p className="text-xs text-gray-500">{contact.email}</p>
                       <p className="mt-1 line-clamp-1 text-xs text-gray-600">
-                        {contact.message}
+                        {sanitizePropertyRequestMessage(contact.message)}
                       </p>
                     </div>
                   </button>
@@ -168,7 +200,7 @@ export default function AdminContactsPage() {
                   </p>
                 ) : null}
                 <p className="whitespace-pre-wrap text-sm text-gray-700">
-                  {selectedContact.message}
+                  {sanitizePropertyRequestMessage(selectedContact.message)}
                 </p>
               </div>
               <p className="text-xs text-gray-400">
