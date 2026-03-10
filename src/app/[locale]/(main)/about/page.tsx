@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Building2, Search, Shield } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Compass,
+  Search,
+  Shield,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Locale } from "@/i18n/routing";
 
 type ProcessStep = {
@@ -257,98 +263,167 @@ export default async function AboutPage({
   const aboutHeadingClass = "font-semibold";
   const aboutParagraphClass =
     "leading-relaxed antialiased text-[14px] text-[rgba(75,85,99,0.95)] sm:text-sm";
+  const valueIcons = [Search, Building2, Shield] as const;
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-sky-50 via-sky-50/40 to-transparent" />
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
-        <section className="rounded-2xl border border-sky-100 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-7">
-          <p className={`text-sm font-semibold uppercase tracking-[0.16em] text-sky-700 ${aboutHeadingClass}`}>
-            {t("about.title")}
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold leading-tight text-gray-900 sm:text-4xl">
-            {coreCopy.aboutSectionTitle}
-          </h1>
-          <p className={`mt-3 max-w-3xl text-base text-gray-600 ${aboutParagraphClass}`}>
-            {coreCopy.aboutSectionText}
-          </p>
-        </section>
+    <div className="relative overflow-hidden bg-[linear-gradient(180deg,#eff6ff_0%,#f8fafc_32%,#ffffff_100%)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_top_right,rgba(15,23,42,0.08),transparent_34%)]" />
+      <div className="pointer-events-none absolute right-0 top-24 h-64 w-64 rounded-full bg-sky-200/20 blur-3xl" />
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
+        <section className="overflow-hidden rounded-[2rem] border border-sky-100/80 bg-white/88 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur">
+          <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
+            <div className="flex flex-col justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                  <Compass className="h-3.5 w-3.5" />
+                  {t("about.title")}
+                </div>
+                <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">
+                  {coreCopy.aboutSectionTitle}
+                </h1>
+                <p className={`mt-4 max-w-2xl text-base text-slate-600 sm:text-lg ${aboutParagraphClass}`}>
+                  {coreCopy.aboutSectionText}
+                </p>
+              </div>
 
-        <section className="rounded-2xl border border-sky-100 bg-sky-50 p-5 shadow-sm">
-          <h2 className={`mb-2 text-xl font-bold text-gray-900 ${aboutHeadingClass}`}>
-            {coreCopy.missionTitle}
-          </h2>
-          <p className={`max-w-4xl text-sm text-gray-600 ${aboutParagraphClass}`}>
-            {coreCopy.missionText}
-          </p>
+              <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Button asChild size="lg" className="bg-slate-950 text-white hover:bg-slate-800">
+                  <Link href={`/${locale}`} className="inline-flex items-center">
+                    {coreCopy.ctaButton}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {coreCopy.whyPoints.slice(0, 2).map((point) => (
+                    <span
+                      key={point}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600"
+                    >
+                      {point}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {values.map((value, index) => (
-              <Card key={value.title} className="border-sky-100 bg-white/80">
-                <CardContent className="flex gap-3 p-3">
-                  <div className="rounded-lg bg-blue-50 p-2">
-                    {index === 0 ? (
-                      <Search className="h-5 w-5 text-blue-600" />
-                    ) : index === 1 ? (
-                      <Building2 className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <Shield className="h-5 w-5 text-blue-600" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className={`mb-1 text-sm font-semibold text-gray-900 ${aboutHeadingClass}`}>
-                      {value.title}
-                    </h3>
-                    <p className={`text-sm text-gray-600 ${aboutParagraphClass}`}>
-                      {value.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <div className="grid gap-4">
+              <div className="rounded-[1.75rem] bg-slate-950 p-6 text-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.95)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
+                  {coreCopy.missionTitle}
+                </p>
+                <p className="mt-4 text-xl font-semibold leading-snug sm:text-2xl">
+                  {coreCopy.missionText}
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                {values.map((value, index) => {
+                  const Icon = valueIcons[index] ?? Shield;
+
+                  return (
+                    <div
+                      key={value.title}
+                      className="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                          <Icon className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className={`text-sm font-semibold text-slate-950 ${aboutHeadingClass}`}>
+                            {value.title}
+                          </p>
+                          <p className={`mt-1 text-sm text-slate-600 ${aboutParagraphClass}`}>
+                            {value.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="mb-2 flex items-center gap-3">
-            <Shield className="h-6 w-6 text-sky-700" />
-            <h2 className={`text-xl font-bold text-gray-900 ${aboutHeadingClass}`}>
+        <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[1.75rem] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_100%)] p-6 shadow-sm sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+              {coreCopy.whyTitle}
+            </p>
+            <h2 className={`mt-3 text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
               {coreCopy.processTitle}
             </h2>
+            <p className={`mt-3 text-sm text-slate-600 ${aboutParagraphClass}`}>
+              {coreCopy.processText}
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {coreCopy.whyPoints.map((point) => (
+                <div
+                  key={point}
+                  className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/80 px-4 py-3"
+                >
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <span className="text-sm font-medium text-slate-700">{point}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <p className={`mb-4 max-w-3xl text-sm text-gray-600 ${aboutParagraphClass}`}>
-            {coreCopy.processText}
-          </p>
-          <div className="mb-4 grid gap-3 md:grid-cols-3">
-            {coreCopy.processSteps.map((step) => (
-              <Card key={step.title} className="border-slate-100">
-                <CardHeader className="pb-1">
-                  <CardTitle className={`text-base ${aboutHeadingClass}`}>{step.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className={`text-sm text-gray-600 ${aboutParagraphClass}`}>
+
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                    {coreCopy.processTitle}
+                  </p>
+                  <h2 className={`mt-1 text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
+                  {coreCopy.missionTitle}
+                </h2>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {coreCopy.processSteps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className="relative rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-5 pl-16"
+                >
+                  <div className="absolute left-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
+                    {index + 1}
+                  </div>
+                  <h3 className={`text-base font-semibold text-slate-950 ${aboutHeadingClass}`}>
+                    {step.title}
+                  </h3>
+                  <p className={`mt-2 text-sm text-slate-600 ${aboutParagraphClass}`}>
                     {step.description}
                   </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="mb-3 border-t border-slate-200 pt-3">
-            <h3 className={`mb-2 text-base font-semibold text-gray-900 ${aboutHeadingClass}`}>
-              {coreCopy.whyTitle}
-            </h3>
-            <ul className="space-y-2 text-sm text-gray-700">
-              {coreCopy.whyPoints.map((point) => (
-                <li key={point}>{point}</li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-          <Button asChild size="sm">
-            <Link href={`/${locale}`} className="inline-flex items-center">
-              {coreCopy.ctaButton}
-              <Search className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+        </section>
+
+        <section className="rounded-[2rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_60%,#b45309_100%)] p-6 text-white shadow-[0_30px_80px_-40px_rgba(15,23,42,0.9)] sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+                NovaBuildings
+              </p>
+              <h2 className="mt-3 max-w-2xl text-2xl font-semibold leading-tight sm:text-3xl">
+                {coreCopy.missionText}
+              </h2>
+            </div>
+            <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-100">
+              <Link href={`/${locale}`} className="inline-flex items-center">
+                {coreCopy.ctaButton}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </section>
       </div>
     </div>
