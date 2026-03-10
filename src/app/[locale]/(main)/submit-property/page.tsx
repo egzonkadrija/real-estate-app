@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle, ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
-import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
+import {
+  getFloorLabelKey,
+  supportsBathroomsField,
+  supportsFloorField,
+  supportsRoomsField,
+} from "@/lib/propertyFloor";
 import type { Location } from "@/types";
 
 const TOTAL_STEPS = 3;
@@ -106,6 +111,8 @@ export default function SubmitPropertyPage() {
   const [phone, setPhone] = useState("");
 
   const showFloorField = supportsFloorField(category);
+  const showRoomsField = supportsRoomsField(category);
+  const showBathroomsField = supportsBathroomsField(category);
   const floorLabelKey = getFloorLabelKey(category);
 
   useEffect(() => {
@@ -234,8 +241,8 @@ export default function SubmitPropertyPage() {
           price: parsedPrice,
           area: parsedArea,
           images: uploadedImages.slice(0, MAX_PROPERTY_IMAGES),
-          rooms: rooms ? Number(rooms) : null,
-          bathrooms: bathrooms ? Number(bathrooms) : null,
+          rooms: showRoomsField && rooms ? Number(rooms) : null,
+          bathrooms: showBathroomsField && bathrooms ? Number(bathrooms) : null,
           location_id: locationId ? Number(locationId) : null,
           location_name: selectedCityName,
           floor: showFloorField && floor ? Number(floor) : null,
@@ -347,6 +354,12 @@ export default function SubmitPropertyPage() {
                     onChange={(e) => {
                       const nextCategory = e.target.value;
                       setCategory(nextCategory);
+                      if (!supportsRoomsField(nextCategory)) {
+                        setRooms("");
+                      }
+                      if (!supportsBathroomsField(nextCategory)) {
+                        setBathrooms("");
+                      }
                       if (!supportsFloorField(nextCategory)) {
                         setFloor("");
                       }
@@ -417,32 +430,38 @@ export default function SubmitPropertyPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t("property.rooms")}
-                  </label>
-                  <Input
-                    type="number"
-                    value={rooms}
-                    onChange={(e) => setRooms(e.target.value)}
-                    placeholder="0"
-                    min={0}
-                  />
+              {showRoomsField || showBathroomsField ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {showRoomsField ? (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        {t("property.rooms")}
+                      </label>
+                      <Input
+                        type="number"
+                        value={rooms}
+                        onChange={(e) => setRooms(e.target.value)}
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                  ) : null}
+                  {showBathroomsField ? (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        {t("property.bathrooms")}
+                      </label>
+                      <Input
+                        type="number"
+                        value={bathrooms}
+                        onChange={(e) => setBathrooms(e.target.value)}
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                  ) : null}
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t("property.bathrooms")}
-                  </label>
-                  <Input
-                    type="number"
-                    value={bathrooms}
-                    onChange={(e) => setBathrooms(e.target.value)}
-                    placeholder="0"
-                    min={0}
-                  />
-                </div>
-              </div>
+              ) : null}
 
               <div>
                 <div className="mb-2 flex items-center justify-between">

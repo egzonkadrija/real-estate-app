@@ -16,7 +16,12 @@ import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField } from "@/lib/utils";
 import { normalizeImageUrl } from "@/lib/utils";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
-import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
+import {
+  getFloorLabelKey,
+  supportsBathroomsField,
+  supportsFloorField,
+  supportsRoomsField,
+} from "@/lib/propertyFloor";
 
 interface PropertyItem {
   id: number;
@@ -761,14 +766,18 @@ function PropertyPreviewModal({
                     <p className="text-xs text-gray-500">Area</p>
                     <p>{property.surface_area ?? "-"} m2</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Rooms</p>
-                    <p>{property.rooms ?? "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Bathrooms</p>
-                    <p>{property.bathrooms ?? "-"}</p>
-                  </div>
+                  {supportsRoomsField(property.category) ? (
+                    <div>
+                      <p className="text-xs text-gray-500">Rooms</p>
+                      <p>{property.rooms ?? "-"}</p>
+                    </div>
+                  ) : null}
+                  {supportsBathroomsField(property.category) ? (
+                    <div>
+                      <p className="text-xs text-gray-500">Bathrooms</p>
+                      <p>{property.bathrooms ?? "-"}</p>
+                    </div>
+                  ) : null}
                   {supportsFloorField(property.category) ? (
                     <div>
                       <p className="text-xs text-gray-500">{t(getFloorLabelKey(property.category))}</p>
@@ -858,6 +867,8 @@ function PropertyFormModal({
     longitude: "",
   });
   const [uploadedImages, setUploadedImages] = React.useState<string[]>([]);
+  const showRoomsField = supportsRoomsField(formData.category);
+  const showBathroomsField = supportsBathroomsField(formData.category);
   const showFloorField = supportsFloorField(formData.category);
   const floorLabel = t(getFloorLabelKey(formData.category));
 
@@ -933,8 +944,8 @@ function PropertyFormModal({
       ...formData,
       price: Number(formData.price),
       surface_area: Number(formData.surface_area),
-      rooms: formData.rooms ? Number(formData.rooms) : null,
-      bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
+      rooms: showRoomsField && formData.rooms ? Number(formData.rooms) : null,
+      bathrooms: showBathroomsField && formData.bathrooms ? Number(formData.bathrooms) : null,
       floor: showFloorField && formData.floor ? Number(formData.floor) : null,
       year_built: formData.year_built ? Number(formData.year_built) : null,
       location_id: Number(formData.location_id),
@@ -1021,6 +1032,8 @@ function PropertyFormModal({
                   setFormData((current) => ({
                     ...current,
                     category: nextCategory,
+                    rooms: supportsRoomsField(nextCategory) ? current.rooms : "",
+                    bathrooms: supportsBathroomsField(nextCategory) ? current.bathrooms : "",
                     floor: supportsFloorField(nextCategory) ? current.floor : "",
                   }));
                 }}
@@ -1038,14 +1051,18 @@ function PropertyFormModal({
               <label className="mb-1 block text-xs font-medium text-gray-500">Area (m²)</label>
               <input type="number" value={formData.surface_area} onChange={(e) => setFormData({ ...formData, surface_area: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">Rooms</label>
-              <input type="number" value={formData.rooms} onChange={(e) => setFormData({ ...formData, rooms: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">Bathrooms</label>
-              <input type="number" value={formData.bathrooms} onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            </div>
+            {showRoomsField ? (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500">Rooms</label>
+                <input type="number" value={formData.rooms} onChange={(e) => setFormData({ ...formData, rooms: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              </div>
+            ) : null}
+            {showBathroomsField ? (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500">Bathrooms</label>
+                <input type="number" value={formData.bathrooms} onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              </div>
+            ) : null}
             {showFloorField ? (
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-500">{floorLabel}</label>

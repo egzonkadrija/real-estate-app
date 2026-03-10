@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { cn, normalizeImageUrl } from "@/lib/utils";
+import { supportsBathroomsField, supportsRoomsField } from "@/lib/propertyFloor";
 import {
   type ReviewPayload,
   getReviewSource,
@@ -599,12 +600,12 @@ export default function AdminRequestsPage() {
                   <span className="font-medium">Area:</span> {selectedPayload.property.area} m²
                 </p>
               ) : null}
-              {selectedPayload?.property?.rooms ? (
+              {supportsRoomsField(selected.category) && selectedPayload?.property?.rooms ? (
                 <p>
                   <span className="font-medium">Rooms:</span> {selectedPayload.property.rooms}
                 </p>
               ) : null}
-              {selectedPayload?.property?.bathrooms ? (
+              {supportsBathroomsField(selected.category) && selectedPayload?.property?.bathrooms ? (
                 <p>
                   <span className="font-medium">Bathrooms:</span>{" "}
                   {selectedPayload.property.bathrooms}

@@ -26,7 +26,12 @@ import {
 import { MortgageCalculator } from "./MortgageCalculator";
 import type { Metadata } from "next";
 import { normalizeImageUrl } from "@/lib/utils";
-import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
+import {
+  getFloorLabelKey,
+  supportsBathroomsField,
+  supportsFloorField,
+  supportsRoomsField,
+} from "@/lib/propertyFloor";
 
 interface PropertyDetailPageProps {
   params: Promise<{ id: string; locale: Locale }>;
@@ -164,10 +169,10 @@ const infoRows: Array<{ label: string; value: string }> = [];
   if (locationName) {
     infoRows.push({ label: t("property.location"), value: locationName });
   }
-  if (property.rooms !== null) {
+  if (supportsRoomsField(property.category) && property.rooms !== null) {
     infoRows.push({ label: t("property.rooms"), value: String(property.rooms) });
   }
-  if (property.bathrooms !== null) {
+  if (supportsBathroomsField(property.category) && property.bathrooms !== null) {
     infoRows.push({ label: t("property.bathrooms"), value: String(property.bathrooms) });
   }
   if (supportsFloorField(property.category) && property.floor !== null) {

@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField, normalizeImageUrl } from "@/lib/utils";
-import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
+import {
+  getFloorLabelKey,
+  supportsBathroomsField,
+  supportsFloorField,
+  supportsRoomsField,
+} from "@/lib/propertyFloor";
 import type { Property, PropertyImage } from "@/types";
 import { Button } from "@/components/ui/button";
 
@@ -103,7 +108,9 @@ export function PropertyCard({
     [property.amenities]
   );
   const documentOptions = [
-    property.rooms !== null ? `${property.rooms} ${t("rooms")}` : t("rooms"),
+    ...(supportsRoomsField(property.category)
+      ? [property.rooms !== null ? `${property.rooms} ${t("rooms")}` : t("rooms")]
+      : []),
     `${property.surface_area} m²`,
   ];
   const moreInfoLabel = locale === "al"
@@ -193,10 +200,10 @@ export function PropertyCard({
     if (locationValue) {
       rows.push({ label: t("location"), value: locationValue });
     }
-    if (property.rooms !== null) {
+    if (supportsRoomsField(property.category) && property.rooms !== null) {
       rows.push({ label: t("rooms"), value: String(property.rooms) });
     }
-    if (property.bathrooms !== null) {
+    if (supportsBathroomsField(property.category) && property.bathrooms !== null) {
       rows.push({ label: t("bathrooms"), value: String(property.bathrooms) });
     }
     if (supportsFloorField(property.category) && property.floor !== null) {
