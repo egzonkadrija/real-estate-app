@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle, ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
 import { PROPERTY_CATEGORIES, PROPERTY_TYPES } from "@/lib/constants";
+import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
 import type { Location } from "@/types";
 
 const TOTAL_STEPS = 3;
@@ -103,6 +104,9 @@ export default function SubmitPropertyPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+
+  const showFloorField = supportsFloorField(category);
+  const floorLabelKey = getFloorLabelKey(category);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -234,7 +238,7 @@ export default function SubmitPropertyPage() {
           bathrooms: bathrooms ? Number(bathrooms) : null,
           location_id: locationId ? Number(locationId) : null,
           location_name: selectedCityName,
-          floor: floor ? Number(floor) : null,
+          floor: showFloorField && floor ? Number(floor) : null,
           year_built: yearBuilt ? Number(yearBuilt) : null,
         },
         note: description || null,
@@ -340,7 +344,13 @@ export default function SubmitPropertyPage() {
                   </label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => {
+                      const nextCategory = e.target.value;
+                      setCategory(nextCategory);
+                      if (!supportsFloorField(nextCategory)) {
+                        setFloor("");
+                      }
+                    }}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {PROPERTY_CATEGORIES.map((cat) => (
@@ -527,19 +537,21 @@ export default function SubmitPropertyPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t("property.floor")}
-                  </label>
-                  <Input
-                    type="number"
-                    value={floor}
-                    onChange={(e) => setFloor(e.target.value)}
-                    placeholder="0"
-                    min={0}
-                  />
-                </div>
+              <div className={`grid gap-4 ${showFloorField ? "grid-cols-2" : "grid-cols-1"}`}>
+                {showFloorField ? (
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      {t(floorLabelKey)}
+                    </label>
+                    <Input
+                      type="number"
+                      value={floor}
+                      onChange={(e) => setFloor(e.target.value)}
+                      placeholder="0"
+                      min={0}
+                    />
+                  </div>
+                ) : null}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     {t("property.yearBuilt")}

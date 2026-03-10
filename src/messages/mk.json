@@ -56,6 +56,7 @@
     "rooms": "Соби",
     "bathrooms": "Бањи",
     "floor": "Кат",
+    "houseFloors": "Број на катови",
     "yearBuilt": "Година на градба",
     "featured": "Издвоено",
     "new": "Ново",

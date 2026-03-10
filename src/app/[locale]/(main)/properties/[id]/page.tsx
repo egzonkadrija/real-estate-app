@@ -26,6 +26,7 @@ import {
 import { MortgageCalculator } from "./MortgageCalculator";
 import type { Metadata } from "next";
 import { normalizeImageUrl } from "@/lib/utils";
+import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
 
 interface PropertyDetailPageProps {
   params: Promise<{ id: string; locale: Locale }>;
@@ -169,8 +170,8 @@ const infoRows: Array<{ label: string; value: string }> = [];
   if (property.bathrooms !== null) {
     infoRows.push({ label: t("property.bathrooms"), value: String(property.bathrooms) });
   }
-  if (property.floor !== null) {
-    infoRows.push({ label: t("property.floor"), value: String(property.floor) });
+  if (supportsFloorField(property.category) && property.floor !== null) {
+    infoRows.push({ label: t(getFloorLabelKey(property.category)), value: String(property.floor) });
   }
   if (property.year_built !== null) {
     infoRows.push({ label: t("property.yearBuilt"), value: String(property.year_built) });

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice, getLocalizedField, normalizeImageUrl } from "@/lib/utils";
+import { getFloorLabelKey, supportsFloorField } from "@/lib/propertyFloor";
 import type { Property, PropertyImage } from "@/types";
 import { Button } from "@/components/ui/button";
 
@@ -174,6 +175,9 @@ export function PropertyCard({
     const locationValue = property.location
       ? getLocalizedField(property.location, "name", locale)
       : "";
+    const floorLabelKey = getFloorLabelKey(property.category) === "property.houseFloors"
+      ? "houseFloors"
+      : "floor";
 
     rows.push({
       label: t("price"),
@@ -195,8 +199,8 @@ export function PropertyCard({
     if (property.bathrooms !== null) {
       rows.push({ label: t("bathrooms"), value: String(property.bathrooms) });
     }
-    if (property.floor !== null) {
-      rows.push({ label: t("floor"), value: String(property.floor) });
+    if (supportsFloorField(property.category) && property.floor !== null) {
+      rows.push({ label: t(floorLabelKey), value: String(property.floor) });
     }
     if (property.year_built !== null) {
       rows.push({ label: t("yearBuilt"), value: String(property.year_built) });
