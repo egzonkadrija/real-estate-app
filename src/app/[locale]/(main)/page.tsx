@@ -20,13 +20,14 @@ const HOME_CATEGORY_FILTERS = [
 type HomeCategoryFilter = (typeof HOME_CATEGORY_FILTERS)[number];
 type HomeQuickSort = "price" | "area" | "location";
 type HomeSortOrder = "asc" | "desc";
+type HomePageSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function HomePage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
-  searchParams?: { [key: string]: string | string[] | undefined } | Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams?: HomePageSearchParams;
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });

@@ -23,6 +23,14 @@ import {
   supportsRoomsField,
 } from "@/lib/propertyFloor";
 
+type AdminPropertyLocation = {
+  name_al?: string;
+  name_en?: string;
+  name_de?: string;
+  name_mk?: string;
+  name_tr?: string;
+} | null;
+
 interface PropertyItem {
   id: number;
   title_al: string;
@@ -36,7 +44,7 @@ interface PropertyItem {
   featured: boolean;
   created_at: string;
   images?: { url: string }[];
-  location?: { name_al: string; name_en: string; name_de: string };
+  location?: AdminPropertyLocation;
 }
 
 interface PropertyDetail extends PropertyItem {
@@ -53,13 +61,7 @@ interface PropertyDetail extends PropertyItem {
   longitude?: number | null;
   agent?: { id: number; name: string } | null;
   images?: { url: string }[];
-  location?: {
-    name_al?: string;
-    name_en?: string;
-    name_de?: string;
-    name_mk?: string;
-    name_tr?: string;
-  } | null;
+  location?: AdminPropertyLocation;
 }
 
 export default function AdminPropertiesPage() {
@@ -107,7 +109,7 @@ export default function AdminPropertiesPage() {
 
         const res = await fetch(`/api/properties?${params.toString()}`);
         const data = await res.json();
-        const nextItems = Array.isArray(data.data) ? data.data : [];
+        const nextItems: PropertyItem[] = Array.isArray(data.data) ? data.data : [];
         const nextTotal =
           typeof data.total === "number" ? data.total : nextItems.length;
 
@@ -115,7 +117,7 @@ export default function AdminPropertiesPage() {
         setProperties((previous) => {
           if (reset) return nextItems;
           const seen = new Set(previous.map((property) => property.id));
-          const unique = nextItems.filter((property) => !seen.has(property.id));
+          const unique = nextItems.filter((property: PropertyItem) => !seen.has(property.id));
           return [...previous, ...unique];
         });
       } catch (e) {

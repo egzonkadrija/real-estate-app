@@ -49,7 +49,7 @@ function getRequestLifecycleStatus(
   if (statusFromPayload === "approved" || statusFromPayload === "declined") {
     return statusFromPayload;
   }
-  if (statusFromPayload === "submitted" || statusFromPayload === "pending") {
+  if (statusFromPayload === "pending") {
     return statusFromPayload;
   }
   if (payload?.approved_property_id) return "approved";
