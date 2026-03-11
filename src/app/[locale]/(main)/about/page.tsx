@@ -266,15 +266,13 @@ export default async function AboutPage({
   const valueIcons = [Search, Building2, Shield] as const;
 
   return (
-    <div className="relative overflow-hidden bg-[linear-gradient(180deg,#eff6ff_0%,#f8fafc_32%,#ffffff_100%)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_top_right,rgba(15,23,42,0.08),transparent_34%)]" />
-      <div className="pointer-events-none absolute right-0 top-24 h-64 w-64 rounded-full bg-sky-200/20 blur-3xl" />
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-        <section className="overflow-hidden rounded-[2rem] border border-sky-100/80 bg-white/88 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur">
+    <div className="bg-gray-50">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
+        <section className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm">
           <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
             <div className="flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
                   <Compass className="h-3.5 w-3.5" />
                   {t("about.title")}
                 </div>
@@ -307,8 +305,8 @@ export default async function AboutPage({
             </div>
 
             <div className="grid gap-4">
-              <div className="rounded-[1.75rem] bg-slate-950 p-6 text-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.95)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
+              <div className="rounded-[1.75rem] border border-gray-200 bg-gray-900 p-6 text-white shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-300">
                   {coreCopy.missionTitle}
                 </p>
                 <p className="mt-4 text-xl font-semibold leading-snug sm:text-2xl">
@@ -323,11 +321,11 @@ export default async function AboutPage({
                   return (
                     <div
                       key={value.title}
-                      className="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4"
+                      className="rounded-[1.5rem] border border-gray-200 bg-gray-50 p-4"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-                          <Icon className="h-5 w-5 text-amber-600" />
+                        <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200">
+                          <Icon className="h-5 w-5 text-gray-700" />
                         </div>
                         <div>
                           <p className={`text-sm font-semibold text-slate-950 ${aboutHeadingClass}`}>
@@ -347,8 +345,8 @@ export default async function AboutPage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[1.75rem] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_100%)] p-6 shadow-sm sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+          <div className="rounded-[1.75rem] border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
               {coreCopy.whyTitle}
             </p>
             <h2 className={`mt-3 text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
@@ -362,22 +360,22 @@ export default async function AboutPage({
               {coreCopy.whyPoints.map((point) => (
                 <div
                   key={point}
-                  className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/80 px-4 py-3"
+                  className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3"
                 >
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-700" />
                   <span className="text-sm font-medium text-slate-700">{point}</span>
                 </div>
               ))}
             </div>
           </div>
 
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="rounded-[1.75rem] border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
+                <div className="rounded-2xl bg-gray-100 p-3 text-gray-700">
                   <Shield className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
                     {coreCopy.processTitle}
                   </p>
                   <h2 className={`mt-1 text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
@@ -390,7 +388,7 @@ export default async function AboutPage({
               {coreCopy.processSteps.map((step, index) => (
                 <div
                   key={step.title}
-                  className="relative rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-5 pl-16"
+                  className="relative rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 pl-16"
                 >
                   <div className="absolute left-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
                     {index + 1}
@@ -407,17 +405,17 @@ export default async function AboutPage({
           </div>
         </section>
 
-        <section className="rounded-[2rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_60%,#b45309_100%)] p-6 text-white shadow-[0_30px_80px_-40px_rgba(15,23,42,0.9)] sm:p-8">
+        <section className="rounded-[2rem] border border-gray-200 bg-white p-6 text-slate-950 shadow-sm sm:p-8">
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-600">
                 NovaBuildings
               </p>
-              <h2 className="mt-3 max-w-2xl text-2xl font-semibold leading-tight sm:text-3xl">
+              <h2 className="mt-3 max-w-2xl text-2xl font-semibold leading-tight text-slate-950 sm:text-3xl">
                 {coreCopy.missionText}
               </h2>
             </div>
-            <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-100">
+            <Button asChild size="lg" className="bg-slate-950 text-white hover:bg-slate-800">
               <Link href={`/${locale}`} className="inline-flex items-center">
                 {coreCopy.ctaButton}
                 <ArrowRight className="ml-2 h-4 w-4" />
