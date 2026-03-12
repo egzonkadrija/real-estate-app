@@ -151,7 +151,9 @@
     "unreadMessages": "Mesazhe të palexuara",
     "loginTitle": "Kyçu në Panel",
     "emailPlaceholder": "admin@realestate.com",
-    "passwordPlaceholder": "Fjalëkalimi"
+    "passwordPlaceholder": "Fjalëkalimi",
+    "showPassword": "Shfaq fjalëkalimin",
+    "hidePassword": "Fsheh fjalëkalimin"
   },
   "about": {
     "title": "Rreth Nesh",

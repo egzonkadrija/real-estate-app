@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Building2, Lock, Mail } from "lucide-react";
+import { Building2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 export default function AdminLoginPage() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -93,11 +94,24 @@ export default function AdminLoginPage() {
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 placeholder={t("passwordPlaceholder")}
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-11 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((previous) => !previous)}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                title={showPassword ? t("hidePassword") : t("showPassword")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
             </div>
           </div>
 

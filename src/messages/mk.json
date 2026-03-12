@@ -151,7 +151,9 @@
     "unreadMessages": "Непрочитани пораки",
     "loginTitle": "Админ најава",
     "emailPlaceholder": "admin@realestate.com",
-    "passwordPlaceholder": "Лозинка"
+    "passwordPlaceholder": "Лозинка",
+    "showPassword": "Прикажи лозинка",
+    "hidePassword": "Сокриј лозинка"
   },
   "about": {
     "title": "За нас",

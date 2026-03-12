@@ -151,7 +151,9 @@
     "unreadMessages": "Ungelesene Nachrichten",
     "loginTitle": "Admin-Anmeldung",
     "emailPlaceholder": "admin@realestate.com",
-    "passwordPlaceholder": "Passwort"
+    "passwordPlaceholder": "Passwort",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort ausblenden"
   },
   "about": {
     "title": "Über Uns",

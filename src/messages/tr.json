@@ -151,7 +151,9 @@
     "unreadMessages": "Okunmamış Mesajlar",
     "loginTitle": "Yönetici Girişi",
     "emailPlaceholder": "admin@realestate.com",
-    "passwordPlaceholder": "Şifre"
+    "passwordPlaceholder": "Şifre",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle"
   },
   "about": {
     "title": "Hakkımızda",
