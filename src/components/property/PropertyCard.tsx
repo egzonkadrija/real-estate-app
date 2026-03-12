@@ -62,7 +62,7 @@ export function PropertyCard({
     ? "/uploads/penthouse-placeholder.webp"
     : "/uploads/placeholder.jpg";
 
-  const images = isDuplex
+  const fallbackImages = isDuplex
     ? [
         { id: 0, url: "/uploads/duplex.jpg", alt: "", sort_order: 0, is_primary: true },
       ]
@@ -100,6 +100,17 @@ export function PropertyCard({
         { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
         { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
       ];
+  const images = React.useMemo(() => {
+    if (Array.isArray(property.images) && property.images.length > 0) {
+      return [...property.images].sort((a, b) => {
+        if (a.is_primary && !b.is_primary) return -1;
+        if (!a.is_primary && b.is_primary) return 1;
+        return a.sort_order - b.sort_order;
+      });
+    }
+
+    return fallbackImages;
+  }, [fallbackImages, property.images]);
 
   const title = getLocalizedField(property, "title", locale);
   const propertyHref = `/properties/${property.id}`;
@@ -233,6 +244,10 @@ export function PropertyCard({
   React.useEffect(() => {
     onMoreInfoToggle?.(showMoreInfo);
   }, [onMoreInfoToggle, showMoreInfo]);
+
+  React.useEffect(() => {
+    setCurrentImage(0);
+  }, [property.id]);
 
   React.useEffect(() => {
     if (!showMoreInfo) return;

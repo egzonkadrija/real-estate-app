@@ -842,6 +842,8 @@ function PropertyFormModal({
 }) {
   const t = useTranslations();
   const [loading, setLoading] = React.useState(false);
+  const [loadingOptions, setLoadingOptions] = React.useState(true);
+  const [optionsError, setOptionsError] = React.useState<string | null>(null);
   const [locations, setLocations] = React.useState<{ id: number; name_al: string; name_en: string; name_de: string; type: string }[]>([]);
   const [agents, setAgents] = React.useState<{ id: number; name: string }[]>([]);
   const [formData, setFormData] = React.useState({
@@ -874,11 +876,65 @@ function PropertyFormModal({
   const showFloorField = supportsFloorField(formData.category);
   const floorLabel = t(getFloorLabelKey(formData.category));
 
-  
+
 
   React.useEffect(() => {
-    fetch("/api/locations").then((r) => r.json()).then(setLocations).catch(() => {});
-    fetch("/api/agents").then((r) => r.json()).then((d) => setAgents(Array.isArray(d) ? d : d.data || [])).catch(() => {});
+    let cancelled = false;
+
+    async function loadOptions() {
+      setLoadingOptions(true);
+      setOptionsError(null);
+
+      try {
+        const [locationsRes, agentsRes] = await Promise.all([
+          fetch("/api/locations?type=city"),
+          fetch("/api/agents?simple=1"),
+        ]);
+
+        const [locationsData, agentsData] = await Promise.all([
+          locationsRes.json().catch(() => []),
+          agentsRes.json().catch(() => []),
+        ]);
+
+        if (!locationsRes.ok) {
+          throw new Error(
+            typeof locationsData?.error === "string"
+              ? locationsData.error
+              : "Failed to load locations"
+          );
+        }
+
+        if (!agentsRes.ok) {
+          throw new Error(
+            typeof agentsData?.error === "string"
+              ? agentsData.error
+              : "Failed to load agents"
+          );
+        }
+
+        if (!cancelled) {
+          setLocations(Array.isArray(locationsData) ? locationsData : []);
+          setAgents(Array.isArray(agentsData) ? agentsData : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error(error);
+          setLocations([]);
+          setAgents([]);
+          setOptionsError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load locations and agents"
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingOptions(false);
+        }
+      }
+    }
+
+    void loadOptions();
 
     if (editingId) {
       fetch(`/api/properties/${editingId}`)
@@ -914,6 +970,10 @@ function PropertyFormModal({
         })
         .catch(() => {});
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [editingId]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -981,7 +1041,7 @@ function PropertyFormModal({
     }
   }
 
-  const cities = locations.filter((l) => l.type === "city");
+  const locationOptions = locations.length > 0 ? locations : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-12">
@@ -1082,17 +1142,47 @@ function PropertyFormModal({
             {/* Location & Agent */}
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">Location</label>
-              <select value={formData.location_id} onChange={(e) => setFormData({ ...formData, location_id: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <option value="">Select...</option>
-                {cities.map((l) => <option key={l.id} value={l.id}>{l.name_en}</option>)}
+              <select
+                value={formData.location_id}
+                onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                required
+                disabled={loadingOptions || locationOptions.length === 0}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+              >
+                <option value="">
+                  {loadingOptions
+                    ? "Loading locations..."
+                    : locationOptions.length === 0
+                      ? "No locations available"
+                      : "Select..."}
+                </option>
+                {locationOptions.map((l) => <option key={l.id} value={l.id}>{l.name_en}</option>)}
               </select>
+              {optionsError ? (
+                <p className="mt-1 text-xs text-red-600">{optionsError}</p>
+              ) : null}
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">Agent</label>
-              <select value={formData.agent_id} onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <option value="">Select...</option>
+              <select
+                value={formData.agent_id}
+                onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
+                required
+                disabled={loadingOptions || agents.length === 0}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+              >
+                <option value="">
+                  {loadingOptions
+                    ? "Loading agents..."
+                    : agents.length === 0
+                      ? "No agents available"
+                      : "Select..."}
+                </option>
                 {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
+              {!optionsError && !loadingOptions && agents.length === 0 ? (
+                <p className="mt-1 text-xs text-amber-600">Add an agent first before creating a property.</p>
+              ) : null}
             </div>
             {/* Coordinates */}
             <div>

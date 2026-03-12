@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { agents, properties } from "@/db/schema";
-import { count, desc, eq, sql } from "drizzle-orm";
+import { asc, count, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, validationErrorResponse } from "@/lib/apiRouteUtils";
 
@@ -75,8 +75,22 @@ function getAccruedRentMonths(rentedSince: Date, now: Date): number {
   return currentPaymentIndex - firstPaymentIndex + 1;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const simple = request.nextUrl.searchParams.get("simple");
+
+    if (simple === "1") {
+      const data = await db
+        .select({
+          id: agents.id,
+          name: agents.name,
+        })
+        .from(agents)
+        .orderBy(asc(agents.name));
+
+      return NextResponse.json(data);
+    }
+
     const agentsWithStats = await db
       .select({
         id: agents.id,
