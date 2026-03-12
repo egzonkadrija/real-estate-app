@@ -412,6 +412,10 @@ function AgentFormModal({
         body: fd,
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Avatar upload failed");
+      }
+
       if (data.url) setFormData((prev) => ({ ...prev, avatar: data.url }));
     } catch (err) {
       console.error(err);

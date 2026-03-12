@@ -929,6 +929,10 @@ function PropertyFormModal({
           body: fd,
         });
         const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Image upload failed");
+        }
+
         if (data.url) {
           setUploadedImages((prev) => [...prev, data.url]);
         }

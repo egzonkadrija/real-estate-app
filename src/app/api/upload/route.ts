@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { requireAuth } from "@/lib/apiRouteUtils";
+import { uploadImage } from "@/lib/fileStorage";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -10,34 +9,6 @@ const ALLOWED_TYPES = [
   "image/gif",
   "image/svg+xml",
 ];
-
-async function uploadToSupabase(file: File, uniqueName: string) {
-  const { supabase } = await import("@/lib/supabase");
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { error } = await supabase.storage
-    .from("property-images")
-    .upload(uniqueName, buffer, {
-      contentType: file.type,
-      upsert: false,
-    });
-
-  if (error) throw error;
-
-  const { data } = supabase.storage
-    .from("property-images")
-    .getPublicUrl(uniqueName);
-
-  return data.publicUrl;
-}
-
-async function uploadToLocal(file: File, uniqueName: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(path.join(uploadDir, uniqueName), buffer);
-  return `/uploads/${uniqueName}`;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,17 +34,15 @@ export async function POST(request: NextRequest) {
 
     const ext = file.name.split(".").pop() || "jpg";
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
-
-    const useSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const url = useSupabase
-      ? await uploadToSupabase(file, uniqueName)
-      : await uploadToLocal(file, uniqueName);
+    const url = await uploadImage(file, uniqueName);
 
     return NextResponse.json({ url }, { status: 201 });
   } catch (error) {
     console.error("Error uploading file:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to upload file";
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: message },
       { status: 500 }
     );
   }
