@@ -9,7 +9,9 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  FileText,
+  BedDouble,
+  Bath,
+  Ruler,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ interface PropertyCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
   onMoreInfoToggle?: (isOpen: boolean) => void;
+  variant?: "default" | "featured";
 }
 
 export function PropertyCard({
@@ -35,8 +38,10 @@ export function PropertyCard({
   isFavorite,
   onToggleFavorite,
   onMoreInfoToggle,
+  variant = "default",
 }: PropertyCardProps) {
   const t = useTranslations("property");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const [currentImage, setCurrentImage] = React.useState(0);
   const [showMoreInfo, setShowMoreInfo] = React.useState(false);
@@ -62,44 +67,48 @@ export function PropertyCard({
     ? "/uploads/penthouse-placeholder.webp"
     : "/uploads/placeholder.jpg";
 
-  const fallbackImages = isDuplex
-    ? [
-        { id: 0, url: "/uploads/duplex.jpg", alt: "", sort_order: 0, is_primary: true },
-      ]
-    : property.category === "warehouse"
-    ? [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-        { id: 1, url: "/uploads/warehouse-interior-1.jpg", alt: "", sort_order: 1, is_primary: false },
-        { id: 2, url: "/uploads/warehouse-interior-2.jpg", alt: "", sort_order: 2, is_primary: false },
-      ]
-    : property.category === "penthouse"
-    ? [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-        { id: 1, url: "/uploads/penthouse-interior-1.jfif", alt: "", sort_order: 1, is_primary: false },
-      ]
-    : property.category === "apartment"
-    ? [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-        { id: 1, url: "/uploads/apartment-interior-1.jfif", alt: "", sort_order: 1, is_primary: false },
-        { id: 2, url: "/uploads/apartment-interior-2.jfif", alt: "", sort_order: 2, is_primary: false },
-      ]
-    : property.category === "land"
-    ? [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-      ]
-    : property.category === "house"
-    ? [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-        { id: 1, url: "/uploads/house-interior-2.jpg", alt: "", sort_order: 1, is_primary: false },
-        { id: 2, url: "/uploads/house-interior-3.jpg", alt: "", sort_order: 2, is_primary: false },
-        { id: 3, url: "/uploads/house-interior-1.jpg", alt: "", sort_order: 3, is_primary: false },
-      ]
-    : [
-        { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
-        { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
-        { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
-        { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
-      ];
+  const fallbackImages = React.useMemo(
+    () =>
+      isDuplex
+        ? [
+            { id: 0, url: "/uploads/duplex.jpg", alt: "", sort_order: 0, is_primary: true },
+          ]
+        : property.category === "warehouse"
+        ? [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+            { id: 1, url: "/uploads/warehouse-interior-1.jpg", alt: "", sort_order: 1, is_primary: false },
+            { id: 2, url: "/uploads/warehouse-interior-2.jpg", alt: "", sort_order: 2, is_primary: false },
+          ]
+        : property.category === "penthouse"
+        ? [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+            { id: 1, url: "/uploads/penthouse-interior-1.jfif", alt: "", sort_order: 1, is_primary: false },
+          ]
+        : property.category === "apartment"
+        ? [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+            { id: 1, url: "/uploads/apartment-interior-1.jfif", alt: "", sort_order: 1, is_primary: false },
+            { id: 2, url: "/uploads/apartment-interior-2.jfif", alt: "", sort_order: 2, is_primary: false },
+          ]
+        : property.category === "land"
+        ? [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+          ]
+        : property.category === "house"
+        ? [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+            { id: 1, url: "/uploads/house-interior-2.jpg", alt: "", sort_order: 1, is_primary: false },
+            { id: 2, url: "/uploads/house-interior-3.jpg", alt: "", sort_order: 2, is_primary: false },
+            { id: 3, url: "/uploads/house-interior-1.jpg", alt: "", sort_order: 3, is_primary: false },
+          ]
+        : [
+            { id: 0, url: mainImage, alt: "", sort_order: 0, is_primary: true },
+            { id: 1, url: "/uploads/property-1.jpg", alt: "", sort_order: 1, is_primary: false },
+            { id: 2, url: "/uploads/property-2.jpg", alt: "", sort_order: 2, is_primary: false },
+            { id: 3, url: "/uploads/property-3.jpg", alt: "", sort_order: 3, is_primary: false },
+          ],
+    [isDuplex, mainImage, property.category]
+  );
   const images = React.useMemo(() => {
     if (Array.isArray(property.images) && property.images.length > 0) {
       return [...property.images].sort((a, b) => {
@@ -118,30 +127,34 @@ export function PropertyCard({
     () => (Array.isArray(property.amenities) ? (property.amenities as string[]) : []),
     [property.amenities]
   );
-  const documentOptions = [
-    ...(supportsRoomsField(property.category)
-      ? [property.rooms !== null ? `${property.rooms} ${t("rooms")}` : t("rooms")]
-      : []),
-    `${property.surface_area} m²`,
-  ];
-  const moreInfoLabel = locale === "al"
-    ? "Më shumë"
-    : locale === "mk"
-    ? "Повеќе"
-    : locale === "de"
-    ? "Mehr Infos"
-    : locale === "tr"
-    ? "Daha fazla"
-    : "More";
-  const lessInfoLabel = locale === "al"
-    ? "Më pak"
-    : locale === "mk"
-    ? "Помалку"
-    : locale === "de"
-    ? "Weniger Infos"
-    : locale === "tr"
-    ? "Daha az"
-    : "Less";
+  const featureItems = React.useMemo(
+    () =>
+      [
+        supportsRoomsField(property.category) && property.rooms !== null
+          ? {
+              key: "rooms",
+              icon: BedDouble,
+              label: t("rooms"),
+              value: String(property.rooms),
+            }
+          : null,
+        supportsBathroomsField(property.category) && property.bathrooms !== null
+          ? {
+              key: "bathrooms",
+              icon: Bath,
+              label: t("bathrooms"),
+              value: String(property.bathrooms),
+            }
+          : null,
+        {
+          key: "area",
+          icon: Ruler,
+          label: t("area"),
+          value: `${property.surface_area} m²`,
+        },
+      ].filter((item): item is NonNullable<typeof item> => item !== null),
+    [property.bathrooms, property.category, property.rooms, property.surface_area, t]
+  );
   const infoTitle = locale === "al"
     ? "Informacione të pronës"
     : locale === "mk"
@@ -293,10 +306,15 @@ export function PropertyCard({
     };
   }, [onMoreInfoToggle]);
 
+  const imageHeightClass =
+    variant === "featured"
+      ? "h-[224px] sm:h-[236px] lg:h-[260px]"
+      : "h-[192px] sm:h-[208px] lg:h-[240px]";
+
   return (
-    <article className="group overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md">
       {/* Image Carousel */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 touch-pan-y">
+      <div className={cn("relative overflow-hidden bg-gray-100 touch-pan-y", imageHeightClass)}>
         <Link href={propertyHref} aria-label={title} className="block h-full w-full">
           <Image
             src={normalizeImageUrl(images[currentImage]?.url, mainImage)}
@@ -304,7 +322,7 @@ export function PropertyCard({
             fill
             draggable={false}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 430px) 92vw, (max-width: 768px) 82vw, (max-width: 1200px) 50vw, 33vw"
           />
         </Link>
 
@@ -353,15 +371,15 @@ export function PropertyCard({
           )}
 
           {/* Badges */}
-          <div className="absolute left-3 top-3 z-10 flex gap-2">
+          <div className="absolute left-2.5 top-2.5 z-10 flex gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
             {property.featured && (
-              <span className="rounded-[var(--radius-sm)] bg-teal-700 px-2.5 py-1 text-xs font-semibold text-white">
+              <span className="rounded-[var(--radius-sm)] bg-teal-700 px-2 py-0.5 text-[10px] font-semibold text-white sm:px-2.5 sm:py-1 sm:text-xs">
                 {t("featured")}
               </span>
             )}
             <span
               className={cn(
-                "rounded-[var(--radius-sm)] px-2.5 py-1 text-xs font-semibold text-white",
+                "rounded-[var(--radius-sm)] px-2 py-0.5 text-[10px] font-semibold text-white sm:px-2.5 sm:py-1 sm:text-xs",
                 property.type === "sale" ? "bg-[var(--brand-600)]" : "bg-gray-700"
               )}
             >
@@ -378,7 +396,7 @@ export function PropertyCard({
                 e.stopPropagation();
                 onToggleFavorite(property.id);
               }}
-              className="absolute right-3 top-3 z-20 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white/90 p-2 shadow transition-colors hover:bg-white"
+              className="absolute right-2.5 top-2.5 z-20 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white/90 p-1.5 shadow transition-colors hover:bg-white sm:right-3 sm:top-3 sm:p-2"
             >
               <Heart
                 className={cn(
@@ -393,43 +411,43 @@ export function PropertyCard({
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <Link href={propertyHref} className="mb-1 block text-lg font-bold text-gray-900 hover:underline">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <Link href={propertyHref} className="block text-base font-bold leading-tight text-gray-900 hover:underline sm:text-lg">
           {formatPrice(property.price, property.currency)}
           {property.type === "rent" && (
-            <span className="text-sm font-normal text-gray-500">/mo</span>
+            <span className="ml-0.5 text-xs font-normal text-gray-500 sm:text-sm">/mo</span>
           )}
         </Link>
         <Link
           href={propertyHref}
           title={title}
-          className="mb-2 block truncate text-base font-semibold leading-tight text-gray-900 hover:underline"
+          className="mt-1 block truncate text-sm font-semibold leading-tight text-gray-900 hover:underline sm:text-base"
         >
           {title}
         </Link>
         {property.location && (
-          <p className="mb-3 flex items-center gap-1 text-xs text-gray-500">
-            <MapPin className="h-3 w-3 text-blue-600" />
-            {getLocalizedField(property.location, "name", locale)}
+          <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500 sm:text-xs">
+            <MapPin className="h-3 w-3 shrink-0 text-blue-600" />
+            <span className="truncate">{getLocalizedField(property.location, "name", locale)}</span>
           </p>
         )}
-        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {documentOptions.map((option, index) => (
-            <span
-              key={option}
-              className={cn(
-                "inline-flex min-w-0 items-center justify-center gap-1 rounded-[var(--radius-pill)] border px-2 py-1 text-[11px]",
-                index === 0
-                  ? "border-sky-200 bg-sky-50 text-sky-700"
-                  : index === 1
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-[var(--border)] bg-white text-gray-600"
-              )}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span className="truncate">{option}</span>
-            </span>
-          ))}
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {featureItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <span
+                key={item.key}
+                title={item.label}
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-1.5 text-[11px] font-medium text-gray-700 sm:text-xs"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--brand-700)]" />
+                <span className="sr-only">{item.label}: </span>
+                <span className="truncate">{item.value}</span>
+              </span>
+            );
+          })}
+        </div>
+        <div className="mt-3">
           <Button
             asChild={false}
             size="sm"
@@ -439,9 +457,9 @@ export function PropertyCard({
               e.stopPropagation();
               setShowMoreInfo((prev) => !prev);
             }}
-            className="h-7"
+            className="h-9 w-full rounded-[var(--radius-md)] text-sm"
           >
-            <span>{showMoreInfo ? lessInfoLabel : moreInfoLabel}</span>
+            <span>{tCommon("viewDetails")}</span>
           </Button>
         </div>
       </div>

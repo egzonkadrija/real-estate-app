@@ -101,27 +101,29 @@ export default async function HomePage({
     <div>
       {/* Featured Properties Slide Bar */}
       {featuredProperties.length > 0 && (
-        <section className="mx-auto max-w-[1440px] px-4 pt-8 pb-4">
-          <PropertyCarousel
-            properties={JSON.parse(JSON.stringify(featuredProperties))}
-            title={t("property.featured")}
-            activePropertyFilters={[...activePropertyFilters]}
-            activeCategory={activeCategory}
-            activeQuickSort={activeQuickSort}
-            activeSortOrder={activeSortOrder}
-            activeMinPrice={activeMinPrice}
-            activeMaxPrice={activeMaxPrice}
-            activeMinArea={activeMinArea}
-            activeMaxArea={activeMaxArea}
-            activeLocationId={activeLocationId}
-          />
+        <section className="mx-auto max-w-[1440px] px-4 pt-4 pb-3 sm:pt-8 sm:pb-4">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-5">
+            <PropertyCarousel
+              properties={JSON.parse(JSON.stringify(featuredProperties))}
+              title={t("property.featured")}
+              activePropertyFilters={[...activePropertyFilters]}
+              activeCategory={activeCategory}
+              activeQuickSort={activeQuickSort}
+              activeSortOrder={activeSortOrder}
+              activeMinPrice={activeMinPrice}
+              activeMaxPrice={activeMaxPrice}
+              activeMinArea={activeMinArea}
+              activeMaxArea={activeMaxArea}
+              activeLocationId={activeLocationId}
+            />
+          </div>
         </section>
       )}
 
       {/* All Properties */}
-      <section className="mx-auto max-w-[1440px] px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">
+      <section className="mx-auto max-w-[1440px] px-4 py-5 sm:py-8">
+        <div className="mb-4 flex items-center justify-between sm:mb-6">
+          <h2 className="text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">
             {t("property.otherProperties")}
           </h2>
         </div>
@@ -142,10 +144,10 @@ export default async function HomePage({
       </section>
 
       {/* CTA Section */}
-      <section className="mx-auto max-w-[1440px] px-4 py-16">
-          <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-white sm:p-12">
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <Send className="h-10 w-10 text-amber-400" />
+      <section className="mx-auto max-w-[1440px] px-4 py-8 sm:py-16">
+          <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 p-5 text-white sm:p-12">
+            <div className="mb-3 flex items-center justify-center gap-2 sm:mb-4 sm:gap-3">
+              <Send className="h-8 w-8 text-amber-400 sm:h-10 sm:w-10" />
               <HeroCTAActions
                 submitLabel={t("common.submitProperty")}
                 requestLabel={t("common.requestProperty")}
@@ -153,10 +155,10 @@ export default async function HomePage({
                 compact
               />
             </div>
-            <h2 className="mb-3 text-center text-2xl font-bold sm:text-3xl">
+            <h2 className="mb-2 text-center text-xl font-bold sm:mb-3 sm:text-3xl">
               {t("form.submitProperty")}
             </h2>
-            <p className="mx-auto mb-6 max-w-2xl text-gray-300">
+            <p className="mx-auto mb-5 max-w-2xl text-sm text-gray-300 sm:mb-6 sm:text-base">
               {t("footer.description")}
             </p>
           <HeroCTAActions

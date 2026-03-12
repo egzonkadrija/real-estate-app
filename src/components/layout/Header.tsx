@@ -85,15 +85,15 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[70] w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-3 sm:h-20 sm:px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
+          <Building2 className="h-8 w-8 text-[var(--brand-600)] sm:h-10 sm:w-10" />
           <span className="inline-flex flex-col leading-none">
-            <span className="text-2xl font-extrabold tracking-wide text-gray-900">
+            <span className="text-xl font-extrabold tracking-wide text-gray-900 sm:text-2xl">
               NOVA
             </span>
-            <span className="mt-0.5 block w-full text-center text-[11px] font-semibold tracking-[0.22em] text-[var(--brand-600)]">
+            <span className="mt-0.5 block w-full text-center text-[10px] font-semibold tracking-[0.2em] text-[var(--brand-600)] sm:text-[11px] sm:tracking-[0.22em]">
               STATE
             </span>
           </span>
@@ -121,10 +121,10 @@ export function Header() {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/favorites"
-            className="relative rounded-[var(--radius-md)] p-2 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+            className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"
           >
             <Heart
               className={cn(
@@ -143,7 +143,7 @@ export function Header() {
           <div ref={langMenuRef} className="relative">
             <button
               onClick={() => setLangOpen(!langOpen)}
-              className="flex items-center gap-1 rounded-[var(--radius-md)] p-2 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+              className="flex items-center gap-1 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"
               aria-expanded={langOpen}
               aria-haspopup="menu"
             >
@@ -177,7 +177,7 @@ export function Header() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-[var(--radius-md)] p-2 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] lg:hidden"
+            className="rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] lg:hidden"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" />
@@ -191,7 +191,7 @@ export function Header() {
       {/* Mobile Nav */}
       {mobileOpen && (
         <div className="border-t border-gray-200 bg-white lg:hidden">
-          <nav className="flex flex-col px-4 py-2">
+          <nav className="flex max-h-[calc(100vh-4rem)] flex-col gap-1 overflow-y-auto px-3 py-2">
             {navLinks.map((link) => {
               const active = isLinkActive(link.href);
               return (
@@ -200,7 +200,7 @@ export function Header() {
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border px-3 py-3 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
                     active
                       ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                       : "border-transparent text-gray-700 hover:border-gray-200 hover:bg-gray-100"

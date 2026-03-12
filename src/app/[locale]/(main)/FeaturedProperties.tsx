@@ -31,13 +31,14 @@ export function FeaturedProperties({ properties }: FeaturedPropertiesProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
       {properties.map((property) => (
         <PropertyCard
           key={property.id}
           property={property}
           isFavorite={isFavorite(property.id)}
           onToggleFavorite={toggleFavorite}
+          variant="featured"
         />
       ))}
     </div>

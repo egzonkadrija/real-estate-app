@@ -232,7 +232,7 @@ export function PropertyCarousel({
       const activeClass = "opacity-100 ring-2 ring-offset-1 ring-black/20";
       const inactiveClass = "opacity-60 ring-1 ring-transparent";
 
-      return `rounded-[var(--radius-pill)] px-4 py-2 text-center text-sm font-medium text-white transition-all duration-200 ${colorClassByFilter[filter]} ${isActive ? activeClass : inactiveClass}`;
+      return `rounded-[var(--radius-pill)] px-3 py-1.5 text-center text-xs font-medium text-white transition-all duration-200 sm:px-4 sm:py-2 sm:text-sm ${colorClassByFilter[filter]} ${isActive ? activeClass : inactiveClass}`;
     },
     [isFilterActive]
   );
@@ -260,7 +260,7 @@ export function PropertyCarousel({
   const getQuickSortButtonClass = React.useCallback(
     (quickSort: QuickSortKey) =>
       cn(
-        "flex flex-shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm leading-none transition-colors",
+        "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs leading-none transition-colors sm:gap-2 sm:px-3.5 sm:text-sm",
         isQuickFilterActive(quickSort)
           ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
           : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
@@ -842,8 +842,8 @@ export function PropertyCarousel({
         syncPauseState();
       }}
     >
-      <div className="mb-4 w-full">
-        <div className="flex w-full flex-wrap items-center gap-3">
+      <div className="mb-3 w-full space-y-2 sm:mb-4 sm:space-y-3">
+        <div className="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
           <Link
             href={getFilterHref("sale")}
             className={getFilterButtonClass("sale")}
@@ -862,26 +862,27 @@ export function PropertyCarousel({
           >
             {t("common.exclusive")}
           </Link>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {CATEGORIES.map(({ key, icon: Icon }) => (
-              <Link
-                key={key}
-                href={getCategoryHref(key)}
-                className={cn(
-                  "flex flex-shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-3.5 py-1.5 text-sm transition-colors",
-                  activeCategory === key
-                    ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
-                    : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {t(`property.${key}`)}
-              </Link>
-            ))}
-          </div>
+        <div className="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+          {CATEGORIES.map(({ key, icon: Icon }) => (
+            <Link
+              key={key}
+              href={getCategoryHref(key)}
+              className={cn(
+                "flex flex-shrink-0 items-center gap-1.5 rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs transition-colors sm:gap-2 sm:px-3.5 sm:text-sm",
+                activeCategory === key
+                  ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
+                  : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              {t(`property.${key}`)}
+            </Link>
+          ))}
+        </div>
 
-          <div className="relative flex flex-wrap items-center gap-2">
+        <div className="relative flex items-center gap-2">
             <button
               ref={(node) => {
                 quickFilterButtonRefs.current.price = node;
@@ -1061,13 +1062,12 @@ export function PropertyCarousel({
                 </div>
               </div>
             )}
-          </div>
         </div>
       </div>
 
-      <div className="mb-4 w-full">
+      <div className="mb-3 w-full sm:mb-4">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 sm:h-5 sm:w-5" />
           <input
             type="text"
             value={search}
@@ -1122,7 +1122,7 @@ export function PropertyCarousel({
               }
             }}
             placeholder={t("hero.searchPlaceholder")}
-            className="w-full rounded-[var(--radius-pill)] border border-[var(--border)] bg-white py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-[var(--brand-600)]"
+            className="w-full rounded-[var(--radius-pill)] border border-[var(--border)] bg-white py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--brand-600)] sm:py-3 sm:pl-10"
           />
           {isSearchFocused && filteredSuggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-white shadow-lg">
@@ -1151,20 +1151,20 @@ export function PropertyCarousel({
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
         {title && (
-          <h2 className="text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">{title}</h2>
+          <h2 className="text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">{title}</h2>
         )}
         <div className="flex items-center gap-2">
           <button
             onClick={() => scroll("left")}
-            className="flex-shrink-0 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white p-2 text-gray-600 shadow-sm transition-colors hover:border-[var(--brand-600)] hover:bg-[var(--surface-muted)]"
+            className="flex-shrink-0 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white p-1.5 text-gray-600 shadow-sm transition-colors hover:border-[var(--brand-600)] hover:bg-[var(--surface-muted)] sm:p-2"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="flex-shrink-0 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white p-2 text-gray-600 shadow-sm transition-colors hover:border-[var(--brand-600)] hover:bg-[var(--surface-muted)]"
+            className="flex-shrink-0 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white p-1.5 text-gray-600 shadow-sm transition-colors hover:border-[var(--brand-600)] hover:bg-[var(--surface-muted)] sm:p-2"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -1175,7 +1175,7 @@ export function PropertyCarousel({
       <div
         ref={scrollRef}
         style={{ scrollSnapType: "none" }}
-        className="scrollbar-hide flex cursor-grab select-none gap-4 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing"
+        className="scrollbar-hide flex cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:gap-4"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -1188,13 +1188,14 @@ export function PropertyCarousel({
           <div
             key={`${property.id}-${idx}`}
             data-card
-            className="w-[75vw] flex-shrink-0 sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
+            className="w-[82vw] max-w-[340px] flex-shrink-0 sm:w-[calc(50%-8px)] sm:max-w-none lg:w-[calc(25%-12px)]"
           >
             <PropertyCard
               property={property}
               isFavorite={isFavorite(property.id)}
               onToggleFavorite={toggleFavorite}
               onMoreInfoToggle={(isOpen) => handleMoreInfoToggle(`${property.id}-${idx}`, isOpen)}
+              variant="featured"
             />
           </div>
         ))}
