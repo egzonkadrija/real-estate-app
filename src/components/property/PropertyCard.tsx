@@ -309,12 +309,24 @@ export function PropertyCard({
   const imageHeightClass =
     variant === "featured"
       ? "h-[224px] sm:h-[236px] lg:h-[260px]"
-      : "h-[192px] sm:h-[208px] lg:h-[240px]";
+      : "h-[188px] sm:h-[208px] lg:h-[240px]";
+  const isDefaultCard = variant === "default";
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md">
+    <article
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md",
+        isDefaultCard && "property-card-listing"
+      )}
+    >
       {/* Image Carousel */}
-      <div className={cn("relative overflow-hidden bg-gray-100 touch-pan-y", imageHeightClass)}>
+      <div
+        className={cn(
+          "relative overflow-hidden bg-gray-100 touch-pan-y",
+          imageHeightClass,
+          isDefaultCard && "property-card-listing__media"
+        )}
+      >
         <Link href={propertyHref} aria-label={title} className="block h-full w-full">
           <Image
             src={normalizeImageUrl(images[currentImage]?.url, mainImage)}
@@ -411,8 +423,14 @@ export function PropertyCard({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <Link href={propertyHref} className="block text-base font-bold leading-tight text-gray-900 hover:underline sm:text-lg">
+      <div className={cn("flex flex-1 flex-col p-3 sm:p-4", isDefaultCard && "property-card-listing__body")}>
+        <Link
+          href={propertyHref}
+          className={cn(
+            "block font-bold leading-tight text-gray-900 hover:underline sm:text-lg",
+            isDefaultCard ? "property-card-listing__price text-[15px]" : "text-base"
+          )}
+        >
           {formatPrice(property.price, property.currency)}
           {property.type === "rent" && (
             <span className="ml-0.5 text-xs font-normal text-gray-500 sm:text-sm">/mo</span>
@@ -421,24 +439,40 @@ export function PropertyCard({
         <Link
           href={propertyHref}
           title={title}
-          className="mt-1 block truncate text-sm font-semibold leading-tight text-gray-900 hover:underline sm:text-base"
+          className={cn(
+            "mt-1 block text-sm font-semibold leading-tight text-gray-900 hover:underline sm:text-base",
+            isDefaultCard ? "property-card-listing__title sm:truncate" : "truncate"
+          )}
         >
           {title}
         </Link>
         {property.location && (
-          <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500 sm:text-xs">
+          <p
+            className={cn(
+              "mt-1 flex items-center gap-1 text-[11px] text-gray-500 sm:text-xs",
+              isDefaultCard && "property-card-listing__location"
+            )}
+          >
             <MapPin className="h-3 w-3 shrink-0 text-blue-600" />
             <span className="truncate">{getLocalizedField(property.location, "name", locale)}</span>
           </p>
         )}
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div
+          className={cn(
+            "mt-2 grid grid-cols-3 gap-2 sm:mt-3",
+            isDefaultCard && "property-card-listing__features"
+          )}
+        >
           {featureItems.map((item) => {
             const Icon = item.icon;
             return (
               <span
                 key={item.key}
                 title={item.label}
-                className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-1.5 text-[11px] font-medium text-gray-700 sm:text-xs"
+                className={cn(
+                  "inline-flex min-w-0 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-1.5 text-[11px] font-medium text-gray-700 sm:text-xs",
+                  isDefaultCard && "property-card-listing__feature"
+                )}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--brand-700)]" />
                 <span className="sr-only">{item.label}: </span>
@@ -447,7 +481,7 @@ export function PropertyCard({
             );
           })}
         </div>
-        <div className="mt-3">
+        <div className={cn("mt-2 sm:mt-3", isDefaultCard && "property-card-listing__button-wrap")}>
           <Button
             asChild={false}
             size="sm"
@@ -457,7 +491,10 @@ export function PropertyCard({
               e.stopPropagation();
               setShowMoreInfo((prev) => !prev);
             }}
-            className="h-9 w-full rounded-[var(--radius-md)] text-sm"
+            className={cn(
+              "h-9 w-full rounded-[var(--radius-md)] text-sm",
+              isDefaultCard && "property-card-listing__button"
+            )}
           >
             <span>{tCommon("viewDetails")}</span>
           </Button>

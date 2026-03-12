@@ -72,3 +72,65 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+@media (max-width: 640px) {
+  .property-card-listing {
+    max-height: 320px;
+  }
+
+  .property-card-listing__media {
+    height: 188px;
+  }
+
+  .property-card-listing__body {
+    padding: 12px;
+  }
+
+  .property-card-listing__price {
+    line-height: 1.15;
+  }
+
+  .property-card-listing__title {
+    margin-top: 4px;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .property-card-listing__location {
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .property-card-listing__features {
+    margin-top: 8px;
+    gap: 6px;
+  }
+
+  .property-card-listing__feature {
+    min-height: 28px;
+    padding: 4px 6px;
+    border-radius: 12px;
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  .property-card-listing__feature svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .property-card-listing__button-wrap {
+    margin-top: 8px;
+  }
+
+  .property-card-listing__button {
+    height: 32px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+}
