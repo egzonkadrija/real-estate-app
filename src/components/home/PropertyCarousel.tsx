@@ -508,7 +508,7 @@ export function PropertyCarousel({
     }
 
     return names;
-  }, [properties, locale]);
+  }, [locale, properties]);
   const filteredSuggestions = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return [];
@@ -843,7 +843,7 @@ export function PropertyCarousel({
       }}
     >
       <div className="mb-3 w-full space-y-2 sm:mb-4 sm:space-y-3">
-        <div className="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center justify-center gap-2 overflow-x-auto pb-1 sm:justify-start sm:flex-wrap sm:pb-0">
           <Link
             href={getFilterHref("sale")}
             className={getFilterButtonClass("sale")}
@@ -864,7 +864,7 @@ export function PropertyCarousel({
           </Link>
         </div>
 
-        <div className="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
           {CATEGORIES.map(({ key, icon: Icon }) => (
             <Link
               key={key}
@@ -882,7 +882,7 @@ export function PropertyCarousel({
           ))}
         </div>
 
-        <div className="relative flex items-center gap-2">
+        <div className="relative flex items-center justify-center gap-2 sm:justify-start">
             <button
               ref={(node) => {
                 quickFilterButtonRefs.current.price = node;
@@ -1171,23 +1171,11 @@ export function PropertyCarousel({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:hidden">
-        {properties.map((property) => (
-          <PropertyCard
-            key={property.id}
-            property={property}
-            isFavorite={isFavorite(property.id)}
-            onToggleFavorite={toggleFavorite}
-            variant="featured"
-          />
-        ))}
-      </div>
-
       {/* Scrollable cards */}
       <div
         ref={scrollRef}
         style={{ scrollSnapType: "none" }}
-        className="scrollbar-hide hidden cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:flex sm:gap-4"
+        className="scrollbar-hide flex cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:gap-4"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -1200,7 +1188,7 @@ export function PropertyCarousel({
           <div
             key={`${property.id}-${idx}`}
             data-card
-            className="w-[82vw] max-w-[340px] flex-shrink-0 sm:w-[calc(50%-8px)] sm:max-w-none lg:w-[calc(25%-12px)]"
+            className="w-[calc(50%-6px)] max-w-none flex-shrink-0 sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
           >
             <PropertyCard
               property={property}

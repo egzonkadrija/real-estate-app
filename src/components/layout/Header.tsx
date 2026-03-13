@@ -84,12 +84,12 @@ export function Header() {
   }, [langOpen]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[70] w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-3 sm:h-20 sm:px-4">
+    <header className="fixed inset-x-0 top-0 z-[70] w-full overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto grid h-16 w-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-20 sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           <Building2 className="h-8 w-8 text-[var(--brand-600)] sm:h-10 sm:w-10" />
-          <span className="inline-flex flex-col leading-none">
+          <span className="inline-flex min-w-0 flex-col leading-none">
             <span className="text-xl font-extrabold tracking-wide text-gray-900 sm:text-2xl">
               NOVA
             </span>
@@ -120,8 +120,8 @@ export function Header() {
           })}
         </nav>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* Center Actions On Mobile / Right Actions On Desktop */}
+        <div className="flex items-center justify-center gap-1 justify-self-center sm:gap-2 lg:ml-auto lg:justify-end">
           <Link
             href="/favorites"
             className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"
@@ -148,7 +148,7 @@ export function Header() {
               aria-haspopup="menu"
             >
               <Globe className="h-5 w-5" />
-              <span className="hidden text-sm sm:inline">
+              <span className="hidden text-sm md:inline">
                 {currentLang.code.toUpperCase()}
               </span>
               <ChevronDown className="h-3 w-3" />
@@ -173,11 +173,13 @@ export function Header() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Mobile Menu Toggle */}
+        {/* Mobile Menu Toggle */}
+        <div className="flex justify-end lg:hidden">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] lg:hidden"
+            className="rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" />

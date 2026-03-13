@@ -213,6 +213,7 @@ CREATE INDEX IF NOT EXISTS properties_surface_area_idx
 CREATE INDEX IF NOT EXISTS properties_rooms_idx
   ON public.properties (rooms);
 
+
 CREATE INDEX IF NOT EXISTS properties_lower_title_al_trgm_idx
   ON public.properties USING gin (lower(title_al) gin_trgm_ops);
 

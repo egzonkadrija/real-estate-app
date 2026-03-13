@@ -139,7 +139,8 @@ export default async function HomePage({
           locationId={activeLocationId}
           noResultsText={t("common.noResults")}
           loadingText="Loading properties..."
-          endOfListText="No more properties."
+          seeMoreText={t("common.viewAll")}
+          loadingMoreText={t("common.loading")}
         />
       </section>
 
