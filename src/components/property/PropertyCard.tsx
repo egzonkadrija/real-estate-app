@@ -327,11 +327,12 @@ export function PropertyCard({
           isDefaultCard && "property-card-listing__media"
         )}
       >
-        <Link href={propertyHref} aria-label={title} className="block h-full w-full">
+        <Link href={propertyHref} aria-label={title} className="relative block h-full w-full">
           <Image
             src={normalizeImageUrl(images[currentImage]?.url, mainImage)}
             alt={images[currentImage]?.alt || title}
             fill
+            loading={variant === "featured" ? "eager" : "lazy"}
             draggable={false}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"

@@ -833,6 +833,7 @@ export function PropertyCarousel({
 
   return (
     <div
+      className="w-full max-w-full min-w-0 overflow-x-hidden"
       onMouseEnter={() => {
         isHoveringRef.current = true;
         syncPauseState();
@@ -843,7 +844,7 @@ export function PropertyCarousel({
       }}
     >
       <div className="mb-3 w-full space-y-2 sm:mb-4 sm:space-y-3">
-        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center justify-center gap-2 overflow-x-auto pb-1 sm:justify-start sm:flex-wrap sm:pb-0">
+        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center justify-center gap-2 overflow-x-auto overscroll-x-contain pb-1 sm:flex-wrap sm:justify-start sm:pb-0">
           <Link
             href={getFilterHref("sale")}
             className={getFilterButtonClass("sale")}
@@ -864,7 +865,7 @@ export function PropertyCarousel({
           </Link>
         </div>
 
-        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
+        <div className="scrollbar-hide flex w-full max-w-full min-w-0 items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 sm:flex-wrap sm:pb-0">
           {CATEGORIES.map(({ key, icon: Icon }) => (
             <Link
               key={key}
@@ -1175,7 +1176,7 @@ export function PropertyCarousel({
       <div
         ref={scrollRef}
         style={{ scrollSnapType: "none" }}
-        className="scrollbar-hide flex cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:gap-4"
+        className="scrollbar-hide flex w-full max-w-full min-w-0 cursor-grab select-none gap-3 overflow-x-auto overscroll-x-contain py-1 touch-pan-y active:cursor-grabbing sm:gap-4"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -1188,7 +1189,7 @@ export function PropertyCarousel({
           <div
             key={`${property.id}-${idx}`}
             data-card
-            className="w-[calc(50%-6px)] max-w-none flex-shrink-0 sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
+            className="min-w-0 basis-[calc((100%-0.75rem)/2)] max-w-none flex-shrink-0 sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-3rem)/4)]"
           >
             <PropertyCard
               property={property}

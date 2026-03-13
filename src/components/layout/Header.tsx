@@ -84,22 +84,20 @@ export function Header() {
   }, [langOpen]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[70] w-full overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto grid h-16 w-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-20 sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
-          <Building2 className="h-8 w-8 text-[var(--brand-600)] sm:h-10 sm:w-10" />
+    <header className="fixed inset-x-0 top-0 z-[70] w-full max-w-full overflow-x-hidden border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto hidden h-20 w-full max-w-[1440px] items-center gap-4 px-4 lg:flex">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
+          <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
           <span className="inline-flex min-w-0 flex-col leading-none">
-            <span className="text-xl font-extrabold tracking-wide text-gray-900 sm:text-2xl">
+            <span className="text-2xl font-extrabold tracking-wide text-gray-900">
               NOVA
             </span>
-            <span className="mt-0.5 block w-full text-center text-[10px] font-semibold tracking-[0.2em] text-[var(--brand-600)] sm:text-[11px] sm:tracking-[0.22em]">
+            <span className="mt-0.5 block w-full text-center text-[11px] font-semibold tracking-[0.22em] text-[var(--brand-600)]">
               STATE
             </span>
           </span>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden items-center gap-5 lg:flex">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href);
@@ -120,8 +118,7 @@ export function Header() {
           })}
         </nav>
 
-        {/* Center Actions On Mobile / Right Actions On Desktop */}
-        <div className="flex items-center justify-center gap-1 justify-self-center sm:gap-2 lg:ml-auto lg:justify-end">
+        <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
           <Link
             href="/favorites"
             className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"
@@ -148,7 +145,7 @@ export function Header() {
               aria-haspopup="menu"
             >
               <Globe className="h-5 w-5" />
-              <span className="hidden text-sm md:inline">
+              <span className="text-[10px] font-medium uppercase sm:text-xs md:text-sm">
                 {currentLang.code.toUpperCase()}
               </span>
               <ChevronDown className="h-3 w-3" />
@@ -174,9 +171,77 @@ export function Header() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu Toggle */}
-        <div className="flex justify-end lg:hidden">
+      <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-3 lg:hidden">
+        <Link href="/" className="relative z-10 flex min-w-0 items-center gap-2">
+          <Building2 className="h-7 w-7 shrink-0 text-[var(--brand-600)]" />
+          <span className="inline-flex min-w-0 flex-col leading-none">
+            <span className="text-lg font-extrabold tracking-wide text-gray-900">
+              NOVA
+            </span>
+            <span className="mt-0.5 block w-full text-center text-[10px] font-semibold tracking-[0.2em] text-[var(--brand-600)]">
+              STATE
+            </span>
+          </span>
+        </Link>
+
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="pointer-events-auto flex items-center justify-center gap-1 rounded-[var(--radius-pill)] bg-white/90 px-1 shadow-sm">
+            <Link
+              href="/favorites"
+              className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+            >
+              <Heart
+                className={cn(
+                  "h-5 w-5",
+                  favorites.length > 0 && "fill-red-500 text-red-500"
+                )}
+              />
+              {favorites.length > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {favorites.length > 9 ? "9+" : favorites.length}
+                </span>
+              )}
+            </Link>
+
+            <div ref={langMenuRef} className="relative">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+                aria-expanded={langOpen}
+                aria-haspopup="menu"
+              >
+                <Globe className="h-5 w-5" />
+                <span className="text-[10px] font-medium uppercase">
+                  {currentLang.code.toUpperCase()}
+                </span>
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => switchLocale(lang.code)}
+                      className={cn(
+                        "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100",
+                        locale === lang.code
+                          ? "bg-[var(--brand-50)] text-[var(--brand-700)]"
+                          : "text-gray-700"
+                      )}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex justify-end">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"

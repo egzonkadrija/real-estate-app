@@ -101,8 +101,8 @@ export default async function HomePage({
     <div>
       {/* Featured Properties Slide Bar */}
       {featuredProperties.length > 0 && (
-        <section className="mx-auto max-w-[1440px] px-4 pt-4 pb-3 sm:pt-8 sm:pb-4">
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-5">
+        <section className="mx-auto w-full max-w-[1440px] overflow-x-hidden px-4 pb-3 pt-4 sm:pb-4 sm:pt-8">
+          <div className="w-full max-w-full overflow-x-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-5">
             <PropertyCarousel
               properties={JSON.parse(JSON.stringify(featuredProperties))}
               title={t("property.featured")}
@@ -121,7 +121,7 @@ export default async function HomePage({
       )}
 
       {/* All Properties */}
-      <section className="mx-auto max-w-[1440px] px-4 py-5 sm:py-8">
+      <section className="mx-auto w-full max-w-[1440px] overflow-x-hidden px-4 py-5 sm:py-8">
         <div className="mb-4 flex items-center justify-between sm:mb-6">
           <h2 className="text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">
             {t("property.otherProperties")}

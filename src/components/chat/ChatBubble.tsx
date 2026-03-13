@@ -113,7 +113,7 @@ export function ChatBubble() {
     <>
       {/* Chat Panel */}
       {open && (
-        <div className="fixed bottom-20 right-4 z-50 flex w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:w-96">
+        <div className="fixed bottom-20 left-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:left-auto sm:w-96 sm:max-w-96">
           {/* Header */}
           <div className="flex items-center justify-between bg-gray-900 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
