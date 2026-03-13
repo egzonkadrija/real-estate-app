@@ -8,7 +8,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-hidden">
       <Header />
       <main className="min-h-[calc(100vh-4rem)] pt-16 sm:min-h-[calc(100vh-5rem)] sm:pt-20">{children}</main>
       <Footer />

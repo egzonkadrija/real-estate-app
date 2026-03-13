@@ -1151,11 +1151,11 @@ export function PropertyCarousel({
         </div>
       </div>
 
-      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
         {title && (
-          <h2 className="text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">{title}</h2>
+          <h2 className="min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">{title}</h2>
         )}
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
           <button
             onClick={() => scroll("left")}
             className="flex-shrink-0 rounded-[var(--radius-pill)] border border-[var(--border)] bg-white p-1.5 text-gray-600 shadow-sm transition-colors hover:border-[var(--brand-600)] hover:bg-[var(--surface-muted)] sm:p-2"
@@ -1171,11 +1171,23 @@ export function PropertyCarousel({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 sm:hidden">
+        {properties.map((property) => (
+          <PropertyCard
+            key={property.id}
+            property={property}
+            isFavorite={isFavorite(property.id)}
+            onToggleFavorite={toggleFavorite}
+            variant="featured"
+          />
+        ))}
+      </div>
+
       {/* Scrollable cards */}
       <div
         ref={scrollRef}
         style={{ scrollSnapType: "none" }}
-        className="scrollbar-hide flex cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:gap-4"
+        className="scrollbar-hide hidden cursor-grab select-none gap-3 overflow-x-auto py-1 touch-pan-y active:cursor-grabbing sm:flex sm:gap-4"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

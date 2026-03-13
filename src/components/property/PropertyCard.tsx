@@ -308,14 +308,14 @@ export function PropertyCard({
 
   const imageHeightClass =
     variant === "featured"
-      ? "h-[224px] sm:h-[236px] lg:h-[260px]"
-      : "h-[188px] sm:h-[208px] lg:h-[240px]";
+      ? "h-[168px] sm:h-[236px] lg:h-[260px]"
+      : "h-[152px] sm:h-[208px] lg:h-[240px]";
   const isDefaultCard = variant === "default";
 
   return (
     <article
       className={cn(
-        "group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md",
+        "group flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md",
         isDefaultCard && "property-card-listing"
       )}
     >
@@ -334,7 +334,7 @@ export function PropertyCard({
             fill
             draggable={false}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 430px) 92vw, (max-width: 768px) 82vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
           />
         </Link>
 
@@ -423,12 +423,12 @@ export function PropertyCard({
       </div>
 
       {/* Content */}
-      <div className={cn("flex flex-1 flex-col p-3 sm:p-4", isDefaultCard && "property-card-listing__body")}>
+      <div className={cn("flex min-w-0 flex-1 flex-col p-2.5 sm:p-4", isDefaultCard && "property-card-listing__body")}>
         <Link
           href={propertyHref}
           className={cn(
-            "block font-bold leading-tight text-gray-900 hover:underline sm:text-lg",
-            isDefaultCard ? "property-card-listing__price text-[15px]" : "text-base"
+            "block text-sm font-bold leading-tight text-gray-900 hover:underline sm:text-lg",
+            isDefaultCard ? "property-card-listing__price" : "sm:text-base"
           )}
         >
           {formatPrice(property.price, property.currency)}
@@ -440,7 +440,7 @@ export function PropertyCard({
           href={propertyHref}
           title={title}
           className={cn(
-            "mt-1 block text-sm font-semibold leading-tight text-gray-900 hover:underline sm:text-base",
+            "mt-1 block text-xs font-semibold leading-tight text-gray-900 hover:underline sm:text-base",
             isDefaultCard ? "property-card-listing__title sm:truncate" : "truncate"
           )}
         >
@@ -449,7 +449,7 @@ export function PropertyCard({
         {property.location && (
           <p
             className={cn(
-              "mt-1 flex items-center gap-1 text-[11px] text-gray-500 sm:text-xs",
+              "mt-1 flex min-w-0 items-center gap-1 text-[10px] text-gray-500 sm:text-xs",
               isDefaultCard && "property-card-listing__location"
             )}
           >
@@ -459,7 +459,7 @@ export function PropertyCard({
         )}
         <div
           className={cn(
-            "mt-2 grid grid-cols-3 gap-2 sm:mt-3",
+            "mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:gap-2",
             isDefaultCard && "property-card-listing__features"
           )}
         >
@@ -470,7 +470,7 @@ export function PropertyCard({
                 key={item.key}
                 title={item.label}
                 className={cn(
-                  "inline-flex min-w-0 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-1.5 text-[11px] font-medium text-gray-700 sm:text-xs",
+                  "inline-flex min-w-0 items-center justify-center gap-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-1.5 py-1.5 text-[10px] font-medium text-gray-700 sm:gap-1.5 sm:px-2 sm:text-xs",
                   isDefaultCard && "property-card-listing__feature"
                 )}
               >
@@ -492,7 +492,7 @@ export function PropertyCard({
               setShowMoreInfo((prev) => !prev);
             }}
             className={cn(
-              "h-9 w-full rounded-[var(--radius-md)] text-sm",
+              "h-auto min-h-9 w-full rounded-[var(--radius-md)] px-2 py-2 text-[11px] leading-tight whitespace-normal sm:h-9 sm:min-h-0 sm:whitespace-nowrap sm:px-3 sm:py-2 sm:text-sm",
               isDefaultCard && "property-card-listing__button"
             )}
           >

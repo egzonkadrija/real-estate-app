@@ -56,7 +56,7 @@ export function Footer() {
               <p className="mb-2 text-sm font-semibold text-white">
                 {t("footer.downloadApp")}
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <a
                   href="#"
                   className="flex items-center gap-1.5 rounded-lg border border-gray-600 px-3 py-1.5 text-xs transition-colors hover:border-white hover:text-white"
@@ -132,13 +132,13 @@ export function Footer() {
               {t("footer.contactInfo")}
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-amber-400" />
-                <span>Shkup, Maqedoni e Veriut</span>
+              <li className="flex flex-wrap items-start gap-2 text-sm">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <span className="min-w-0 flex-1 break-words">Shkup, Maqedoni e Veriut</span>
               </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-amber-400" />
-                <span>+389 2 123 456</span>
+              <li className="flex flex-wrap items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 shrink-0 text-amber-400" />
+                <span className="min-w-0 break-words">+389 2 123 456</span>
                 <a href="https://wa.me/38921234567" target="_blank" rel="noopener noreferrer" className="ml-1 text-green-400 hover:text-green-300">
                   <WhatsAppIcon className="h-4 w-4" />
                 </a>
@@ -146,12 +146,12 @@ export function Footer() {
                   <ViberIcon className="h-4 w-4" />
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-amber-400" />
-                <span>info@novabuildings.com</span>
+              <li className="flex flex-wrap items-start gap-2 text-sm">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <span className="min-w-0 flex-1 break-all">info@novabuildings.com</span>
               </li>
             </ul>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <a href="#" className="rounded-lg p-2 transition-colors hover:bg-gray-800">
                 <Facebook className="h-5 w-5" />
               </a>

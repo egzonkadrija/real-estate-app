@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning>
-      <body className={`${rubik.className} min-h-screen max-w-[100vw] overflow-x-hidden bg-gray-50 antialiased`}>
+      <body className={`${rubik.className} min-h-screen w-full overflow-x-hidden bg-gray-50 antialiased`}>
         {children}
       </body>
     </html>

@@ -147,7 +147,6 @@ export function HomePropertiesFeed({
     },
     [
       activeCategory,
-      filterKey,
       locationId,
       maxArea,
       maxPrice,
