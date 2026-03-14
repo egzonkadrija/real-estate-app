@@ -2,8 +2,11 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
+import useEmblaCarousel from "embla-carousel-react";
 import { Link, useRouter } from "@/i18n/routing";
 import {
+  ChevronLeft,
+  ChevronRight,
   Euro,
   Maximize2,
   MapPin,
@@ -323,6 +326,14 @@ export function PropertyCarousel({
   const [search, setSearch] = React.useState("");
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = React.useState(-1);
+  const [slidesPerView, setSlidesPerView] = React.useState(1);
+  const [canScrollPrev, setCanScrollPrev] = React.useState(false);
+  const [canScrollNext, setCanScrollNext] = React.useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    containScroll: "trimSnaps",
+    loop: false,
+  });
 
   React.useEffect(() => {
     setPriceMinInput(activeMinPrice);
@@ -364,6 +375,45 @@ export function PropertyCarousel({
       ignore = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    const updateSlidesPerView = () => {
+      if (window.innerWidth >= 1024) {
+        setSlidesPerView(4);
+        return;
+      }
+      if (window.innerWidth >= 640) {
+        setSlidesPerView(2);
+        return;
+      }
+      setSlidesPerView(1);
+    };
+
+    updateSlidesPerView();
+    window.addEventListener("resize", updateSlidesPerView);
+
+    return () => {
+      window.removeEventListener("resize", updateSlidesPerView);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!emblaApi) return;
+
+    const updateNavigationState = () => {
+      setCanScrollPrev(emblaApi.canScrollPrev());
+      setCanScrollNext(emblaApi.canScrollNext());
+    };
+
+    updateNavigationState();
+    emblaApi.on("select", updateNavigationState);
+    emblaApi.on("reInit", updateNavigationState);
+
+    return () => {
+      emblaApi.off("select", updateNavigationState);
+      emblaApi.off("reInit", updateNavigationState);
+    };
+  }, [emblaApi]);
 
   React.useEffect(() => {
     if (!openQuickFilter) return;
@@ -551,7 +601,10 @@ export function PropertyCarousel({
 
   const renderPropertyCard = React.useCallback(
     (property: Property & { images?: PropertyImage[]; location?: Location }, key: string) => (
-      <div key={key} className="w-full min-w-0">
+      <div
+        key={key}
+        className="min-w-0 flex-[0_0_100%] px-1 sm:flex-[0_0_50%] lg:flex-[0_0_25%]"
+      >
         <PropertyCard
           property={property}
           isFavorite={isFavorite(property.id)}
@@ -562,6 +615,21 @@ export function PropertyCarousel({
     ),
     [isFavorite, toggleFavorite]
   );
+
+  const handleScrollPrev = React.useCallback(() => {
+    if (!emblaApi) return;
+    const targetIndex = Math.max(0, emblaApi.selectedScrollSnap() - slidesPerView);
+    emblaApi.scrollTo(targetIndex);
+  }, [emblaApi, slidesPerView]);
+
+  const handleScrollNext = React.useCallback(() => {
+    if (!emblaApi) return;
+    const targetIndex = Math.min(
+      properties.length - 1,
+      emblaApi.selectedScrollSnap() + slidesPerView
+    );
+    emblaApi.scrollTo(targetIndex);
+  }, [emblaApi, properties.length, slidesPerView]);
 
   function submitSearchQuery(value: string) {
     const query = value.trim();
@@ -582,6 +650,37 @@ export function PropertyCarousel({
             {title}
           </h2>
         )}
+
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleScrollPrev}
+            disabled={!canScrollPrev}
+            aria-label="Previous featured properties"
+            className={cn(
+              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+              canScrollPrev
+                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                : "border-gray-200 bg-gray-100 text-gray-300"
+            )}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleScrollNext}
+            disabled={!canScrollNext}
+            aria-label="Next featured properties"
+            className={cn(
+              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+              canScrollNext
+                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                : "border-gray-200 bg-gray-100 text-gray-300"
+            )}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="mb-3 w-full space-y-2 sm:mb-4 sm:space-y-3 lg:space-y-0">
@@ -875,10 +974,14 @@ export function PropertyCarousel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
-        {properties.map((property, idx) =>
-          renderPropertyCard(property, `${property.id}-grid-${idx}`)
-        )}
+      <div className="w-full min-w-0 overflow-hidden">
+        <div ref={emblaRef} className="overflow-hidden">
+          <div className="-mx-1 flex touch-pan-y">
+            {properties.map((property, idx) =>
+              renderPropertyCard(property, `${property.id}-carousel-${idx}`)
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
