@@ -27,7 +27,11 @@ export function Header() {
   const { favorites } = useFavorites();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [langOpen, setLangOpen] = React.useState(false);
-  const langMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const desktopLangMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileLangButtonRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileLangPanelRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileMenuButtonRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileMenuPanelRef = React.useRef<HTMLDivElement | null>(null);
 
   const navLinks = [
     { href: "/" as const, label: t("properties"), icon: Building2 },
@@ -55,21 +59,34 @@ export function Header() {
   function switchLocale(newLocale: Locale) {
     router.replace(pathname, { locale: newLocale });
     setLangOpen(false);
+    setMobileOpen(false);
   }
 
   React.useEffect(() => {
-    if (!langOpen) return;
+    setLangOpen(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (!langOpen && !mobileOpen) return;
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setLangOpen(false);
+        setMobileOpen(false);
       }
     }
 
     function handlePointerDown(event: MouseEvent | TouchEvent) {
-      if (!langMenuRef.current) return;
-      if (langMenuRef.current.contains(event.target as Node)) return;
+      const target = event.target as Node;
+      if (desktopLangMenuRef.current?.contains(target)) return;
+      if (mobileLangButtonRef.current?.contains(target)) return;
+      if (mobileLangPanelRef.current?.contains(target)) return;
+      if (mobileMenuButtonRef.current?.contains(target)) return;
+      if (mobileMenuPanelRef.current?.contains(target)) return;
+
       setLangOpen(false);
+      setMobileOpen(false);
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -81,10 +98,34 @@ export function Header() {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
     };
-  }, [langOpen]);
+  }, [langOpen, mobileOpen]);
+
+  const toggleDesktopLanguage = React.useCallback(() => {
+    setLangOpen((current) => !current);
+  }, []);
+
+  const toggleMobileLanguage = React.useCallback(() => {
+    setLangOpen((current) => {
+      const next = !current;
+      if (next) {
+        setMobileOpen(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleMobileMenu = React.useCallback(() => {
+    setMobileOpen((current) => {
+      const next = !current;
+      if (next) {
+        setLangOpen(false);
+      }
+      return next;
+    });
+  }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[70] w-full max-w-full overflow-x-hidden border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="fixed inset-x-0 top-0 z-[70] min-w-0 overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto hidden h-20 w-full max-w-[1440px] items-center gap-4 px-4 lg:flex">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
@@ -137,9 +178,9 @@ export function Header() {
           </Link>
 
           {/* Language Switcher */}
-          <div ref={langMenuRef} className="relative">
+          <div ref={desktopLangMenuRef} className="relative">
             <button
-              onClick={() => setLangOpen(!langOpen)}
+              onClick={toggleDesktopLanguage}
               className="flex items-center gap-1 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"
               aria-expanded={langOpen}
               aria-haspopup="menu"
@@ -148,7 +189,9 @@ export function Header() {
               <span className="text-[10px] font-medium uppercase sm:text-xs md:text-sm">
                 {currentLang.code.toUpperCase()}
               </span>
-              <ChevronDown className="h-3 w-3" />
+              <ChevronDown
+                className={cn("h-3 w-3 transition-transform", langOpen && "rotate-180")}
+              />
             </button>
             {langOpen && (
               <div className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
@@ -173,8 +216,8 @@ export function Header() {
         </div>
       </div>
 
-      <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-3 lg:hidden">
-        <Link href="/" className="relative z-10 flex min-w-0 items-center gap-2">
+      <div className="mx-auto flex h-16 w-full max-w-[1440px] min-w-0 items-center justify-between gap-2 overflow-hidden px-3 lg:hidden">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
           <Building2 className="h-7 w-7 shrink-0 text-[var(--brand-600)]" />
           <span className="inline-flex min-w-0 flex-col leading-none">
             <span className="text-lg font-extrabold tracking-wide text-gray-900">
@@ -186,11 +229,11 @@ export function Header() {
           </span>
         </Link>
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="pointer-events-auto flex items-center justify-center gap-1 rounded-[var(--radius-pill)] bg-white/90 px-1 shadow-sm">
+        <div className="flex min-w-0 shrink-0 items-center justify-end gap-1">
+          <div className="flex items-center justify-center gap-1 rounded-[var(--radius-pill)] bg-white/90 px-1 shadow-sm">
             <Link
               href="/favorites"
-              className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+              className="relative shrink-0 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
             >
               <Heart
                 className={cn(
@@ -205,60 +248,76 @@ export function Header() {
               )}
             </Link>
 
-            <div ref={langMenuRef} className="relative">
+            <div ref={mobileLangButtonRef} className="relative shrink-0">
               <button
-                onClick={() => setLangOpen(!langOpen)}
+                onClick={toggleMobileLanguage}
                 className="flex items-center gap-1 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
                 aria-expanded={langOpen}
                 aria-haspopup="menu"
+                aria-controls="mobile-language-panel"
               >
                 <Globe className="h-5 w-5" />
                 <span className="text-[10px] font-medium uppercase">
                   {currentLang.code.toUpperCase()}
                 </span>
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown
+                  className={cn("h-3 w-3 transition-transform", langOpen && "rotate-180")}
+                />
               </button>
-              {langOpen && (
-                <div className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => switchLocale(lang.code)}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100",
-                        locale === lang.code
-                          ? "bg-[var(--brand-50)] text-[var(--brand-700)]"
-                          : "text-gray-700"
-                      )}
-                    >
-                      <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
-        </div>
 
-        <div className="relative z-10 flex justify-end">
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
-          >
-            {mobileOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
+          <div ref={mobileMenuButtonRef} className="flex shrink-0">
+            <button
+              onClick={toggleMobileMenu}
+              className="shrink-0 rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)]"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav-panel"
+            >
+              {mobileOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
+      {langOpen && (
+        <div
+          id="mobile-language-panel"
+          ref={mobileLangPanelRef}
+          className="w-full min-w-0 overflow-x-hidden border-t border-gray-200 bg-white lg:hidden"
+        >
+          <div className="flex max-h-[calc(100vh-4rem)] flex-col gap-1 overflow-y-auto px-3 py-2">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => switchLocale(lang.code)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                  locale === lang.code
+                    ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
+                    : "border-transparent text-gray-700 hover:border-gray-200 hover:bg-gray-100"
+                )}
+              >
+                <span className="text-base">{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="border-t border-gray-200 bg-white lg:hidden">
-          <nav className="flex max-h-[calc(100vh-4rem)] flex-col gap-1 overflow-y-auto px-3 py-2">
+        <div className="w-full min-w-0 overflow-x-hidden border-t border-gray-200 bg-white lg:hidden">
+          <nav
+            id="mobile-nav-panel"
+            ref={mobileMenuPanelRef}
+            className="flex max-h-[calc(100vh-4rem)] flex-col gap-1 overflow-y-auto px-3 py-2"
+          >
             {navLinks.map((link) => {
               const active = isLinkActive(link.href);
               return (
