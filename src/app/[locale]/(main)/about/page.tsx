@@ -266,7 +266,7 @@ export default async function AboutPage({
 
   return (
     <div className="bg-gray-50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-4 py-8 sm:py-12">
         <section className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm">
           <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
             <div className="flex flex-col gap-8">
@@ -358,8 +358,8 @@ export default async function AboutPage({
           </div>
         </section>
 
-        <section className="px-1">
-          <div className="max-w-5xl">
+        <section className="px-6 sm:px-8 lg:px-10">
+          <div>
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-gray-100 p-3 text-gray-700">
                 <Shield className="h-5 w-5" />
@@ -387,7 +387,7 @@ export default async function AboutPage({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-gray-200 bg-white p-6 text-slate-950 shadow-sm sm:p-8">
+        <section className="rounded-[2rem] border border-gray-200 bg-white p-6 text-slate-950 shadow-sm sm:p-8 lg:p-10">
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-600">
