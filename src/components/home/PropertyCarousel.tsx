@@ -299,8 +299,8 @@ export function PropertyCarousel({
         "flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[var(--radius-pill)] border text-sm leading-none transition-colors",
         "focus:outline-none focus-visible:outline-none focus-visible:ring-0",
         isQuickFilterActive(quickSort)
-          ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
-          : "border-[var(--border)] text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+          ? "border-[var(--brand-600)] bg-white text-[var(--brand-700)]"
+          : "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
       ),
     [isQuickFilterActive]
   );
@@ -332,6 +332,14 @@ export function PropertyCarousel({
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
+    duration: 30,
+    breakpoints: {
+      "(min-width: 1024px)": {
+        dragFree: true,
+        duration: 40,
+        skipSnaps: true,
+      },
+    },
     loop: false,
   });
 
