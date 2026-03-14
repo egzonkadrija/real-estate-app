@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
@@ -45,6 +46,7 @@ export function PropertyCard({
   const locale = useLocale();
   const [currentImage, setCurrentImage] = React.useState(0);
   const [showMoreInfo, setShowMoreInfo] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
   const isDuplex = React.useMemo(() => {
     const duplexRegex = /\b(?:duplex|dupleks)\b/i;
     return [property.title_al, property.title_en, property.title_de]
@@ -255,6 +257,11 @@ export function PropertyCard({
   }, [amenities, amenitiesLabel, locale, property, statusLabel, t, typeLabel]);
 
   React.useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  React.useEffect(() => {
     onMoreInfoToggle?.(showMoreInfo);
   }, [onMoreInfoToggle, showMoreInfo]);
 
@@ -308,6 +315,50 @@ export function PropertyCard({
 
   const imageMediaClass = "h-[152px] sm:h-[208px] lg:h-[240px]";
   const isDefaultCard = variant === "default";
+  const detailsModal =
+    showMoreInfo && isMounted
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex cursor-default touch-none items-center justify-center bg-black/55 p-4"
+            role="dialog"
+            aria-modal="true"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => setShowMoreInfo(false)}
+          >
+            <div
+              className="w-full max-w-lg cursor-auto rounded-[var(--radius-lg)] bg-white p-4 shadow-2xl sm:p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">{infoTitle}</p>
+                  <p className="truncate text-xs text-gray-500">{title}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowMoreInfo(false)}
+                  aria-label={closeLabel}
+                  className="rounded-[var(--radius-pill)] border border-[var(--border)] p-1.5 text-gray-600 hover:bg-[var(--surface-muted)]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <ul className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
+                {infoItems.map((item) => (
+                  <li
+                    key={`${item.label}-${item.value}`}
+                    className="flex items-start justify-between gap-3 rounded-[var(--radius-sm)] border border-gray-100 px-2 py-2 text-xs"
+                  >
+                    <span className="text-gray-500">{item.label}</span>
+                    <span className="text-right font-medium text-gray-800">{item.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <article
@@ -504,48 +555,7 @@ export function PropertyCard({
         </div>
       </div>
 
-      {showMoreInfo && (
-        <div
-          className="fixed inset-0 z-[100] flex cursor-default touch-none items-center justify-center bg-black/55 p-4"
-          role="dialog"
-          aria-modal="true"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => setShowMoreInfo(false)}
-        >
-          <div
-            className="w-full max-w-lg cursor-auto rounded-[var(--radius-lg)] bg-white p-4 shadow-2xl sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{infoTitle}</p>
-                <p className="truncate text-xs text-gray-500">{title}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowMoreInfo(false)}
-                aria-label={closeLabel}
-                className="rounded-[var(--radius-pill)] border border-[var(--border)] p-1.5 text-gray-600 hover:bg-[var(--surface-muted)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <ul className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
-              {infoItems.map((item) => (
-                <li
-                  key={`${item.label}-${item.value}`}
-                  className="flex items-start justify-between gap-3 rounded-[var(--radius-sm)] border border-gray-100 px-2 py-2 text-xs"
-                >
-                  <span className="text-gray-500">{item.label}</span>
-                  <span className="text-right font-medium text-gray-800">
-                    {item.value}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
+      {detailsModal}
     </article>
   );
 }
