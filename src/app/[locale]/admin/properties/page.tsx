@@ -36,6 +36,7 @@ interface PropertyItem {
   title_al: string;
   title_en: string;
   title_de: string;
+  title_mk: string;
   type: string;
   category: string;
   price: number;
@@ -51,6 +52,7 @@ interface PropertyDetail extends PropertyItem {
   description_al?: string;
   description_en?: string;
   description_de?: string;
+  description_mk?: string;
   surface_area?: number | null;
   rooms?: number | null;
   bathrooms?: number | null;
@@ -850,9 +852,11 @@ function PropertyFormModal({
     title_al: "",
     title_en: "",
     title_de: "",
+    title_mk: "",
     description_al: "",
     description_en: "",
     description_de: "",
+    description_mk: "",
     type: "sale",
     category: "apartment",
     price: "",
@@ -944,9 +948,11 @@ function PropertyFormModal({
             title_al: prop.title_al || "",
             title_en: prop.title_en || "",
             title_de: prop.title_de || "",
+            title_mk: prop.title_mk || "",
             description_al: prop.description_al || "",
             description_en: prop.description_en || "",
             description_de: prop.description_de || "",
+            description_mk: prop.description_mk || "",
             type: prop.type || "sale",
             category: prop.category || "apartment",
             price: String(prop.price || ""),
@@ -1069,6 +1075,10 @@ function PropertyFormModal({
               <label className="mb-1 block text-xs font-medium text-gray-500">Title (German)</label>
               <input value={formData.title_de} onChange={(e) => setFormData({ ...formData, title_de: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-gray-500">Title (Macedonian)</label>
+              <input value={formData.title_mk} onChange={(e) => setFormData({ ...formData, title_mk: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
             {/* Descriptions */}
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (Albanian)</label>
@@ -1081,6 +1091,10 @@ function PropertyFormModal({
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (German)</label>
               <textarea value={formData.description_de} onChange={(e) => setFormData({ ...formData, description_de: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-gray-500">Description (Macedonian)</label>
+              <textarea value={formData.description_mk} onChange={(e) => setFormData({ ...formData, description_mk: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
             {/* Type & Category */}
             <div>

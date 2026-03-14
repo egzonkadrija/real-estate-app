@@ -42,9 +42,11 @@ export interface Property {
   title_al: string;
   title_en: string;
   title_de: string;
+  title_mk: string;
   description_al: string;
   description_en: string;
   description_de: string;
+  description_mk: string;
   type: PropertyType;
   category: PropertyCategory;
   price: number;

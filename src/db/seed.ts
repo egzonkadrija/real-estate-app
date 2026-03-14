@@ -538,9 +538,15 @@ async function seed() {
     },
   ];
 
+  const propertiesWithMacedonianData: schema.NewProperty[] = propertiesData.map((property) => ({
+    ...property,
+    title_mk: property.title_en,
+    description_mk: property.description_en,
+  }));
+
   const insertedProperties = await db
     .insert(schema.properties)
-    .values(propertiesData)
+    .values(propertiesWithMacedonianData)
     .returning();
 
   console.log(`  Inserted ${insertedProperties.length} properties`);

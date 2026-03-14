@@ -169,20 +169,22 @@ function getQuickReply(text: string, chatTexts: Record<string, string>): string 
 }
 
 function getPropertyTitle(
-  property: { title_al: string; title_en: string; title_de: string },
+  property: { title_al: string; title_en: string; title_de: string; title_mk?: string },
   locale: SupportedLocale
 ): string {
   if (locale === "al") return property.title_al;
+  if (locale === "mk") return property.title_mk || property.title_en;
   if (locale === "de") return property.title_de;
   return property.title_en;
 }
 
 function getLocationName(
-  location: { name_al: string; name_en: string; name_de: string } | null | undefined,
+  location: { name_al: string; name_en: string; name_de: string; name_mk?: string } | null | undefined,
   locale: SupportedLocale
 ): string {
   if (!location) return "";
   if (locale === "al") return location.name_al;
+  if (locale === "mk") return location.name_mk || location.name_en;
   if (locale === "de") return location.name_de;
   return location.name_en;
 }
