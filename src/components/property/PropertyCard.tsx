@@ -306,10 +306,7 @@ export function PropertyCard({
     };
   }, [onMoreInfoToggle]);
 
-  const imageMediaClass =
-    variant === "featured"
-      ? "aspect-[3/2] w-full"
-      : "h-[152px] sm:h-[208px] lg:h-[240px]";
+  const imageMediaClass = "h-[152px] sm:h-[208px] lg:h-[240px]";
   const isDefaultCard = variant === "default";
 
   return (
