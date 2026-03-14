@@ -306,9 +306,9 @@ export function PropertyCard({
     };
   }, [onMoreInfoToggle]);
 
-  const imageHeightClass =
+  const imageMediaClass =
     variant === "featured"
-      ? "h-[168px] sm:h-[236px] lg:h-[260px]"
+      ? "aspect-[3/2] w-full"
       : "h-[152px] sm:h-[208px] lg:h-[240px]";
   const isDefaultCard = variant === "default";
 
@@ -323,7 +323,7 @@ export function PropertyCard({
       <div
         className={cn(
           "relative overflow-hidden bg-gray-100 touch-pan-y",
-          imageHeightClass,
+          imageMediaClass,
           isDefaultCard && "property-card-listing__media"
         )}
       >
@@ -335,7 +335,11 @@ export function PropertyCard({
             loading={variant === "featured" ? "eager" : "lazy"}
             draggable={false}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            sizes={
+              variant === "featured"
+                ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                : "(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            }
           />
         </Link>
 
