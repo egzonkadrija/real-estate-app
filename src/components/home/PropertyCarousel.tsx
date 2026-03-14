@@ -607,11 +607,16 @@ export function PropertyCarousel({
       .slice(0, 8);
   }, [propertyNameSuggestions, search]);
 
+  const effectiveSlidesPerView = Math.min(slidesPerView, properties.length);
+  const slideBasisPercent = `${100 / effectiveSlidesPerView}%`;
+  const showCarouselNavigation = properties.length > effectiveSlidesPerView;
+
   const renderPropertyCard = React.useCallback(
     (property: Property & { images?: PropertyImage[]; location?: Location }, key: string) => (
       <div
         key={key}
-        className="min-w-0 flex-[0_0_100%] px-1 sm:flex-[0_0_50%] lg:flex-[0_0_25%]"
+        className="min-w-0 px-1"
+        style={{ flex: `0 0 ${slideBasisPercent}` }}
       >
         <PropertyCard
           property={property}
@@ -621,7 +626,7 @@ export function PropertyCarousel({
         />
       </div>
     ),
-    [isFavorite, toggleFavorite]
+    [isFavorite, slideBasisPercent, toggleFavorite]
   );
 
   const handleScrollPrev = React.useCallback(() => {
@@ -961,36 +966,38 @@ export function PropertyCarousel({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2 sm:mt-4">
-        <button
-          type="button"
-          onClick={handleScrollPrev}
-          disabled={!canScrollPrev}
-          aria-label="Previous featured properties"
-          className={cn(
-            "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
-            canScrollPrev
-              ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
-              : "border-gray-200 bg-gray-100 text-gray-300"
-          )}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={handleScrollNext}
-          disabled={!canScrollNext}
-          aria-label="Next featured properties"
-          className={cn(
-            "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
-            canScrollNext
-              ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
-              : "border-gray-200 bg-gray-100 text-gray-300"
-          )}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
+      {showCarouselNavigation && (
+        <div className="mt-3 flex items-center justify-end gap-2 sm:mt-4">
+          <button
+            type="button"
+            onClick={handleScrollPrev}
+            disabled={!canScrollPrev}
+            aria-label="Previous featured properties"
+            className={cn(
+              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+              canScrollPrev
+                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                : "border-gray-200 bg-gray-100 text-gray-300"
+            )}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleScrollNext}
+            disabled={!canScrollNext}
+            aria-label="Next featured properties"
+            className={cn(
+              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+              canScrollNext
+                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+                : "border-gray-200 bg-gray-100 text-gray-300"
+            )}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
