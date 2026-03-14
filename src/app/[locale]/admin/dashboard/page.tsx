@@ -58,6 +58,14 @@ interface PropertyListResponse {
   total: number;
 }
 
+function normalizePropertyListResponse(value: unknown): PropertyListResponse {
+  const record = value as { data?: unknown; total?: unknown } | null | undefined;
+  const data = Array.isArray(record?.data) ? (record.data as PropertyPreview[]) : [];
+  const total = typeof record?.total === "number" ? record.total : data.length;
+
+  return { data, total };
+}
+
 interface AdminHQStats {
   pendingRequests: number;
   pendingProperties: number;
@@ -188,14 +196,18 @@ export default function AdminDashboard() {
 
         const submittedRequestsJson = await submittedRequestsRes.json().catch(() => []);
         const requestedPropertiesJson = await requestedPropertiesRes.json().catch(() => []);
-        const pendingPropertiesJson: PropertyListResponse =
-          await pendingPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
-        const activePropertiesJson: PropertyListResponse =
-          await activePropertiesRes.json().catch(() => ({ data: [], total: 0 }));
-        const soldPropertiesJson: PropertyListResponse =
-          await soldPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
-        const rentedPropertiesJson: PropertyListResponse =
-          await rentedPropertiesRes.json().catch(() => ({ data: [], total: 0 }));
+        const pendingPropertiesJson = normalizePropertyListResponse(
+          await pendingPropertiesRes.json().catch(() => null)
+        );
+        const activePropertiesJson = normalizePropertyListResponse(
+          await activePropertiesRes.json().catch(() => null)
+        );
+        const soldPropertiesJson = normalizePropertyListResponse(
+          await soldPropertiesRes.json().catch(() => null)
+        );
+        const rentedPropertiesJson = normalizePropertyListResponse(
+          await rentedPropertiesRes.json().catch(() => null)
+        );
         const revenueJson = await revenueRes.json().catch(() => ({
           soldRevenue: 0,
           soldProperties: [],
@@ -219,22 +231,10 @@ export default function AdminDashboard() {
 
         setStats({
           pendingRequests: pendingSubmittedRequests.length,
-          pendingProperties:
-            typeof pendingPropertiesJson.total === "number"
-              ? pendingPropertiesJson.total
-              : pendingPropertiesJson.data.length,
-          activeListings:
-            typeof activePropertiesJson.total === "number"
-              ? activePropertiesJson.total
-              : activePropertiesJson.data.length,
-          soldProperties:
-            typeof soldPropertiesJson.total === "number"
-              ? soldPropertiesJson.total
-              : soldPropertiesJson.data.length,
-          rentedProperties:
-            typeof rentedPropertiesJson.total === "number"
-              ? rentedPropertiesJson.total
-              : rentedPropertiesJson.data.length,
+          pendingProperties: pendingPropertiesJson.total,
+          activeListings: activePropertiesJson.total,
+          soldProperties: soldPropertiesJson.total,
+          rentedProperties: rentedPropertiesJson.total,
           requestedProperties: requestPropertyItems.length,
         });
         setPendingRequests(pendingSubmittedRequests.slice(0, 5));

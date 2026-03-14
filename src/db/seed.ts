@@ -135,7 +135,7 @@ async function seed() {
 
   // â”€â”€ 3. Properties â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  const propertiesData: schema.NewProperty[] = [
+  const propertiesData: Array<Omit<schema.NewProperty, "title_mk" | "description_mk">> = [
     // 1 - Apartment for sale in Skopje
     {
       title_al: 'BanesÃ« moderne 3-dhomÃ«she nÃ« qendÃ«r tÃ« Shkupit',
