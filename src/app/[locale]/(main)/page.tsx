@@ -102,7 +102,7 @@ export default async function HomePage({
       {/* Featured Properties */}
       {featuredProperties.length > 0 && (
         <section className="mx-auto w-full max-w-[1440px] overflow-x-hidden px-4 pb-3 pt-4 sm:pb-4 sm:pt-8">
-          <div className="w-full max-w-full overflow-x-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-5">
+          <div className="w-full max-w-full overflow-x-hidden pt-3 sm:pt-5">
             <PropertyCarousel
               properties={JSON.parse(JSON.stringify(featuredProperties))}
               title={t("property.featured")}

@@ -644,43 +644,12 @@ export function PropertyCarousel({
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-x-hidden">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
+      <div className="mb-3 flex flex-wrap items-center gap-3 sm:mb-4">
         {title && (
           <h2 className="min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">
             {title}
           </h2>
         )}
-
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={handleScrollPrev}
-            disabled={!canScrollPrev}
-            aria-label="Previous featured properties"
-            className={cn(
-              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
-              canScrollPrev
-                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
-                : "border-gray-200 bg-gray-100 text-gray-300"
-            )}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={handleScrollNext}
-            disabled={!canScrollNext}
-            aria-label="Next featured properties"
-            className={cn(
-              "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
-              canScrollNext
-                ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
-                : "border-gray-200 bg-gray-100 text-gray-300"
-            )}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
       </div>
 
       <div className="mb-3 w-full space-y-2 sm:mb-4 sm:space-y-3 lg:space-y-0">
@@ -982,6 +951,37 @@ export function PropertyCarousel({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-end gap-2 sm:mt-4">
+        <button
+          type="button"
+          onClick={handleScrollPrev}
+          disabled={!canScrollPrev}
+          aria-label="Previous featured properties"
+          className={cn(
+            "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+            canScrollPrev
+              ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+              : "border-gray-200 bg-gray-100 text-gray-300"
+          )}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={handleScrollNext}
+          disabled={!canScrollNext}
+          aria-label="Next featured properties"
+          className={cn(
+            "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
+            canScrollNext
+              ? "border-[var(--border)] bg-white text-gray-700 hover:border-[var(--brand-600)] hover:text-[var(--brand-700)]"
+              : "border-gray-200 bg-gray-100 text-gray-300"
+          )}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );

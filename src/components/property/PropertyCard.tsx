@@ -315,7 +315,8 @@ export function PropertyCard({
   return (
     <article
       className={cn(
-        "group flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow hover:shadow-md",
+        "group flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] transition-shadow",
+        variant === "featured" ? "shadow-none hover:shadow-none" : "shadow-sm hover:shadow-md",
         isDefaultCard && "property-card-listing"
       )}
     >
