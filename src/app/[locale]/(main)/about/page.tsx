@@ -269,8 +269,9 @@ export default async function AboutPage({
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
         <section className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm">
           <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
-            <div className="flex flex-col justify-between">
-              <div>
+            <div className="flex flex-col gap-8">
+              <div className="space-y-8">
+                <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
                   <Compass className="h-3.5 w-3.5" />
                   {t("about.title")}
@@ -281,8 +282,9 @@ export default async function AboutPage({
                 <p className={`mt-4 max-w-2xl text-base text-slate-600 sm:text-lg ${aboutParagraphClass}`}>
                   {coreCopy.aboutSectionText}
                 </p>
+                </div>
 
-                <div className="mt-8 max-w-2xl rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 sm:mt-10 sm:p-6">
+                <div className="max-w-2xl rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 sm:p-6">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
                     {coreCopy.whyTitle}
                   </p>
@@ -306,7 +308,7 @@ export default async function AboutPage({
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-4 sm:mt-8 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Button asChild size="lg" className="bg-slate-950 text-white hover:bg-slate-800">
                   <Link href={`/${locale}`} className="inline-flex items-center">
                     {coreCopy.ctaButton}
@@ -356,32 +358,27 @@ export default async function AboutPage({
           </div>
         </section>
 
-        <section>
-          <div className="rounded-[1.75rem] border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="px-1">
+          <div className="max-w-5xl">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-gray-100 p-3 text-gray-700">
                 <Shield className="h-5 w-5" />
               </div>
-              <div>
-                <h2 className={`text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
-                  {coreCopy.missionTitle}
-                </h2>
-              </div>
+              <h2 className={`text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
+                {coreCopy.missionTitle}
+              </h2>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 grid gap-6 md:grid-cols-3">
               {coreCopy.processSteps.map((step, index) => (
-                <div
-                  key={step.title}
-                  className="relative rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 pl-16"
-                >
-                  <div className="absolute left-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
+                <div key={step.title} className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
                     {index + 1}
-                  </div>
+                  </p>
                   <h3 className={`text-base font-semibold text-slate-950 ${aboutHeadingClass}`}>
                     {step.title}
                   </h3>
-                  <p className={`mt-2 text-sm text-slate-600 ${aboutParagraphClass}`}>
+                  <p className={`text-sm text-slate-600 ${aboutParagraphClass}`}>
                     {step.description}
                   </p>
                 </div>
