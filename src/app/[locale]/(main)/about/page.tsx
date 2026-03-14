@@ -93,7 +93,7 @@ const aboutCopyByLocale: Record<Locale, AboutCopy> = {
   en: {
     missionTitle: "Our Mission",
     missionText:
-      "We simplify real estate in North Macedonia through clear, fast, and transparent property workflows.",
+      "We make real estate in North Macedonia clear, fast, and transparent.",
     aboutSectionTitle: "About NovaBuildings",
     aboutSectionText:
       "A cleaner, simpler journey from discovery to decision with less friction and better clarity.",
@@ -363,10 +363,7 @@ export default async function AboutPage({
                 <Shield className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-700">
-                  {coreCopy.processTitle}
-                </p>
-                <h2 className={`mt-1 text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
+                <h2 className={`text-2xl font-semibold text-slate-950 ${aboutHeadingClass}`}>
                   {coreCopy.missionTitle}
                 </h2>
               </div>
