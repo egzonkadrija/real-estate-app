@@ -846,7 +846,7 @@ function PropertyFormModal({
   const [loading, setLoading] = React.useState(false);
   const [loadingOptions, setLoadingOptions] = React.useState(true);
   const [optionsError, setOptionsError] = React.useState<string | null>(null);
-  const [locations, setLocations] = React.useState<{ id: number; name_al: string; name_en: string; name_de: string; type: string }[]>([]);
+  const [locations, setLocations] = React.useState<{ id: number; name_al: string; name_en: string; name_de: string; name_mk?: string; type: string }[]>([]);
   const [agents, setAgents] = React.useState<{ id: number; name: string }[]>([]);
   const [formData, setFormData] = React.useState({
     title_al: "",

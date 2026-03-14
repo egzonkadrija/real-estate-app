@@ -18,7 +18,7 @@ async function seed() {
   // â”€â”€ 1. Locations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // States (regions) of North Macedonia
-  const statesData: schema.NewLocation[] = [
+  const statesData: Array<Omit<schema.NewLocation, 'name_mk'>> = [
     { type: 'state', name_al: 'Shkup', name_en: 'Skopje', name_de: 'Skopje', slug: 'shkup' },
     { type: 'state', name_al: 'TetovÃ«', name_en: 'Tetovo', name_de: 'Tetovo', slug: 'tetove' },
     { type: 'state', name_al: 'Gostivar', name_en: 'Gostivar', name_de: 'Gostivar', slug: 'gostivar' },
@@ -28,9 +28,14 @@ async function seed() {
     { type: 'state', name_al: 'StrugÃ«', name_en: 'Struga', name_de: 'Struga', slug: 'struge' },
   ];
 
+  const statesWithMacedonianData: schema.NewLocation[] = statesData.map((location) => ({
+    ...location,
+    name_mk: location.name_en,
+  }));
+
   const insertedStates = await db
     .insert(schema.locations)
-    .values(statesData)
+    .values(statesWithMacedonianData)
     .returning();
 
   console.log(`  Inserted ${insertedStates.length} states`);
@@ -42,7 +47,7 @@ async function seed() {
   }
 
   // Cities under each state
-  const citiesData: schema.NewLocation[] = [
+  const citiesData: Array<Omit<schema.NewLocation, 'name_mk'>> = [
     // Shkup (Skopje) cities
     { type: 'city', name_al: 'Shkup', name_en: 'Skopje', name_de: 'Skopje', parent_id: stateMap.get('shkup')!, slug: 'shkup-qytet' },
     { type: 'city', name_al: 'Ã‡air', name_en: 'Cair', name_de: 'Cair', parent_id: stateMap.get('shkup')!, slug: 'cair' },
@@ -81,9 +86,14 @@ async function seed() {
     { type: 'city', name_al: 'DibÃ«r', name_en: 'Debar', name_de: 'Debar', parent_id: stateMap.get('struge')!, slug: 'diber' },
   ];
 
+  const citiesWithMacedonianData: schema.NewLocation[] = citiesData.map((location) => ({
+    ...location,
+    name_mk: location.name_en,
+  }));
+
   const insertedCities = await db
     .insert(schema.locations)
-    .values(citiesData)
+    .values(citiesWithMacedonianData)
     .returning();
 
   console.log(`  Inserted ${insertedCities.length} cities`);

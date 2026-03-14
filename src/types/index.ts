@@ -33,6 +33,7 @@ export interface Location {
   name_al: string;
   name_en: string;
   name_de: string;
+  name_mk: string;
   parent_id: number | null;
   slug: string;
 }

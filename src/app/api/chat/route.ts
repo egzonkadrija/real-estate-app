@@ -204,6 +204,7 @@ async function findLocationId(text: string): Promise<number | undefined> {
       name_al: true,
       name_en: true,
       name_de: true,
+      name_mk: true,
     },
   });
 
@@ -211,7 +212,7 @@ async function findLocationId(text: string): Promise<number | undefined> {
   let bestLength = 0;
 
   for (const location of allLocations) {
-    const variants = [location.name_al, location.name_en, location.name_de];
+    const variants = [location.name_al, location.name_en, location.name_de, location.name_mk];
     for (const variant of variants) {
       const normalized = normalizeText(variant).trim();
       if (normalized.length < 3) continue;

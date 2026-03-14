@@ -64,6 +64,7 @@ export const locations = pgTable('locations', {
   name_al: varchar('name_al', { length: 255 }).notNull(),
   name_en: varchar('name_en', { length: 255 }).notNull(),
   name_de: varchar('name_de', { length: 255 }).notNull(),
+  name_mk: varchar('name_mk', { length: 255 }).notNull(),
   parent_id: integer('parent_id'),
   slug: varchar('slug', { length: 255 }).notNull().unique(),
 });

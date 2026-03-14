@@ -118,7 +118,8 @@ export async function POST(
             sql`(
               lower(${locations.name_al}) = lower(${requestItem.location}) OR
               lower(${locations.name_en}) = lower(${requestItem.location}) OR
-              lower(${locations.name_de}) = lower(${requestItem.location})
+              lower(${locations.name_de}) = lower(${requestItem.location}) OR
+              lower(${locations.name_mk}) = lower(${requestItem.location})
             )`
           )
         )
