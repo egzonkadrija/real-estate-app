@@ -439,6 +439,155 @@ export default function AdminPropertiesPage() {
     );
   }
 
+  function renderPropertyActions(prop: PropertyItem, compact = false) {
+    return (
+      <div
+        className={cn(
+          "flex flex-wrap gap-1",
+          compact ? "justify-start" : "justify-end"
+        )}
+      >
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setEditingId(prop.id);
+            setShowForm(true);
+          }}
+          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+        >
+          <Edit className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleDelete(prop.id);
+          }}
+          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+        {prop.status !== getCompletionStatus(prop) ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleMarkCompleted(prop);
+            }}
+            disabled={markingAsSoldId === prop.id}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-60"
+          >
+            {markingAsSoldId === prop.id ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                {getCompletionLabel(prop)}
+              </span>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{getCompletionLabel(prop)}</span>
+              </>
+            )}
+          </button>
+        ) : null}
+        {prop.status === "rented" || prop.status === "sold" ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleRelist(prop);
+            }}
+            disabled={relistingId === prop.id}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-60"
+          >
+            {relistingId === prop.id ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Relisting...
+              </span>
+            ) : (
+              <span>Relist</span>
+            )}
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderPropertyMobileCard(prop: PropertyItem) {
+    return (
+      <button
+        key={prop.id}
+        type="button"
+        onClick={() => void openPreview(prop.id)}
+        className="w-full rounded-none bg-white p-4 text-left transition-colors hover:bg-gray-50"
+      >
+        <div className="flex items-start gap-3">
+          <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+            {prop.images?.[0] ? (
+              <Image
+                src={normalizeImageUrl(prop.images[0].url)}
+                alt=""
+                width={96}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            ) : null}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-gray-900">
+              {getLocalizedField(prop, "title", locale)}
+            </p>
+            {prop.location ? (
+              <p className="mt-1 truncate text-xs text-gray-500">
+                {getLocalizedField(prop.location, "name", locale)}
+              </p>
+            ) : null}
+            <p className="mt-2 text-sm font-semibold text-gray-900">
+              {formatPrice(prop.price, prop.currency)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-medium",
+              prop.type === "sale"
+                ? "bg-blue-50 text-blue-700"
+                : "bg-emerald-50 text-emerald-700"
+            )}
+          >
+            {prop.type === "sale" ? t("property.forSale") : t("property.forRent")}
+          </span>
+          <span
+            className={cn("rounded-full px-2.5 py-1 text-xs font-medium", {
+              "bg-green-50 text-green-700": prop.status === "active",
+              "bg-yellow-50 text-yellow-700": prop.status === "pending",
+              "bg-gray-100 text-gray-700":
+                prop.status === "sold" || prop.status === "rented",
+            })}
+          >
+            {prop.status}
+          </span>
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+            {prop.category}
+          </span>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-500">
+            {new Date(prop.created_at).toLocaleDateString()}
+          </p>
+          <div onClick={(event) => event.stopPropagation()}>
+            {renderPropertyActions(prop, true)}
+          </div>
+        </div>
+      </button>
+    );
+  }
+
   function renderTypeDivider(label: string) {
     return (
       <tr key={`divider-${label}`} className="bg-red-50">
@@ -454,17 +603,17 @@ export default function AdminPropertiesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
           {t("admin.properties")}
         </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <div className="grid w-full grid-cols-3 overflow-hidden rounded-lg border border-gray-200 bg-white sm:inline-flex sm:w-auto sm:grid-cols-none">
             <button
               type="button"
               onClick={() => handleTypeFilterChange("all")}
               className={cn(
-                "px-3 py-2 text-sm font-medium transition-colors",
+                "min-w-0 px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm",
                 typeFilter === "all"
                   ? "bg-blue-600 text-white"
                   : "text-gray-700 hover:bg-gray-50"
@@ -476,7 +625,7 @@ export default function AdminPropertiesPage() {
               type="button"
               onClick={() => handleTypeFilterChange("sale")}
               className={cn(
-                "px-3 py-2 text-sm font-medium transition-colors",
+                "min-w-0 px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm",
                 typeFilter === "sale"
                   ? "bg-blue-600 text-white"
                   : "text-gray-700 hover:bg-gray-50"
@@ -488,7 +637,7 @@ export default function AdminPropertiesPage() {
               type="button"
               onClick={() => handleTypeFilterChange("rent")}
               className={cn(
-                "px-3 py-2 text-sm font-medium transition-colors",
+                "min-w-0 px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm",
                 typeFilter === "rent"
                   ? "bg-blue-600 text-white"
                   : "text-gray-700 hover:bg-gray-50"
@@ -502,7 +651,7 @@ export default function AdminPropertiesPage() {
               setEditingId(null);
               setShowForm(true);
             }}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             {t("admin.addProperty")}
@@ -511,7 +660,43 @@ export default function AdminPropertiesPage() {
       </div>
       {/* Properties Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-gray-100 lg:hidden">
+          {loading && properties.length === 0 ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="px-4 py-4">
+                <div className="h-24 animate-pulse rounded-xl bg-gray-100" />
+              </div>
+            ))
+          ) : properties.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-gray-500">
+              No properties found
+            </div>
+          ) : typeFilter === "all" ? (
+            <>
+              {saleProperties.length > 0 ? (
+                <div className="border-y-2 border-red-400 bg-red-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
+                  For Sale
+                </div>
+              ) : null}
+              {saleProperties.map((prop) => renderPropertyMobileCard(prop))}
+              {rentProperties.length > 0 ? (
+                <div className="border-y-2 border-red-400 bg-red-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
+                  For Rent
+                </div>
+              ) : null}
+              {rentProperties.map((prop) => renderPropertyMobileCard(prop))}
+            </>
+          ) : (
+            properties.map((prop) => renderPropertyMobileCard(prop))
+          )}
+          {loading && properties.length > 0 ? (
+            <div className="px-4 py-4">
+              <div className="h-24 animate-pulse rounded-xl bg-gray-100" />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">

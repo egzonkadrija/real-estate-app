@@ -60,6 +60,11 @@ export default function AdminLayout({
   }, [globalSearch, locale, nativePathname, router, searchParams]);
 
   async function handleLogout() {
+    const shouldLogout = window.confirm("Are you sure you want to log out?");
+    if (!shouldLogout) {
+      return;
+    }
+
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
