@@ -15,6 +15,7 @@ import {
   X,
   Search,
 } from "lucide-react";
+import { BrandMark } from "@/components/branding/BrandMark";
 import { cn } from "@/lib/utils";
 
 export default function AdminLayout({
@@ -93,8 +94,8 @@ export default function AdminLayout({
             href="/admin/dashboard"
             className="flex items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <Building2 className="h-7 w-7 text-blue-600" />
-            <span className="inline-flex flex-col leading-none">
+            <BrandMark className="h-9 w-9 shrink-0 text-blue-600" />
+            <span className="inline-flex flex-col justify-center leading-none">
               <span className="text-lg font-extrabold tracking-wide text-gray-900">
                 NOVA
               </span>
@@ -144,13 +145,16 @@ export default function AdminLayout({
               <Link
                 href="/admin/dashboard"
                 onClick={() => setSidebarOpen(false)}
-                className="inline-flex flex-col rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="inline-flex items-center gap-2 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                <span className="text-lg font-extrabold tracking-wide text-gray-900">
-                  NOVA
-                </span>
-                <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
-                  STATE
+                <BrandMark className="h-8 w-8 shrink-0 text-blue-600" />
+                <span className="inline-flex flex-col justify-center leading-none">
+                  <span className="text-lg font-extrabold tracking-wide text-gray-900">
+                    NOVA
+                  </span>
+                  <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+                    STATE
+                  </span>
                 </span>
               </Link>
               <button
@@ -221,13 +225,16 @@ export default function AdminLayout({
           </button>
           <Link
             href="/admin/dashboard"
-            className="inline-flex flex-col rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="inline-flex items-center gap-2 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <span className="text-lg font-extrabold tracking-wide text-gray-900">
-              NOVA
-            </span>
-            <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
-              STATE
+            <BrandMark className="h-8 w-8 shrink-0 text-blue-600" />
+            <span className="inline-flex flex-col justify-center leading-none">
+              <span className="text-lg font-extrabold tracking-wide text-gray-900">
+                NOVA
+              </span>
+              <span className="mt-0.5 block w-full text-center text-[9px] font-semibold tracking-[0.2em] text-blue-600">
+                STATE
+              </span>
             </span>
           </Link>
         </header>

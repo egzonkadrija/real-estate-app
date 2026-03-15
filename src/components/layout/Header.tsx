@@ -15,6 +15,7 @@ import {
   Send,
   FileText,
 } from "lucide-react";
+import { BrandMark } from "@/components/branding/BrandMark";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { type Locale } from "@/lib/constants";
@@ -127,8 +128,8 @@ export function Header() {
     <header className="fixed inset-x-0 top-0 z-[70] min-w-0 overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto hidden h-20 w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_minmax(0,48rem)_minmax(0,1fr)] items-center gap-4 px-4 lg:grid">
         <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
-          <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
-            <span className="inline-flex min-w-0 flex-col leading-none">
+          <BrandMark className="h-11 w-11 shrink-0" />
+            <span className="inline-flex min-w-0 flex-col justify-center leading-none">
             <span className="text-2xl font-extrabold tracking-wide text-gray-900">
               CASA
             </span>
@@ -217,8 +218,8 @@ export function Header() {
 
       <div className="mx-auto flex h-16 w-full max-w-[1440px] min-w-0 items-center justify-between gap-2 overflow-hidden px-3 lg:hidden">
         <Link href="/" className="flex min-w-0 items-center gap-2">
-          <Building2 className="h-7 w-7 shrink-0 text-[var(--brand-600)]" />
-          <span className="inline-flex min-w-0 flex-col leading-none">
+          <BrandMark className="h-8 w-8 shrink-0" />
+          <span className="inline-flex min-w-0 flex-col justify-center leading-none">
             <span className="text-lg font-extrabold tracking-wide text-gray-900">
               CASA
             </span>
