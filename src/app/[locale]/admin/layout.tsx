@@ -92,9 +92,9 @@ export default function AdminLayout({
         <div className="flex h-16 items-center border-b border-gray-200 px-6">
           <Link
             href="/admin/dashboard"
-            className="flex items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex items-center gap-3 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <BrandMark className="h-9 w-9 shrink-0 text-blue-600" />
+            <BrandMark className="h-12 w-12 shrink-0 text-blue-600" />
             <span className="inline-flex flex-col justify-center leading-none">
               <span className="text-lg font-extrabold tracking-wide text-gray-900">
                 NOVA
@@ -145,9 +145,9 @@ export default function AdminLayout({
               <Link
                 href="/admin/dashboard"
                 onClick={() => setSidebarOpen(false)}
-                className="inline-flex items-center gap-2 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="inline-flex items-center gap-2.5 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                <BrandMark className="h-8 w-8 shrink-0 text-blue-600" />
+                <BrandMark className="h-10 w-10 shrink-0 text-blue-600" />
                 <span className="inline-flex flex-col justify-center leading-none">
                   <span className="text-lg font-extrabold tracking-wide text-gray-900">
                     NOVA
@@ -225,9 +225,9 @@ export default function AdminLayout({
           </button>
           <Link
             href="/admin/dashboard"
-            className="inline-flex items-center gap-2 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="inline-flex items-center gap-2.5 rounded-md leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <BrandMark className="h-8 w-8 shrink-0 text-blue-600" />
+            <BrandMark className="h-10 w-10 shrink-0 text-blue-600" />
             <span className="inline-flex flex-col justify-center leading-none">
               <span className="text-lg font-extrabold tracking-wide text-gray-900">
                 NOVA
