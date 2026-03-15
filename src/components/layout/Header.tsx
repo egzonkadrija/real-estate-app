@@ -126,7 +126,7 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[70] min-w-0 overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto hidden h-20 w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-4 lg:grid">
+      <div className="mx-auto hidden h-20 w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_minmax(0,48rem)_minmax(0,1fr)] items-center gap-4 px-4 lg:grid">
         <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
             <span className="inline-flex min-w-0 flex-col leading-none">
@@ -139,7 +139,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center justify-center gap-5 lg:flex">
+        <nav className="hidden w-full items-center justify-between gap-4 lg:flex">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href);
             return (
@@ -147,7 +147,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded-[var(--radius-md)] border px-5 py-2.5 text-sm font-medium transition-colors",
+                  "rounded-[var(--radius-md)] border px-4 py-2.5 text-center text-sm font-medium transition-colors xl:px-5",
                   active
                     ? "border-[var(--brand-600)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                     : "border-transparent text-gray-700 hover:border-[var(--border)] hover:bg-[var(--surface-muted)] hover:text-[var(--brand-700)]"
