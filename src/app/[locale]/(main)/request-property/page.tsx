@@ -166,7 +166,7 @@ export default function RequestPropertyPage() {
   if (status === "success") {
     return (
       <div className="mx-auto w-full max-w-[1440px] px-4 py-16">
-        <div className="mx-auto w-full max-w-2xl text-center">
+        <div className="mx-auto w-full max-w-3xl text-center">
           <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             {t("form.messageSent")}
@@ -181,7 +181,7 @@ export default function RequestPropertyPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8">
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl">
         <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
           {t("form.requestProperty")}
         </h1>
