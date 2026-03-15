@@ -48,7 +48,7 @@ export function Footer() {
                 </span>
               </span>
             </Link>
-            <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed">
+            <p className="mx-auto mt-4 max-w-sm whitespace-pre-line text-center text-sm leading-relaxed">
               {t("footer.description")}
             </p>
           </div>
