@@ -882,9 +882,9 @@ export function PropertyCarousel({
                           <button
                             type="button"
                             onClick={resetPriceFilters}
-                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                            className="inline-flex shrink-0 items-center rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900"
                           >
-                            {t("common.clearAll")}
+                            {t("filters.clearAll")}
                           </button>
                         </div>
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -942,9 +942,9 @@ export function PropertyCarousel({
                           <button
                             type="button"
                             onClick={resetAreaFilters}
-                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                            className="inline-flex shrink-0 items-center rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900"
                           >
-                            {t("common.clearAll")}
+                            {t("filters.clearAll")}
                           </button>
                         </div>
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -1002,9 +1002,9 @@ export function PropertyCarousel({
                           <button
                             type="button"
                             onClick={resetLocationFilters}
-                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                            className="inline-flex shrink-0 items-center rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900"
                           >
-                            {t("common.clearAll")}
+                            {t("filters.clearAll")}
                           </button>
                         </div>
                         <select
