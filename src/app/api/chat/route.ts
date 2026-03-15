@@ -169,22 +169,24 @@ function getQuickReply(text: string, chatTexts: Record<string, string>): string 
 }
 
 function getPropertyTitle(
-  property: { title_al: string; title_en: string; title_de: string; title_mk?: string },
+  property: { title_al: string; title_en: string; title_de: string; title_mk?: string; title_tr?: string },
   locale: SupportedLocale
 ): string {
   if (locale === "al") return property.title_al;
   if (locale === "mk") return property.title_mk || property.title_en;
+  if (locale === "tr") return property.title_tr || property.title_en;
   if (locale === "de") return property.title_de;
   return property.title_en;
 }
 
 function getLocationName(
-  location: { name_al: string; name_en: string; name_de: string; name_mk?: string } | null | undefined,
+  location: { name_al: string; name_en: string; name_de: string; name_mk?: string; name_tr?: string } | null | undefined,
   locale: SupportedLocale
 ): string {
   if (!location) return "";
   if (locale === "al") return location.name_al;
   if (locale === "mk") return location.name_mk || location.name_en;
+  if (locale === "tr") return location.name_tr || location.name_en;
   if (locale === "de") return location.name_de;
   return location.name_en;
 }
@@ -205,6 +207,7 @@ async function findLocationId(text: string): Promise<number | undefined> {
       name_en: true,
       name_de: true,
       name_mk: true,
+      name_tr: true,
     },
   });
 
@@ -212,7 +215,13 @@ async function findLocationId(text: string): Promise<number | undefined> {
   let bestLength = 0;
 
   for (const location of allLocations) {
-    const variants = [location.name_al, location.name_en, location.name_de, location.name_mk];
+    const variants = [
+      location.name_al,
+      location.name_en,
+      location.name_de,
+      location.name_mk,
+      location.name_tr,
+    ];
     for (const variant of variants) {
       const normalized = normalizeText(variant).trim();
       if (normalized.length < 3) continue;

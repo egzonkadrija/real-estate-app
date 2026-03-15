@@ -37,6 +37,7 @@ interface PropertyItem {
   title_en: string;
   title_de: string;
   title_mk: string;
+  title_tr: string;
   type: string;
   category: string;
   price: number;
@@ -53,6 +54,7 @@ interface PropertyDetail extends PropertyItem {
   description_en?: string;
   description_de?: string;
   description_mk?: string;
+  description_tr?: string;
   surface_area?: number | null;
   rooms?: number | null;
   bathrooms?: number | null;
@@ -846,17 +848,19 @@ function PropertyFormModal({
   const [loading, setLoading] = React.useState(false);
   const [loadingOptions, setLoadingOptions] = React.useState(true);
   const [optionsError, setOptionsError] = React.useState<string | null>(null);
-  const [locations, setLocations] = React.useState<{ id: number; name_al: string; name_en: string; name_de: string; name_mk?: string; type: string }[]>([]);
+  const [locations, setLocations] = React.useState<{ id: number; name_al: string; name_en: string; name_de: string; name_mk?: string; name_tr?: string; type: string }[]>([]);
   const [agents, setAgents] = React.useState<{ id: number; name: string }[]>([]);
   const [formData, setFormData] = React.useState({
     title_al: "",
     title_en: "",
     title_de: "",
     title_mk: "",
+    title_tr: "",
     description_al: "",
     description_en: "",
     description_de: "",
     description_mk: "",
+    description_tr: "",
     type: "sale",
     category: "apartment",
     price: "",
@@ -949,10 +953,12 @@ function PropertyFormModal({
             title_en: prop.title_en || "",
             title_de: prop.title_de || "",
             title_mk: prop.title_mk || "",
+            title_tr: prop.title_tr || "",
             description_al: prop.description_al || "",
             description_en: prop.description_en || "",
             description_de: prop.description_de || "",
             description_mk: prop.description_mk || "",
+            description_tr: prop.description_tr || "",
             type: prop.type || "sale",
             category: prop.category || "apartment",
             price: String(prop.price || ""),
@@ -1079,6 +1085,10 @@ function PropertyFormModal({
               <label className="mb-1 block text-xs font-medium text-gray-500">Title (Macedonian)</label>
               <input value={formData.title_mk} onChange={(e) => setFormData({ ...formData, title_mk: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-gray-500">Title (Turkish)</label>
+              <input value={formData.title_tr} onChange={(e) => setFormData({ ...formData, title_tr: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
             {/* Descriptions */}
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (Albanian)</label>
@@ -1095,6 +1105,10 @@ function PropertyFormModal({
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (Macedonian)</label>
               <textarea value={formData.description_mk} onChange={(e) => setFormData({ ...formData, description_mk: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-gray-500">Description (Turkish)</label>
+              <textarea value={formData.description_tr} onChange={(e) => setFormData({ ...formData, description_tr: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
             {/* Type & Category */}
             <div>

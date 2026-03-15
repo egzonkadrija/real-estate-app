@@ -40,6 +40,7 @@ interface PropertyPreview {
   title_en: string;
   title_de: string;
   title_mk: string;
+  title_tr: string;
   status: string;
   type: string;
   category: string;

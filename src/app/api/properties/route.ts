@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
           OR ${properties.title_en} ILIKE ${term}
           OR ${properties.title_de} ILIKE ${term}
           OR ${properties.title_mk} ILIKE ${term}
+          OR ${properties.title_tr} ILIKE ${term}
           OR CAST(${properties.category} AS text) ILIKE ${term}
           OR CAST(${properties.type} AS text) ILIKE ${term}
           OR EXISTS (
@@ -97,6 +98,7 @@ export async function GET(request: NextRequest) {
                 OR search_locations."name_en" ILIKE ${term}
                 OR search_locations."name_de" ILIKE ${term}
                 OR search_locations."name_mk" ILIKE ${term}
+                OR search_locations."name_tr" ILIKE ${term}
               )
           )
         )`

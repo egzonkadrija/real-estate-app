@@ -29,6 +29,20 @@
       "when": 1773504000000,
       "tag": "0003_add_macedonian_location_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773580000000,
+      "tag": "0004_add_turkish_location_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773583600000,
+      "tag": "0005_add_turkish_property_fields",
+      "breakpoints": true
     }
   ]
 }

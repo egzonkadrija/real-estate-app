@@ -119,7 +119,8 @@ export async function POST(
               lower(${locations.name_al}) = lower(${requestItem.location}) OR
               lower(${locations.name_en}) = lower(${requestItem.location}) OR
               lower(${locations.name_de}) = lower(${requestItem.location}) OR
-              lower(${locations.name_mk}) = lower(${requestItem.location})
+              lower(${locations.name_mk}) = lower(${requestItem.location}) OR
+              lower(${locations.name_tr}) = lower(${requestItem.location})
             )`
           )
         )
@@ -170,10 +171,12 @@ export async function POST(
         title_en: title,
         title_de: title,
         title_mk: title,
+        title_tr: title,
         description_al: description,
         description_en: description,
         description_de: description,
         description_mk: description,
+        description_tr: description,
         type,
         category,
         price,

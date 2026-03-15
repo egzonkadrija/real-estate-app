@@ -34,6 +34,7 @@ export interface Location {
   name_en: string;
   name_de: string;
   name_mk: string;
+  name_tr: string;
   parent_id: number | null;
   slug: string;
 }
@@ -44,10 +45,12 @@ export interface Property {
   title_en: string;
   title_de: string;
   title_mk: string;
+  title_tr: string;
   description_al: string;
   description_en: string;
   description_de: string;
   description_mk: string;
+  description_tr: string;
   type: PropertyType;
   category: PropertyCategory;
   price: number;
