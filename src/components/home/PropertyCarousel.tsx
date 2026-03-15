@@ -588,6 +588,95 @@ export function PropertyCarousel({
     router,
   ]);
 
+  const resetPriceFilters = React.useCallback(() => {
+    setPriceMinInput("");
+    setPriceMaxInput("");
+    setPriceSortOrder("desc");
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        activeQuickSort === "price" ? null : activeQuickSort,
+        activeQuickSort === "price" ? null : activeSortOrder,
+        "",
+        "",
+        activeMinArea,
+        activeMaxArea,
+        activeLocationId ?? ""
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeLocationId,
+    activeMaxArea,
+    activeMinArea,
+    activeQuickSort,
+    activeSortOrder,
+    buildHomeHref,
+    normalizedPropertyFilters,
+    router,
+  ]);
+
+  const resetAreaFilters = React.useCallback(() => {
+    setAreaMinInput("");
+    setAreaMaxInput("");
+    setAreaSortOrder("desc");
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        activeQuickSort === "area" ? null : activeQuickSort,
+        activeQuickSort === "area" ? null : activeSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        "",
+        "",
+        activeLocationId ?? ""
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeLocationId,
+    activeMaxPrice,
+    activeMinPrice,
+    activeQuickSort,
+    activeSortOrder,
+    buildHomeHref,
+    normalizedPropertyFilters,
+    router,
+  ]);
+
+  const resetLocationFilters = React.useCallback(() => {
+    setLocationInput("");
+    router.push(
+      buildHomeHref(
+        normalizedPropertyFilters,
+        activeCategory,
+        activeQuickSort === "location" ? null : activeQuickSort,
+        activeQuickSort === "location" ? null : activeSortOrder,
+        activeMinPrice,
+        activeMaxPrice,
+        activeMinArea,
+        activeMaxArea,
+        ""
+      )
+    );
+    setOpenQuickFilter(null);
+  }, [
+    activeCategory,
+    activeMaxArea,
+    activeMaxPrice,
+    activeMinArea,
+    activeMinPrice,
+    activeQuickSort,
+    activeSortOrder,
+    buildHomeHref,
+    normalizedPropertyFilters,
+    router,
+  ]);
+
   const propertyNameSuggestions = React.useMemo(() => {
     const seen = new Set<string>();
     const names: string[] = [];
@@ -788,7 +877,16 @@ export function PropertyCarousel({
                   >
                     {openQuickFilter === "price" && (
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900">{t("property.price")}</h3>
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-lg font-semibold text-gray-900">{t("property.price")}</h3>
+                          <button
+                            type="button"
+                            onClick={resetPriceFilters}
+                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            {t("common.clearAll")}
+                          </button>
+                        </div>
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                           <input
                             type="number"
@@ -839,7 +937,16 @@ export function PropertyCarousel({
 
                     {openQuickFilter === "area" && (
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900">{t("property.area")}</h3>
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-lg font-semibold text-gray-900">{t("property.area")}</h3>
+                          <button
+                            type="button"
+                            onClick={resetAreaFilters}
+                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            {t("common.clearAll")}
+                          </button>
+                        </div>
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                           <input
                             type="number"
@@ -890,7 +997,16 @@ export function PropertyCarousel({
 
                     {openQuickFilter === "location" && (
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900">{t("property.location")}</h3>
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-lg font-semibold text-gray-900">{t("property.location")}</h3>
+                          <button
+                            type="button"
+                            onClick={resetLocationFilters}
+                            className="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            {t("common.clearAll")}
+                          </button>
+                        </div>
                         <select
                           value={locationInput}
                           onChange={(e) => setLocationInput(e.target.value)}

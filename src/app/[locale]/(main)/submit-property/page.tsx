@@ -281,43 +281,46 @@ export default function SubmitPropertyPage() {
 
   if (status === "success") {
     return (
-      <div className="mx-auto flex w-full max-w-4xl flex-col px-4 py-16 text-center">
-        <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">
-          {t("form.messageSent")}
-        </h1>
-        <p className="text-gray-500">
-          {uiText.successDescription}
-        </p>
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-16">
+        <div className="flex w-full max-w-4xl flex-col text-center">
+          <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            {t("form.messageSent")}
+          </h1>
+          <p className="text-gray-500">
+            {uiText.successDescription}
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-      <header className="flex w-full flex-col gap-2">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {t("form.submitProperty")}
-        </h1>
-        <p className="text-gray-500">
-          {t("form.step")} {step} {t("form.of")} {TOTAL_STEPS}
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-8">
+      <div className="flex w-full max-w-4xl flex-col gap-6">
+        <header className="flex w-full flex-col gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            {t("form.submitProperty")}
+          </h1>
+          <p className="text-gray-500">
+            {t("form.step")} {step} {t("form.of")} {TOTAL_STEPS}
+          </p>
+        </header>
 
-      {/* Progress Bar */}
-      <div className="mb-2 flex w-full gap-2">
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-          <div
-            key={i}
-            className={`h-2 flex-1 rounded-full ${
-              i + 1 <= step ? "bg-blue-600" : "bg-gray-200"
-            }`}
-          />
-        ))}
-      </div>
+        {/* Progress Bar */}
+        <div className="mb-2 flex w-full gap-2">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full ${
+                i + 1 <= step ? "bg-blue-600" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
 
-      <Card className="w-full">
-        <CardContent className="p-6">
+        <Card className="w-full">
+          <CardContent className="p-6">
           {/* Step 1: Basic Info */}
           {step === 1 && (
             <div className="space-y-4">
@@ -681,8 +684,9 @@ export default function SubmitPropertyPage() {
               {errorMessage || uiText.errorMessage}
             </p>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

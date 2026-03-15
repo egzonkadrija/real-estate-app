@@ -165,30 +165,33 @@ export default function RequestPropertyPage() {
 
   if (status === "success") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">
-          {t("form.messageSent")}
-        </h1>
-        <p className="text-gray-500">
-          {uiText.successDescription}
-        </p>
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-16">
+        <div className="w-full max-w-2xl text-center">
+          <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            {t("form.messageSent")}
+          </h1>
+          <p className="text-gray-500">
+            {uiText.successDescription}
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
-        {t("form.requestProperty")}
-      </h1>
-      <p className="mb-6 text-gray-500">
-        {uiText.introDescription}
-      </p>
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-8">
+      <div className="w-full max-w-2xl">
+        <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+          {t("form.requestProperty")}
+        </h1>
+        <p className="mb-6 text-gray-500">
+          {uiText.introDescription}
+        </p>
 
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
             {/* Type */}
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -391,9 +394,10 @@ export default function RequestPropertyPage() {
                 {uiText.errorMessage}
               </p>
             )}
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
