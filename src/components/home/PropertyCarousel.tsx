@@ -39,6 +39,12 @@ type PropertyFilterKey = "sale" | "rent" | "exclusive";
 type CategoryKey = (typeof CATEGORIES)[number];
 type QuickSortKey = "price" | "area" | "location";
 type QuickSortOrder = "asc" | "desc";
+type SearchSuggestionKind = "property" | "location" | "category" | "type";
+type SearchSuggestion = {
+  label: string;
+  query: string;
+  kind: SearchSuggestionKind;
+};
 
 const QUICK_FILTER_POPOVER_MAX_WIDTH = 360;
 const QUICK_FILTER_POPOVER_MARGIN = 16;
@@ -598,14 +604,51 @@ export function PropertyCarousel({
     return names;
   }, [locale, properties]);
 
+  const searchSuggestions = React.useMemo<SearchSuggestion[]>(() => {
+    const seen = new Set<string>();
+    const suggestions: SearchSuggestion[] = [];
+
+    const pushSuggestion = (
+      label: string,
+      query: string,
+      kind: SearchSuggestionKind
+    ) => {
+      const trimmedLabel = label.trim();
+      const trimmedQuery = query.trim();
+      if (!trimmedLabel || !trimmedQuery) return;
+
+      const key = `${kind}:${trimmedLabel.toLowerCase()}:${trimmedQuery.toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      suggestions.push({ label: trimmedLabel, query: trimmedQuery, kind });
+    };
+
+    for (const titleValue of propertyNameSuggestions) {
+      pushSuggestion(titleValue, titleValue, "property");
+    }
+
+    for (const location of locationOptions) {
+      pushSuggestion(getLocalizedField(location, "name", locale), getLocalizedField(location, "name", locale), "location");
+    }
+
+    for (const category of CATEGORIES) {
+      pushSuggestion(t(`property.${category}`), category, "category");
+    }
+
+    pushSuggestion(t("property.forSale"), "sale", "type");
+    pushSuggestion(t("property.forRent"), "rent", "type");
+
+    return suggestions;
+  }, [locale, locationOptions, propertyNameSuggestions, t]);
+
   const filteredSuggestions = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return [];
 
-    return propertyNameSuggestions
-      .filter((titleValue) => titleValue.toLowerCase().includes(query))
+    return searchSuggestions
+      .filter((suggestion) => suggestion.label.toLowerCase().includes(query))
       .slice(0, 8);
-  }, [propertyNameSuggestions, search]);
+  }, [search, searchSuggestions]);
 
   const effectiveSlidesPerView = Math.min(slidesPerView, properties.length);
   const slideBasisPercent = `${100 / effectiveSlidesPerView}%`;
@@ -644,13 +687,20 @@ export function PropertyCarousel({
     emblaApi.scrollTo(targetIndex);
   }, [emblaApi, properties.length, slidesPerView]);
 
-  function submitSearchQuery(value: string) {
+  function submitSearchQuery(value: string, displayValue?: string) {
     const query = value.trim();
     if (!query) return;
-    setSearch(query);
+    setSearch(displayValue?.trim() || query);
     setIsSearchFocused(false);
     setActiveSuggestionIndex(-1);
     router.push(`/properties?q=${encodeURIComponent(query)}`);
+  }
+
+  function getSuggestionKindLabel(kind: SearchSuggestionKind) {
+    if (kind === "location") return t("filters.location");
+    if (kind === "category") return t("filters.category");
+    if (kind === "type") return t("filters.type");
+    return t("common.search");
   }
 
   if (properties.length === 0) return null;
@@ -916,7 +966,8 @@ export function PropertyCarousel({
                   if (e.key === "Enter") {
                     if (activeSuggestionIndex >= 0 && activeSuggestionIndex < filteredSuggestions.length) {
                       e.preventDefault();
-                      submitSearchQuery(filteredSuggestions[activeSuggestionIndex]);
+                      const suggestion = filteredSuggestions[activeSuggestionIndex];
+                      submitSearchQuery(suggestion.query, suggestion.label);
                       return;
                     }
                     if (search.trim()) {
@@ -931,20 +982,23 @@ export function PropertyCarousel({
                 <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-white shadow-lg">
                   <ul className="max-h-72 overflow-y-auto py-1">
                     {filteredSuggestions.map((suggestion, index) => (
-                      <li key={suggestion}>
+                      <li key={`${suggestion.kind}-${suggestion.query}-${suggestion.label}`}>
                         <button
                           type="button"
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            submitSearchQuery(suggestion);
+                            submitSearchQuery(suggestion.query, suggestion.label);
                           }}
-                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors ${
                             index === activeSuggestionIndex
                               ? "bg-[var(--surface-muted)] text-[var(--brand-700)]"
                               : "text-gray-700 hover:bg-[var(--surface-muted)]"
                           }`}
                         >
-                          {suggestion}
+                          <span className="truncate">{suggestion.label}</span>
+                          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+                            {getSuggestionKindLabel(suggestion.kind)}
+                          </span>
                         </button>
                       </li>
                     ))}

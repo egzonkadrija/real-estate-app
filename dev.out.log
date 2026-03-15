@@ -3,13 +3,11 @@
 > node scripts/dev-no-fork.cjs
 
 ▲ Next.js 16.1.6 (webpack)
-- Local:         http://localhost:3000
-- Network:       http://localhost:3000
+- Local:         http://localhost:3001
+- Network:       http://localhost:3001
 - Environments: .env.local
 - Experiments (use with caution):
   ✓ workerThreads
 
 ✓ Starting...
-✓ Ready in 1777ms
-○ Compiling /[locale] ...
- GET /en 200 in 5.1s (compile: 4.1s, proxy.ts: 159ms, generate-params: 529ms, render: 897ms)
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.

@@ -81,7 +81,25 @@ export async function GET(request: NextRequest) {
     if (q?.trim()) {
       const term = `%${q.trim()}%`;
       conditions.push(
-        sql`(${properties.title_al} ILIKE ${term} OR ${properties.title_en} ILIKE ${term} OR ${properties.title_de} ILIKE ${term} OR ${properties.title_mk} ILIKE ${term})`
+        sql`(
+          ${properties.title_al} ILIKE ${term}
+          OR ${properties.title_en} ILIKE ${term}
+          OR ${properties.title_de} ILIKE ${term}
+          OR ${properties.title_mk} ILIKE ${term}
+          OR CAST(${properties.category} AS text) ILIKE ${term}
+          OR CAST(${properties.type} AS text) ILIKE ${term}
+          OR EXISTS (
+            SELECT 1
+            FROM "locations" AS search_locations
+            WHERE search_locations."id" = ${properties.location_id}
+              AND (
+                search_locations."name_al" ILIKE ${term}
+                OR search_locations."name_en" ILIKE ${term}
+                OR search_locations."name_de" ILIKE ${term}
+                OR search_locations."name_mk" ILIKE ${term}
+              )
+          )
+        )`
       );
     }
 
