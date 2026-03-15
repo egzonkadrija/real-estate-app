@@ -129,12 +129,12 @@ export function Header() {
       <div className="mx-auto hidden h-20 w-full max-w-[1440px] items-center gap-4 px-4 lg:flex">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
-          <span className="inline-flex min-w-0 flex-col leading-none">
+            <span className="inline-flex min-w-0 flex-col leading-none">
             <span className="text-2xl font-extrabold tracking-wide text-gray-900">
-              NOVA
+              CASA
             </span>
             <span className="mt-0.5 block w-full text-center text-[11px] font-semibold tracking-[0.22em] text-[var(--brand-600)]">
-              STATE
+              ESTATE
             </span>
           </span>
         </Link>
@@ -221,10 +221,10 @@ export function Header() {
           <Building2 className="h-7 w-7 shrink-0 text-[var(--brand-600)]" />
           <span className="inline-flex min-w-0 flex-col leading-none">
             <span className="text-lg font-extrabold tracking-wide text-gray-900">
-              NOVA
+              CASA
             </span>
             <span className="mt-0.5 block w-full text-center text-[10px] font-semibold tracking-[0.2em] text-[var(--brand-600)]">
-              STATE
+              ESTATE
             </span>
           </span>
         </Link>
