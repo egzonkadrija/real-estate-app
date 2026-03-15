@@ -126,8 +126,8 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[70] min-w-0 overflow-x-clip border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto hidden h-20 w-full max-w-[1440px] items-center gap-4 px-4 lg:flex">
-        <Link href="/" className="flex min-w-0 items-center gap-2">
+      <div className="mx-auto hidden h-20 w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-4 lg:grid">
+        <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           <Building2 className="h-10 w-10 text-[var(--brand-600)]" />
             <span className="inline-flex min-w-0 flex-col leading-none">
             <span className="text-2xl font-extrabold tracking-wide text-gray-900">
@@ -139,7 +139,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-5 lg:flex">
+        <nav className="hidden items-center justify-center gap-5 lg:flex">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href);
             return (
@@ -159,7 +159,7 @@ export function Header() {
           })}
         </nav>
 
-        <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-2 justify-self-end">
           <Link
             href="/favorites"
             className="relative rounded-[var(--radius-md)] p-1.5 text-gray-600 transition-colors hover:bg-[var(--surface-muted)] sm:p-2"

@@ -282,7 +282,7 @@ export default function SubmitPropertyPage() {
   if (status === "success") {
     return (
       <div className="mx-auto w-full max-w-[1440px] px-4 py-16">
-        <div className="flex w-full max-w-4xl flex-col text-center">
+        <div className="mx-auto flex w-full max-w-4xl flex-col text-center">
           <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             {t("form.messageSent")}
@@ -297,7 +297,7 @@ export default function SubmitPropertyPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-8">
-      <div className="flex w-full max-w-4xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
         <header className="flex w-full flex-col gap-2">
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
             {t("form.submitProperty")}
