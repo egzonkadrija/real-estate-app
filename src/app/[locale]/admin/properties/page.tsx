@@ -1262,10 +1262,6 @@ function PropertyFormModal({
               <label className="mb-1 block text-xs font-medium text-gray-500">Title (English)</label>
               <input value={formData.title_en} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">Title (German)</label>
-              <input value={formData.title_de} onChange={(e) => setFormData({ ...formData, title_de: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-500">Title (Macedonian)</label>
               <input value={formData.title_mk} onChange={(e) => setFormData({ ...formData, title_mk: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
@@ -1282,10 +1278,6 @@ function PropertyFormModal({
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (English)</label>
               <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">Description (German)</label>
-              <textarea value={formData.description_de} onChange={(e) => setFormData({ ...formData, description_de: e.target.value })} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-500">Description (Macedonian)</label>

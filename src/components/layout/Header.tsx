@@ -45,7 +45,6 @@ export function Header() {
     { code: "mk", label: "Macedonian", flag: "🇲🇰" },
     { code: "al", label: "Shqip", flag: "🇦🇱" },
     { code: "en", label: "English", flag: "🇬🇧" },
-    { code: "de", label: "Deutsch", flag: "🇩🇪" },
     { code: "tr", label: "Türkçe", flag: "🇹🇷" },
   ];
 
