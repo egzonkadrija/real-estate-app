@@ -313,7 +313,10 @@ export function PropertyCard({
     };
   }, [onMoreInfoToggle]);
 
-  const imageMediaClass = "h-[152px] sm:h-[208px] lg:h-[240px]";
+  const imageMediaClass =
+    variant === "featured"
+      ? "aspect-[3/2]"
+      : "h-[152px] sm:h-[208px] lg:h-[240px]";
   const isDefaultCard = variant === "default";
   const detailsModal =
     showMoreInfo && isMounted
