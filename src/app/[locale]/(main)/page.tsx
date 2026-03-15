@@ -159,7 +159,7 @@ export default async function HomePage({
             <h2 className="mb-2 text-center text-xl font-bold sm:mb-3 sm:text-3xl">
               {t("form.submitProperty")}
             </h2>
-            <p className="mx-auto mb-5 max-w-2xl text-sm text-gray-300 sm:mb-6 sm:text-base">
+            <p className="mx-auto mb-5 max-w-2xl whitespace-pre-line text-center text-sm text-gray-300 sm:mb-6 sm:text-base">
               {t("footer.description")}
             </p>
           <HeroCTAActions
