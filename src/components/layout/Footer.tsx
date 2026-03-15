@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Youtube, Linkedin, Smartphone } from "lucide-react";
+import { Building2, Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -48,31 +48,9 @@ export function Footer() {
                 </span>
               </span>
             </Link>
-            <p className="mt-4 text-sm leading-relaxed">
+            <p className="mt-4 text-center text-sm leading-relaxed">
               {t("footer.description")}
             </p>
-            {/* Download App */}
-            <div className="mt-4">
-              <p className="mb-2 text-sm font-semibold text-white">
-                {t("footer.downloadApp")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <a
-                  href="#"
-                  className="flex items-center gap-1.5 rounded-lg border border-gray-600 px-3 py-1.5 text-xs transition-colors hover:border-white hover:text-white"
-                >
-                  <Smartphone className="h-4 w-4" />
-                  App Store
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-1.5 rounded-lg border border-gray-600 px-3 py-1.5 text-xs transition-colors hover:border-white hover:text-white"
-                >
-                  <Smartphone className="h-4 w-4" />
-                  Google Play
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -157,12 +135,6 @@ export function Footer() {
               </a>
               <a href="#" className="rounded-lg p-2 transition-colors hover:bg-gray-800">
                 <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="rounded-lg p-2 transition-colors hover:bg-gray-800">
-                <Youtube className="h-5 w-5" />
-              </a>
-              <a href="#" className="rounded-lg p-2 transition-colors hover:bg-gray-800">
-                <Linkedin className="h-5 w-5" />
               </a>
               <a href="#" className="rounded-lg p-2 transition-colors hover:bg-gray-800">
                 <TikTokIcon className="h-5 w-5" />
